@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <title>Post New Item</title>
+  </head>
+  <body>
+    <form action="/items/save_item" method="post">
+      <table>
+        <tr><td>Title: </td><td><input type="text" name="title"/></td></tr>
+        <tr><td>Description: </td><td><textarea name="description" rows="4" cols="50"></textarea></td></tr>
+        <tr><td>Price: </td><td>$<input type="text" name="price"/></td></tr>
+        <tr><td><button type="submit" value="Save">Post Item</button></td></tr>
+      </table>
+    </form>
+  </body>
+</html>
