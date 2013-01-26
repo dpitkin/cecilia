@@ -20,6 +20,10 @@ handlers:
 - url: /items/.*
   script: items.app
   secure: always
+  
+- url: /threads/.*
+  script: threads.app
+  secure: always
 
 libraries:
 - name: webapp2

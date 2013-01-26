@@ -1,0 +1,11 @@
+<html>
+  <head>
+    <title>Threads</title>
+  </head>
+  <body>
+    {% for thread in threads %}
+      <p><a href="/threads/view_thread?thread_id={{ thread.key().id() }}">{{ thread.title }}</a></p>
+    {% endfor %}
+    <p><a href="/threads/new_thread">Click here to start a new thread</a></p>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <title>Thread</title>
+  </head>
+  <body>
+    <h1>{{ thread.title }}</h1>
+    {% for child in children %}
+      <h2>{{ child.body }}</h2>
+    {% endfor %}
+    <form action="/threads/save_message" method="post">
+      <!-- this isn't secure, since the user can modify the ID field and inject messages into other peoples threads -->
+      <input type="hidden" name="thread_id" value="{{ thread.key().id() }}"/>
+      <label>Message:</label><textarea name="message" rows="4" cols="50"></textarea>
+      <p><button type="submit" value="submit">Reply</button></p>
+    </form>
+  </body>
+</html>
