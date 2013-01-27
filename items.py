@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
 import database
-
-cgi = database.cgi
-db = database.db
+from database import cgi
+from database import db
 
 class MainHandler(database.webapp2.RequestHandler):
   def get(self):
@@ -30,9 +29,9 @@ class SaveHandler(database.webapp2.RequestHandler):
     item = database.Item(parent=database.users.get_current_user())
     item.title = cgi.escape(self.request.get('title'))
     item.description = cgi.escape(self.request.get('description'))
-    item.price = float(cgi.escape(self.request.get('price')))
+    item.price = '%.2f' % float(cgi.escape(self.request.get('price')))
     item.put()
     self.redirect('/items/')
     
-  
+
 app = database.webapp2.WSGIApplication([('/items/', MainHandler), ('/items/new_item', NewHandler), ('/items/save_item', SaveHandler), ('/items/view_item', ViewHandler)], debug=True)

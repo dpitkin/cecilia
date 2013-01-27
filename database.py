@@ -67,7 +67,7 @@ class Message(db.Model):
 class Item(db.Model):
   title = db.StringProperty()
   description = db.TextProperty()
-  price = db.FloatProperty()
+  price = db.StringProperty()
   created_at = db.DateTimeProperty(auto_now_add=True)
   expiration_date = db.DateProperty()
   #belongs_to User

@@ -2,9 +2,8 @@
 # Dane was here
 
 import database
-
-cgi = database.cgi
-db = database.db
+from database import cgi
+from database import db
 
 class MainHandler(database.webapp2.RequestHandler):
   def get(self):
