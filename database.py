@@ -20,30 +20,12 @@ import os
 
 import cgi
 
-import hashlib
-import random
-
 from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
 
 jinja_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
-
-class User(db.Model):
-  first_name = db.StringProperty()
-  last_name = db.StringProperty()
-  #has_many threads
-  #has_many items
-  is_admin = db.BooleanProperty()
-  salt = db.StringProperty()
-  hashed_password = db.StringProperty()
-  login = db.StringProperty()
-def save_user(user, plain_password):
-  user.salt = str(random.random())
-  user.is_admin = False
-  user.hashed_password = hashlib.sha512(plain_password + user.salt).hexdigest()
-  user.put()
   
 class Thread(db.Model):
   title = db.StringProperty()
@@ -51,18 +33,16 @@ class Thread(db.Model):
   recipient_id = db.IntegerProperty()
   #has_many messages
   #belongs_to User
-  def save_thread(user):
-    self.parent = user
-    self.put()
+  created_by_id = db.StringProperty()
   
 class Message(db.Model):
   body = db.TextProperty()
   created_at = db.DateTimeProperty(auto_now_add=True)
   #belongs_to Thread
-  def save_message(thread, user):
-    self.parent = thread
-    self.parent = user
-    self.put()
+  
+def save_message(message, thread, user):
+  message.parent = thread
+  message.put()
 
 class Item(db.Model):
   title = db.StringProperty()
@@ -71,6 +51,4 @@ class Item(db.Model):
   created_at = db.DateTimeProperty(auto_now_add=True)
   expiration_date = db.DateProperty()
   #belongs_to User
-  def save_item(user):
-    self.parent = user
-    self.put()
+  created_by_id = db.StringProperty()

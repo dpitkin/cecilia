@@ -1,0 +1,11 @@
+<html>
+  <head>
+    <title>Search Results</title>
+  </head>
+  <body>
+    <p> You searched: {{ query }}</p>
+    {% for item in items %}
+      <p><a href="/items/view_item?item_id={{ item.key().id() }}">{{ item.title }}</a></p>
+    {% endfor %}
+  </body>
+</html>

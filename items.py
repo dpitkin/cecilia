@@ -26,12 +26,23 @@ class ViewHandler(database.webapp2.RequestHandler):
     
 class SaveHandler(database.webapp2.RequestHandler):
   def post(self):
-    item = database.Item(parent=database.users.get_current_user())
+    user = database.users.get_current_user()
+    item = database.Item()
     item.title = cgi.escape(self.request.get('title'))
     item.description = cgi.escape(self.request.get('description'))
     item.price = '%.2f' % float(cgi.escape(self.request.get('price')))
+    item.created_by_id = user.user_id()
     item.put()
     self.redirect('/items/')
     
+class SearchHandler(database.webapp2.RequestHandler):
+  def post(self):
+    query = cgi.escape(self.request.get('query'))
+    items = db.GqlQuery("SELECT * FROM Item WHERE title = :1 ORDER BY created_at DESC", query)
+    template_values = { 'items': items, 'query': query}
+    template = database.jinja_environment.get_template('items/search.html')
+    self.response.out.write(template.render(template_values))
+    
 
-app = database.webapp2.WSGIApplication([('/items/', MainHandler), ('/items/new_item', NewHandler), ('/items/save_item', SaveHandler), ('/items/view_item', ViewHandler)], debug=True)
+app = database.webapp2.WSGIApplication([('/items/', MainHandler), ('/items/new_item', NewHandler), 
+('/items/save_item', SaveHandler), ('/items/view_item', ViewHandler), ('/items/search', SearchHandler)], debug=True)

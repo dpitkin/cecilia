@@ -29,7 +29,8 @@ class NewHandler(database.webapp2.RequestHandler):
 
 class SaveHandler(database.webapp2.RequestHandler):
   def post(self):
-    thread = database.Thread(parent=database.users.get_current_user())
+    user = database.users.get_current_user()
+    thread = database.Thread(created_by_id=user.user_id())
     thread.title = cgi.escape(self.request.get('title'))
     thread.put()
     message = database.Message(parent=thread)

@@ -19,9 +19,16 @@ import database
 
 class MainHandler(database.webapp2.RequestHandler):
   def get(self):
-    template_values = {
-      
-    }
-    template = database.jinja_environment.get_template('index.html')
-    self.response.out.write(template.render(template_values))
+    user = database.users.get_current_user()
+    if user:
+      logout_url = database.users.create_logout_url('/')
+      template_values = {
+        'user': user,
+        'logout': logout_url
+      }
+      template = database.jinja_environment.get_template('index.html')
+      self.response.out.write(template.render(template_values))
+    else:
+      self.redirect(database.users.create_login_url(self.request.uri))
+    
 app = database.webapp2.WSGIApplication([('/', MainHandler)], debug=True)
