@@ -25,6 +25,15 @@ handlers:
   script: threads.app
   secure: always
 
+- url: /css
+  static_dir: css
+
+- url: /img
+  static_dir: img
+
+- url: /js
+  static_dir: js
+  
 libraries:
 - name: webapp2
   version: "2.5.2"

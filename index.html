@@ -1,14 +1,12 @@
-<html>
-  <head>
-    <title>Hardcode2013</title>
-  </head>
-  <body>
-    <p><a href="{{ logout }}">Logout</a></p>
+{% extends "layouts/layout.html" %}
+{% block title %}
+Hardcode2013
+{% endblock %}
+{% block content %}
     <table>
       <form action="/items/search" method="post">
         <tr><td>Search: </td><td><input type="text" name="query"/></td></tr>
-        <tr><td><button type="submit" value="Log In">Search</button></td></tr>
+        <tr><td><button type="submit" value="Log In" class="btn">Search</button></td></tr>
       </form>
     </table>
-  </body>
-</html>
+{% endblock %}
