@@ -19,11 +19,29 @@ import database
 
 class MainHandler(database.webapp2.RequestHandler):
   def get(self):
+    database.render_template(self, 'index.html', {})
+      
+class RegisterHandler(database.webapp2.RequestHandler):
+  def get(self):
     user = database.users.get_current_user()
-    if user:
-      logout_url = database.users.create_logout_url('/')
-      database.render_template(self, 'index.html', {'user': user, 'logout': logout_url})
+    li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", user.user_id())
+    if li.count() == 1:
+      self.redirect('/')
     else:
-      self.redirect(database.users.create_login_url(self.request.uri))
+      render_template(self, '/users/register_user.html', {})
+      
+class SaveLIHandler(database.webapp2.RequestHandler):
+  def post(self):
+    user = database.users.get_current_user()
+    li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", user.user_id())
+    #check for duplicates
+    if li.count() == 0:
+      li = LoginInformation()
+      li.first_name = cgi.escape(self.request.get('first_name'))
+      li.last_name = cgi.escape(self.request.get('last_name'))
+      li.user_id = user.user_id()
+      li.is_active = True
+      li.put()
+    self.redirect('/')
     
-app = database.webapp2.WSGIApplication([('/', MainHandler)], debug=True)
+app = database.webapp2.WSGIApplication([('/', MainHandler), ('/verify_user', RegisterHandler)], debug=True)
