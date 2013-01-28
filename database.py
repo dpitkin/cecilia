@@ -41,6 +41,7 @@ class LoginInformation(db.Model):
   #belongs_to User
   user_id = db.StringProperty()
   is_active = db.BooleanProperty()
+  is_admin = db.BooleanProperty()
   
 class Thread(db.Model):
   title = db.StringProperty()
