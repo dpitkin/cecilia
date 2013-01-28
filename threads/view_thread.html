@@ -1,17 +1,21 @@
-<html>
-  <head>
-    <title>Thread</title>
-  </head>
-  <body>
-    <h1>{{ thread.title }}</h1>
-    {% for child in children %}
-      <h2>{{ child.body }}</h2>
-    {% endfor %}
-    <form action="/threads/save_message" method="post">
-      <!-- this isn't secure, since the user can modify the ID field and inject messages into other peoples threads -->
-      <input type="hidden" name="thread_id" value="{{ thread.key().id() }}"/>
-      <label>Message:</label><textarea name="message" rows="4" cols="50"></textarea>
-      <p><button type="submit" value="submit">Reply</button></p>
-    </form>
-  </body>
-</html>
+{% extends "layouts/layout.html" %}
+{% block title %}
+{{ thread.title }}
+{% endblock %}
+{% block content %}
+<h3>{{ thread.title }}</h3>
+<div class="well">
+{% for child in children %}
+<p> <i class="icon-share-alt"></i> {{ child.body }}</p>
+{% endfor %}
+</div>
+<form action="/threads/save_message" method="post">
+	<!-- this isn't secure, since the user can modify the ID field and inject messages into other peoples threads -->
+	<input type="hidden" name="thread_id" value="{{ thread.key().id() }}"/>
+	<label>Message:</label><textarea name="message" class="message_box" rows="4" cols="50"></textarea>
+	<p>
+		<button type="submit" value="submit" class="btn btn-primary">Reply</button>
+		<a class="btn" href="/threads/">Back</a>
+	</p>
+</form>
+{% endblock %}
