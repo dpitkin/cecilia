@@ -7,25 +7,19 @@ db = database.db
 
 class MainHandler(database.webapp2.RequestHandler):
   def get(self):
-    threads = db.GqlQuery("SELECT * FROM Thread ORDER BY created_at DESC")
-    template_values = {'threads': threads}
-    template = database.jinja_environment.get_template('threads/index.html')
-    self.response.out.write(template.render(template_values))
+    threads = db.GqlQuery("SELECT * FROM Thread WHERE created_by_id = :1 ORDER BY created_at DESC", database.users.get_current_user().user_id())
+    database.render_template(self, 'threads/index.html', {'threads': threads})
     
 class ViewHandler(database.webapp2.RequestHandler):
   def get(self):
     thread_key = db.Key.from_path('Thread', int(self.request.get('thread_id')))
     thread = db.get(thread_key)
     children = db.GqlQuery("SELECT * FROM Message WHERE ANCESTOR is :1", thread_key)
-    template_values = {'thread': thread, 'children': children}
-    template = database.jinja_environment.get_template('threads/view_thread.html')
-    self.response.out.write(template.render(template_values))
+    database.render_template(self, 'threads/view_thread.html', {'thread': thread, 'children': children})
     
 class NewHandler(database.webapp2.RequestHandler):
   def get(self):
-    template_values = {}
-    template = database.jinja_environment.get_template('threads/new_thread.html')
-    self.response.out.write(template.render(template_values))  
+    database.render_template(self, 'threads/new_thread.html', {})
 
 class SaveHandler(database.webapp2.RequestHandler):
   def post(self):

@@ -22,12 +22,7 @@ class MainHandler(database.webapp2.RequestHandler):
     user = database.users.get_current_user()
     if user:
       logout_url = database.users.create_logout_url('/')
-      template_values = {
-        'user': user,
-        'logout': logout_url
-      }
-      template = database.jinja_environment.get_template('index.html')
-      self.response.out.write(template.render(template_values))
+      database.render_template(self, 'index.html', {'user': user, 'logout': logout_url})
     else:
       self.redirect(database.users.create_login_url(self.request.uri))
     
