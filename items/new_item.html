@@ -1,15 +1,33 @@
-<html>
-  <head>
-    <title>Post New Item</title>
-  </head>
-  <body>
-    <form action="/items/save_item" method="post">
-      <table>
-        <tr><td>Title: </td><td><input type="text" name="title"/></td></tr>
-        <tr><td>Description: </td><td><textarea name="description" rows="4" cols="50"></textarea></td></tr>
-        <tr><td>Price: </td><td>$<input type="text" name="price"/></td></tr>
-        <tr><td><button type="submit" value="Save">Post Item</button></td></tr>
-      </table>
-    </form>
-  </body>
-</html>
+{% extends "layouts/layout.html" %}
+{% block title %}
+New Item
+{% endblock %}
+{% block content %}
+<h3>New Item</h3>
+<form action="/items/save_item" method="post">
+	<div class="well">
+
+		<p>
+			Title<br />
+			<div class="input-prepend">
+				<span class="add-on"><i class="icon-tag"></i></span>
+				<input name="title" type="text">
+			</div>
+		</p>
+		<p>
+			Description<br />
+			<textarea name="description" rows="4" cols="50"></textarea>
+		</p>
+		<p>
+			Price<br />
+			<div class="input-prepend">
+				<span class="add-on">$</span>
+				<input name="price" type="text">
+			</div>
+		</p>
+	</div>
+	<button class="btn btn-primary" type="submit" value="Save">Post Item</button>
+	<a class="btn" href="/items/">Cancel</a>
+</form>
+
+{% endblock %}

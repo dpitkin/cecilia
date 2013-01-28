@@ -1,18 +1,20 @@
-<!--html>
-<head>
-<title>Items</title>
-</head>
-<body>
-{% for item in items %}
-<p><a href="/items/view_item?item_id={{ item.key().id() }}">{{ item.title }}</a></p>
-{% endfor %}
-<p><a href="/items/new_item">Click here to post a new item</a></p>
-</body>
-</html-->
 {% extends "layouts/layout.html" %}
+{% block title %}
+My Items
+{% endblock %}
 {% block content %}
+<h3>My Items</h3>
+<hr />
+<table class="table table-striped">
 	{% for item in items %}
-		<p><a href="/items/view_item?item_id={{ item.key().id() }}">{{ item.title }}</a></p>
+	<tr>
+		<td>
+			<a href="/items/view_item?item_id={{ item.key().id() }}">
+				<div>{{ item.title }}</div>
+			</a>
+		</td>
+	</tr>
 	{% endfor %}
-	<p><a href="/items/new_item">Click here to post a new item</a></p>
+</table>
+<p><a class="btn" href="/items/new_item">New Item</a></p>
 {% endblock %}

@@ -1,11 +1,20 @@
-<html>
-  <head>
-    <title>Threads</title>
-  </head>
-  <body>
-    {% for thread in threads %}
-      <p><a href="/threads/view_thread?thread_id={{ thread.key().id() }}">{{ thread.title }}</a></p>
-    {% endfor %}
-    <p><a href="/threads/new_thread">Click here to start a new thread</a></p>
-  </body>
-</html>
+{% extends "layouts/layout.html" %}
+{% block title %}
+Threads
+{% endblock %}
+{% block content %}
+<h3>Inbox</h3>
+<hr />
+<table class="table table-striped">
+{% for thread in threads %}
+<tr>
+	<td>
+		<a href="/threads/view_thread?thread_id={{ thread.key().id() }}">
+			<div>{{ thread.title }}</div>
+		</a>
+	</td>
+</tr>
+{% endfor %}
+</table>
+<p><a class="btn" href="/threads/new_thread">New Thread</a></p>
+{% endblock %}
