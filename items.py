@@ -29,6 +29,49 @@ class SaveHandler(database.webapp2.RequestHandler):
     item.put()
     self.redirect('/items/')
     
+class DeleteHandler(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    redirect = '/'
+    if user:
+      item = db.get(db.Key.from_path('Item', int(self.request.get('item_id'))))
+      #make sure the person owns this item
+      if item.created_by_id == user.user_id():
+        database.db.delete(item)
+        redirect = '/items/my_items'
+    self.redirect(redirect)
+    
+class EditHandler(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    if user:
+      item = db.get(db.Key.from_path('Item', int(self.request.get('item_id'))))
+      database.render_template(self, 'items/edit_item.html', {'item': item})
+    else:
+      self.redirect('/')
+      
+class UpdateHandler(database.webapp2.RequestHandler):
+  def post(self):
+    user = database.users.get_current_user()
+    if user:
+      item = db.get(db.Key.from_path('Item', int(cgi.escape(self.request.get('item_id')))))
+      item.title = cgi.escape(self.request.get('title'))
+      item.description = cgi.escape(self.request.get('description'))
+      item.price = cgi.escape(self.request.get('price'))
+      item.put()
+      self.redirect('/items/my_items')
+    else:
+      self.redirect('/')
+    
+class ShopHandler(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    if user:
+      items = db.GqlQuery("SELECT * FROM Item WHERE created_by_id = :1 ORDER BY created_at DESC", user.user_id())
+      database.render_template(self, 'items/my_items.html', {'items': items})
+    else:
+      self.redirect('/')
+    
 class SearchHandler(database.webapp2.RequestHandler):
   def post(self):
     query = cgi.escape(self.request.get('query'))
@@ -37,4 +80,6 @@ class SearchHandler(database.webapp2.RequestHandler):
     
 
 app = database.webapp2.WSGIApplication([('/items/', MainHandler), ('/items/new_item', NewHandler), 
-('/items/save_item', SaveHandler), ('/items/view_item', ViewHandler), ('/items/search', SearchHandler)], debug=True)
+('/items/save_item', SaveHandler), ('/items/view_item', ViewHandler), ('/items/search', SearchHandler),
+('/items/my_items', ShopHandler), ('/items/delete_item', DeleteHandler), ('/items/edit_item', EditHandler),
+('/items/update_item', UpdateHandler)], debug=True)

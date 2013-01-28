@@ -31,7 +31,7 @@ def render_template(handler_object, file_name, template_values):
   user = users.get_current_user()
   template_values['user'] = user
   template_values['logout_url'] = users.create_logout_url('/')
-  template_values['login_url'] = users.create_login_url('/verify_user')
+  template_values['login_url'] = users.create_login_url('/users/verify_user/')
   template = jinja_environment.get_template(file_name)
   handler_object.response.out.write(template.render(template_values))
   

@@ -1,0 +1,34 @@
+{% extends "layouts/layout.html" %}
+{% block title %}
+Edit Item
+{% endblock %}
+{% block content %}
+<h3>Edit Item</h3>
+<hr />
+<form action="/items/update_item" method="post">
+  <input type="hidden" name="item_id" value="{{ item.key().id() }}"/>
+	<div class="well">
+
+		<p>
+			Title<br />
+			<div class="input-prepend">
+				<span class="add-on"><i class="icon-tag"></i></span>
+				<input name="title" value="{{ item.title }}" type="text">
+			</div>
+		</p>
+		<p>
+			Description<br />
+			<textarea name="description" rows="4" cols="50">{{ item.description }}</textarea>
+		</p>
+		<p>
+			Price<br />
+			<div class="input-prepend">
+				<span class="add-on">$</span>
+				<input name="price" type="text" value="{{ item.price }}">
+			</div>
+		</p>
+	</div>
+	<button class="btn btn-primary" type="submit" value="Save">Update Item</button>
+	<a class="btn" href="/items/">Cancel</a>
+</form>
+{% endblock %}

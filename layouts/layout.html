@@ -20,9 +20,11 @@
 						<li class="">
 							<a href="/">Home</a>
 						</li>
-						<li class="">
-							<a href="/threads/">Inbox</a>
-						</li>
+            {% if user %}
+              <li class="">
+                <a href="/threads/">Inbox</a>
+              </li>
+            {% endif %}
 					</ul>
 					<ul class="nav pull-right">
 						<li class="dropdown">
@@ -31,10 +33,10 @@
 								<i class="icon-user icon-white"></i> {{user.nickname()}}<b class="caret"></b>
 							</a>
 							<ul class="dropdown-menu" role="menu" aria-labelledby="drop3">
-								<li><a tabindex="-1" href="#">My Info</a></li>
-								<li><a tabindex="-1" href="/items/">My Virtual Shop</a></li>
+								<li><a tabindex="-1" href="/users/">My Info</a></li>
+								<li><a tabindex="-1" href="/items/my_items">My Virtual Shop</a></li>
 								<li class="divider"></li>
-								<li><a tabindex="-1" href="#">Logout</a></li>
+								<li><a tabindex="-1" href="{{ logout_url }}">Logout</a></li>
 							</ul>
 							{% else %}
 							<a id="user_info" href="{{login_url}}">Login</a>				

@@ -12,6 +12,12 @@ indexes:
 
 - kind: Item
   properties:
+  - name: created_by_id
+  - name: created_at
+    direction: desc
+
+- kind: Item
+  properties:
   - name: title
   - name: created_at
     direction: desc
