@@ -1,0 +1,30 @@
+body {
+	padding-top: 60px;
+}
+
+#user_info {
+	/*	padding: 10px 20px 10px;*/
+	/*  margin-left: -20px;*/
+	/*  font-size: 20px;*/
+	display: inline-block;
+	*display: inline;
+	padding: 4px 12px;
+	margin-bottom: 0;
+	*margin-left: .3em;
+	line-height: 20px;
+	color: white;
+	text-align: center;
+	vertical-align: middle;
+	cursor: pointer;
+
+
+	margin-top:5px;
+}
+
+#user_info_wrapper {
+	float:right;	
+}
+
+.message_box {
+	width:100%;
+}

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>{% block title %}{% endblock %}</title>
+	<link rel="stylesheet" href="/css/bootstrap.css" />
+	<link rel="stylesheet" href="/css/bootstrap-responsive.css" />	
+	<link rel="stylesheet" href="/css/cecilia.css" />		
+	<script type="text/javascript" src="/js/jquery.min.js"></script>
+	<script type="text/javascript" src="/js/bootstrap.js"></script>
+	<script type="text/javascript" src="/js/cecilia.js"></script>	
+
+</head>
+<body>
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container">
+				<a class="brand" href="#">Project Cecilia</a>
+				<div class="container">
+					<ul class="nav">
+						<li class="">
+							<a href="/">Home</a>
+						</li>
+            {% if user %}
+              <li class="">
+                <a href="/threads/">Inbox</a>
+              </li>
+              {% if is_admin %}
+              	<li class="">
+              	  <a href="/admin/">Admin</a>
+              	</li>
+              {% endif %}
+            {% endif %}
+					</ul>
+					<ul class="nav pull-right">
+						<li class="dropdown">
+							{% if user %}
+							<a href="#" id="userinfo" role="button" class="dropdown-toggle" data-toggle="dropdown">
+								<i class="icon-user icon-white"></i> {{user.nickname()}}<b class="caret"></b>
+							</a>
+							<ul class="dropdown-menu" role="menu" aria-labelledby="drop3">
+								<li><a tabindex="-1" href="/users/">My Info</a></li>
+								<li><a tabindex="-1" href="/items/my_items">My Virtual Shop</a></li>
+								<li class="divider"></li>
+								<li><a tabindex="-1" href="{{ logout_url }}">Logout</a></li>
+							</ul>
+							{% else %}
+							<a id="user_info" href="{{login_url}}">Login</a>				
+							{% endif %}
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="container">
+		{% block content %}
+		{% endblock %}
+	</div>
+</body>
+</html>

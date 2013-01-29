@@ -7,45 +7,58 @@ db = database.db
 
 class MainHandler(database.webapp2.RequestHandler):
   def get(self):
-    threads = db.GqlQuery("SELECT * FROM Thread ORDER BY created_at DESC")
-    template_values = {'threads': threads}
-    template = database.jinja_environment.get_template('threads/index.html')
-    self.response.out.write(template.render(template_values))
+    user = database.users.get_current_user()
+    if user:
+      threads = db.GqlQuery("SELECT * FROM Thread WHERE created_by_id = :1 ORDER BY created_at DESC", user.user_id())
+      database.render_template(self, 'threads/index.html', {'threads': threads})
+    else:
+      self.redirect('/')
     
 class ViewHandler(database.webapp2.RequestHandler):
   def get(self):
-    thread_key = db.Key.from_path('Thread', int(self.request.get('thread_id')))
-    thread = db.get(thread_key)
-    children = db.GqlQuery("SELECT * FROM Message WHERE ANCESTOR is :1", thread_key)
-    template_values = {'thread': thread, 'children': children}
-    template = database.jinja_environment.get_template('threads/view_thread.html')
-    self.response.out.write(template.render(template_values))
+    user = database.users.get_current_user()
+    if user:
+      thread_key = db.Key.from_path('Thread', int(self.request.get('thread_id')))
+      thread = db.get(thread_key)
+      children = db.GqlQuery("SELECT * FROM Message WHERE ANCESTOR is :1", thread_key)
+      database.render_template(self, 'threads/view_thread.html', {'thread': thread, 'children': children})
+    else:
+      self.redirect('/')
     
 class NewHandler(database.webapp2.RequestHandler):
   def get(self):
-    template_values = {}
-    template = database.jinja_environment.get_template('threads/new_thread.html')
-    self.response.out.write(template.render(template_values))  
+    user = database.users.get_current_user()
+    if user:
+      database.render_template(self, 'threads/new_thread.html', {})
+    else:
+      self.redirect('/')
 
 class SaveHandler(database.webapp2.RequestHandler):
   def post(self):
     user = database.users.get_current_user()
-    thread = database.Thread(created_by_id=user.user_id())
-    thread.title = cgi.escape(self.request.get('title'))
-    thread.put()
-    message = database.Message(parent=thread)
-    message.body = cgi.escape(self.request.get('message'))
-    message.put()
-    self.redirect('/threads/')  
+    if user:
+      thread = database.Thread(created_by_id=user.user_id())
+      thread.title = cgi.escape(self.request.get('title'))
+      thread.put()
+      message = database.Message(parent=thread)
+      message.body = cgi.escape(self.request.get('message'))
+      message.put()
+      self.redirect('/threads/')
+    else:
+      self.redirect('/')
 
 class SaveMessageHandler(database.webapp2.RequestHandler):
   def post(self):
-    thread_key = db.Key.from_path('Thread', int(self.request.get('thread_id')))
-    thread = db.get(thread_key)
-    message = database.Message(parent=thread)
-    message.body = cgi.escape(self.request.get('message'))
-    message.put()
-    self.redirect('/threads/view_thread?thread_id='+self.request.get('thread_id'))     
-  
+    user = database.users.get_current_user()
+    if user:
+      thread_key = db.Key.from_path('Thread', int(self.request.get('thread_id')))
+      thread = db.get(thread_key)
+      message = database.Message(parent=thread)
+      message.body = cgi.escape(self.request.get('message'))
+      message.put()
+      self.redirect('/threads/view_thread?thread_id='+self.request.get('thread_id'))    
+    else:
+      self.redirect('/')
+    
 app = database.webapp2.WSGIApplication([('/threads/', MainHandler), ('/threads/view_thread', ViewHandler), 
 ('/threads/new_thread', NewHandler), ('/threads/save_thread', SaveHandler), ('/threads/save_message', SaveMessageHandler)], debug=True)

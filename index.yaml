@@ -12,6 +12,34 @@ indexes:
 
 - kind: Item
   properties:
+  - name: created_by_id
+  - name: created_at
+    direction: desc
+
+- kind: Item
+  properties:
   - name: title
+  - name: created_at
+    direction: desc
+
+- kind: LoginInformation
+  properties:
+  - name: is_active
+  - name: is_admin
+  - name: first_name
+
+- kind: LoginInformation
+  properties:
+  - name: is_admin
+  - name: first_name
+
+- kind: LoginInformation
+  properties:
+  - name: is_admin
+  - name: user_id
+
+- kind: Thread
+  properties:
+  - name: created_by_id
   - name: created_at
     direction: desc
