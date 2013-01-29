@@ -3,10 +3,11 @@
 Register User
 {% endblock %}
 {% block content %}
-  <form action="/users/save_user" method="post">
+  <form action="/users/save_user" enctype="multipart/form-data" method="post">
     <h4>Our records indicate this is your first time logging into our site. Please fill out the information below.</h4>
     <p>First Name: <input type="text" name="first_name"/></p>
     <p>Last Name: <input type="text" name="last_name"/></p>
+    <p><input type="file" name="avatar"/></p>
     <p><button type="submit" value="Submit" class="btn">Submit</button></p>
   </form>
 {% endblock %}

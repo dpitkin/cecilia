@@ -21,6 +21,25 @@ cgi = database.cgi
 
 class MainHandler(database.webapp2.RequestHandler):
   def get(self):
-    database.render_template(self, 'index.html', {})
+    items = database.db.GqlQuery("SELECT * FROM Item ORDER BY created_at DESC")
+    database.render_template(self, 'items/index.html', {'items': items})
     
-app = database.webapp2.WSGIApplication([('/', MainHandler)], debug=True)
+class ImageHandler(database.webapp2.RequestHandler):
+  def get(self):
+    image_id = cgi.escape(self.request.get('avatar_id'))
+    if image_id:
+      li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", image_id).get()
+      if li.avatar:
+        self.response.headers['Content-Type'] = 'image/png'
+        self.response.out.write(li.avatar)
+      else: 
+        self.error(404)
+    else:
+      li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", database.users.get_current_user().user_id()).get()
+      if li.avatar:
+        self.response.headers['Content-Type'] = 'image/png'
+        self.response.out.write(li.avatar)
+      else:
+        self.error(404)
+    
+app = database.webapp2.WSGIApplication([('/', MainHandler), ('/images/', ImageHandler)], debug=True)

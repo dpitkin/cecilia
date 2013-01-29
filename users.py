@@ -30,6 +30,7 @@ class SaveLIHandler(database.webapp2.RequestHandler):
       li.user_id = user.user_id()
       li.is_active = True
       li.is_admin = database.users.is_current_user_admin()
+      li.avatar = database.db.Blob(database.images.resize(self.request.get('avatar'), 128, 128))
       li.put()
     self.redirect('/')
     

@@ -8,9 +8,37 @@ db = database.db
 class MainHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
+    out_unread_thread = []
+    in_unread_thread = []
+    push = False
+    
+    #ew, (n+1) queries
     if user:
-      threads = db.GqlQuery("SELECT * FROM Thread WHERE created_by_id = :1 ORDER BY created_at DESC", user.user_id())
-      database.render_template(self, 'threads/index.html', {'threads': threads})
+      sent_threads = db.GqlQuery("SELECT * FROM Thread WHERE created_by_id = :1 ORDER BY created_at DESC", user.user_id())
+      for thread in sent_threads:
+        children = db.GqlQuery("SELECT * FROM Message WHERE ANCESTOR is :1", thread.key())
+        for child in children:
+          if child.recipient_id == user.user_id() and child.read == False:
+            push = True
+            break
+          else:
+            push = False
+        out_unread_thread.append(True) if push else out_unread_thread.append(False)
+      
+      push = False
+      in_threads = db.GqlQuery("SELECT * FROM Thread WHERE recipient_id = :1 ORDER BY created_at DESC", user.user_id())
+      for thread in in_threads:
+        children = db.GqlQuery("SELECT * FROM Message WHERE ANCESTOR is :1", thread.key())
+        for child in children:
+          if child.recipient_id == user.user_id() and child.read == False:
+            push = True
+            break
+          else:
+            push = False
+        in_unread_thread.append(True) if push else in_unread_thread.append(False)
+      
+      database.render_template(self, 'threads/index.html', {'sent_threads': sent_threads, 'in_threads': in_threads, 'out_unread_thread': out_unread_thread,
+      'in_unread_thread': in_unread_thread})
     else:
       self.redirect('/')
     
@@ -21,6 +49,10 @@ class ViewHandler(database.webapp2.RequestHandler):
       thread_key = db.Key.from_path('Thread', int(self.request.get('thread_id')))
       thread = db.get(thread_key)
       children = db.GqlQuery("SELECT * FROM Message WHERE ANCESTOR is :1", thread_key)
+      for child in children:
+        if child.recipient_id == user.user_id():
+          child.read = True
+          child.put()
       database.render_template(self, 'threads/view_thread.html', {'thread': thread, 'children': children})
     else:
       self.redirect('/')
@@ -29,7 +61,8 @@ class NewHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
     if user:
-      database.render_template(self, 'threads/new_thread.html', {})
+      item = db.get(db.Key.from_path('Item', (int(cgi.escape(self.request.get('about'))))))
+      database.render_template(self, 'threads/new_thread.html', {'item': item})
     else:
       self.redirect('/')
 
@@ -39,9 +72,14 @@ class SaveHandler(database.webapp2.RequestHandler):
     if user:
       thread = database.Thread(created_by_id=user.user_id())
       thread.title = cgi.escape(self.request.get('title'))
+      item_id = int(cgi.escape(self.request.get('item_id')))
+      thread.recipient_id = db.get(db.Key.from_path('Item', item_id)).created_by_id
       thread.put()
       message = database.Message(parent=thread)
       message.body = cgi.escape(self.request.get('message'))
+      message.created_by_id = thread.created_by_id
+      message.recipient_id = thread.recipient_id
+      message.read = False
       message.put()
       self.redirect('/threads/')
     else:
@@ -55,6 +93,9 @@ class SaveMessageHandler(database.webapp2.RequestHandler):
       thread = db.get(thread_key)
       message = database.Message(parent=thread)
       message.body = cgi.escape(self.request.get('message'))
+      message.created_by_id = user.user_id()
+      message.recipient_id = thread.recipient_id if user.user_id() == thread.created_by_id else thread.created_by_id
+      message.read = False
       message.put()
       self.redirect('/threads/view_thread?thread_id='+self.request.get('thread_id'))    
     else:

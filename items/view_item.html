@@ -7,4 +7,5 @@ View Item
 <p>Title: {{item.title}}</p>
 <p>Description: {{item.description}}</p>
 <p>Price: {{item.price}}</p>
+<p><a href="/threads/new_thread?about={{item.key().id()}}" class="btn">Make a Bid</a></p>
 {% endblock %}

@@ -3,8 +3,15 @@
 My Items
 {% endblock %}
 {% block content %}
-<h3>My Items</h3>
+<h3>All Items</h3>
 <hr />
+<table>
+  <form action="/items/search" method="post">
+    <tr><td>Search: </td><td><input type="text" name="query"/></td></tr>
+    <tr><td><button type="submit" value="Search" class="btn">Search</button></td></tr>
+  </form>
+</table>
+<br/><br/>
 <table class="table table-striped">
 	{% for item in items %}
 	<tr>
