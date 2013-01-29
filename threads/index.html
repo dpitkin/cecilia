@@ -5,15 +5,32 @@ Threads
 {% block content %}
 <h3>Inbox</h3>
 <hr />
+<h4>Received</h4>
 <table class="table table-striped">
-{% for thread in threads %}
+{% set i = 0 %}
+{% for thread in in_threads %}
 <tr>
 	<td>
 		<a href="/threads/view_thread?thread_id={{ thread.key().id() }}">
-			<div>{{ thread.title }}</div>
+			<div>{% if in_unread_thread[i] %}(Unread message) {% endif %}{{ thread.title }}</div>
 		</a>
 	</td>
 </tr>
+{% set i = i + 1 %}
+{% endfor %}
+</table>
+<h4>Sent</h4>
+<table class="table table-striped">
+{% set i = 0 %}
+{% for thread in sent_threads %}
+<tr>
+	<td>
+		<a href="/threads/view_thread?thread_id={{ thread.key().id() }}">
+			<div>{% if out_unread_thread[i] %}(Unread message) {% endif %}{{ thread.title }}</div>
+		</a>
+	</td>
+</tr>
+{% set i = i + 1 %}
 {% endfor %}
 </table>
 <p><a class="btn" href="/threads/new_thread">New Thread</a></p>

@@ -31,6 +31,10 @@ handlers:
 
 - url: /css
   static_dir: css
+  
+- url: /images/
+  script: main.app
+  secure: optional
 
 - url: /img
   static_dir: img

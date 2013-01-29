@@ -4,11 +4,13 @@
 	<title>{% block title %}{% endblock %}</title>
 	<link rel="stylesheet" href="/css/bootstrap.css" />
 	<link rel="stylesheet" href="/css/bootstrap-responsive.css" />	
-	<link rel="stylesheet" href="/css/cecilia.css" />		
+	<link rel="stylesheet" href="/css/cecilia.css" />	
+  <link rel="stylesheet" href="/css/jquery.dataTables.css" />	
 	<script type="text/javascript" src="/js/jquery.min.js"></script>
 	<script type="text/javascript" src="/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/js/cecilia.js"></script>	
-
+  <script type="text/javascript" src="/js/jquery.dataTables.min.js"></script>	
+  
 </head>
 <body>
 	<div class="navbar navbar-inverse navbar-fixed-top">
@@ -22,7 +24,7 @@
 						</li>
             {% if user %}
               <li class="">
-                <a href="/threads/">Inbox</a>
+                <a href="/threads/">Inbox ({{unread_messages}})</a>
               </li>
               {% if is_admin %}
               	<li class="">

@@ -43,3 +43,9 @@ indexes:
   - name: created_by_id
   - name: created_at
     direction: desc
+
+- kind: Thread
+  properties:
+  - name: recipient_id
+  - name: created_at
+    direction: desc
