@@ -1,0 +1,53 @@
+{% extends "layouts/layout.html" %}
+{% block title %}
+Admin
+{% endblock %}
+{% block content %}
+<h3>Administration</h3>
+<hr />
+<h5>Activated users</h5>
+<table class="table table-striped">
+{% for user in activated_users %}
+<tr>
+	<td>
+		<div>
+         <form action="/admin/deactivate_user" method="post">
+            <input type="hidden" name="user_id" value="{{ user.user_id }}"/>
+            <button class="btn btn-primary" type="submit" value="Deactivate">Deactivate</button>
+            <input type="checkbox" name="checkbox1"> <b>Name:</b> {{ user.first_name }} {{ user.last_name }} <b>User ID:</b> {{ user.user_id }} <b>Active:</b> {{ user.is_active }}</div>
+	     </form>
+    </td>
+</tr>
+{% endfor %}
+</table>
+<script language="JavaScript">
+function check_all(source, checkboxname) {
+  checkboxes = document.getElementsByName(checkboxname);
+  for(var i in checkboxes)
+    checkboxes[i].checked = true;
+}
+function uncheck_all(source, checkboxname) {
+  checkboxes = document.getElementsByName(checkboxname);
+  for(var i in checkboxes)
+    checkboxes[i].checked = false;
+}
+</script>
+<p><a class="btn" onClick="check_all(this,'checkbox1')">Check all</a> <a class="btn" onClick="uncheck_all(this,'checkbox1')">Uncheck all</a></p>
+<h5>Deactivated users</h5>
+<table class="table table-striped">
+{% for user in deactivated_users %}
+<tr>
+    <td>
+        <div>
+         <form action="/admin/reactivate_user" method="post">
+            <input type="hidden" name="user_id" value="{{ user.user_id }}"/>
+            <button class="btn btn-primary" type="submit" value="Reactivate">Reactivate</button>
+           <input type="checkbox" name="checkbox2"> <b>Name:</b> {{ user.first_name }} {{ user.last_name }} <b>User ID:</b> {{ user.user_id }} <b>Active:</b> {{ user.is_active }}</div>
+         </form>
+    </td>
+</tr>
+{% endfor %}
+</table>
+<p><a class="btn" onClick="check_all(this,'checkbox2')">Check all</a> <a class="btn" onClick="uncheck_all(this,'checkbox2')">Uncheck all</a></p>
+<p><a class="btn" href="/_ah/admin/">Go to console</a></p>
+{% endblock %}
