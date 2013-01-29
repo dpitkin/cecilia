@@ -28,7 +28,7 @@ handlers:
 - url: /css
   static_dir: css
   
-- url: /images/.*
+- url: /images/
   script: main.app
   secure: optional
 
