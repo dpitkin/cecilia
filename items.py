@@ -7,6 +7,7 @@ from database import db
 class MainHandler(database.webapp2.RequestHandler):
   def get(self):
     items = db.GqlQuery("SELECT * FROM Item ORDER BY created_at DESC")
+    is_admin = database.users.is_current_user_admin()
     database.render_template(self, 'items/index.html', {'items': items})
 
 class NewHandler(database.webapp2.RequestHandler):
@@ -32,14 +33,12 @@ class SaveHandler(database.webapp2.RequestHandler):
 class DeleteHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
-    redirect = '/'
     if user:
       item = db.get(db.Key.from_path('Item', int(self.request.get('item_id'))))
-      #make sure the person owns this item
-      if item.created_by_id == user.user_id():
+      #make sure the person owns this item or they're an admin
+      if (item.created_by_id == user.user_id()) or (database.users.is_current_user_admin()):
         database.db.delete(item)
-        redirect = '/items/my_items'
-    self.redirect(redirect)
+    self.redirect(self.request.referer)
     
 class EditHandler(database.webapp2.RequestHandler):
   def get(self):
