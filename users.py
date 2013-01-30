@@ -27,6 +27,8 @@ class SaveLIHandler(database.webapp2.RequestHandler):
       li = database.LoginInformation()
       li.first_name = cgi.escape(self.request.get('first_name'))
       li.last_name = cgi.escape(self.request.get('last_name'))
+      li.nickname = cgi.escape(self.request.get("nickname"))
+      li.private = bool(self.request.get("private"))
       li.user_id = user.user_id()
       li.is_active = True
       li.is_admin = database.users.is_current_user_admin()

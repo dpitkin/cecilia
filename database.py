@@ -32,6 +32,11 @@ jinja_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.di
 
 def render_template(handler_object, file_name, template_values):
   user = users.get_current_user()
+  if user:
+    current_li = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", user.user_id()).get()
+  else:
+    current_li = None
+  template_values['current_li'] = current_li
   template_values['user'] = user
   template_values['logout_url'] = users.create_logout_url('/')
   template_values['login_url'] = users.create_login_url('/users/verify_user/')
@@ -44,6 +49,9 @@ def render_template(handler_object, file_name, template_values):
   template = jinja_environment.get_template(file_name)
   handler_object.response.out.write(template.render(template_values))
   
+def get_current_li():
+  return db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", users.get_current_user.user_id()).get()
+  
 class LoginInformation(db.Model):
   first_name = db.StringProperty()
   last_name = db.StringProperty()
@@ -52,6 +60,11 @@ class LoginInformation(db.Model):
   is_active = db.BooleanProperty()
   is_admin = db.BooleanProperty()
   avatar = db.BlobProperty()
+  nickname = db.StringProperty()
+  private = db.BooleanProperty()
+  
+  def get_private_display_name(this):
+    return this.first_name + " " + this.last_name
   
 class Thread(db.Model):
   title = db.StringProperty()

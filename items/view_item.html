@@ -4,8 +4,13 @@ View Item
 {% endblock %}
 {% block content %}
 <h3>View Item</h3>
-<p>Title: {{item.title}}</p>
-<p>Description: {{item.description}}</p>
-<p>Price: ${{item.price}}</p>
-<p><a href="/threads/new_thread?about={{item.key().id()}}" class="btn">Make a Bid</a></p>
+<div class="well">
+	<p>Title: {{item.title}}</p>
+	<p>Description: {{item.description}}</p>
+	<p>Price: ${{item.price}}</p>
+</div>
+<p>
+	<a href="/threads/new_thread?about={{item.key().id()}}" class="btn btn-primary">Make a Bid</a>
+	<a href="/items/" class="btn">Back</a>
+</p>
 {% endblock %}

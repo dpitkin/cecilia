@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import database
+import re
 
 cgi = database.cgi
 db = database.db
@@ -61,7 +62,10 @@ class NewHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
     if user:
-      item = db.get(db.Key.from_path('Item', (int(cgi.escape(self.request.get('about'))))))
+      item = None
+      if self.request.get("about"): 
+        item = db.get(db.Key.from_path('Item', (int(cgi.escape(self.request.get('about'))))))
+
       database.render_template(self, 'threads/new_thread.html', {'item': item})
     else:
       self.redirect('/')
@@ -70,17 +74,28 @@ class SaveHandler(database.webapp2.RequestHandler):
   def post(self):
     user = database.users.get_current_user()
     if user:
-      thread = database.Thread(created_by_id=user.user_id())
-      thread.title = cgi.escape(self.request.get('title'))
-      item_id = int(cgi.escape(self.request.get('item_id')))
-      thread.recipient_id = db.get(db.Key.from_path('Item', item_id)).created_by_id
-      thread.put()
-      message = database.Message(parent=thread)
-      message.body = cgi.escape(self.request.get('message'))
-      message.created_by_id = thread.created_by_id
-      message.recipient_id = thread.recipient_id
-      message.read = False
-      message.put()
+      if self.request.get("item_id"):
+        item_id = int(cgi.escape(self.request.get('item_id')))
+        recipients = [db.get(db.Key.from_path('Item', item_id)).created_by_id]
+      else:
+        recipients = cgi.escape(self.request.get("recipients"))
+        #WOAH! Rejects everything but numbers, then maps to integers
+        recipients = [y for y in [re.sub("[^0-9]", "", x) for x in recipients.split(",")] if len(y) > 0]
+      
+      recipients = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id IN :1", recipients)
+      recipients = [r for r in recipients if r != user]
+      if len(recipients) > 0:
+        for recipient in recipients:
+          thread = database.Thread(created_by_id=user.user_id())
+          thread.title = cgi.escape(self.request.get('title'))
+          thread.recipient_id = recipient.user_id
+          thread.put()
+          message = database.Message(parent=thread)
+          message.body = cgi.escape(self.request.get('message'))
+          message.created_by_id = thread.created_by_id
+          message.recipient_id = thread.recipient_id
+          message.read = False
+          message.put()
       self.redirect('/threads/')
     else:
       self.redirect('/')
