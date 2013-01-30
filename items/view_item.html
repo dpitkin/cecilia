@@ -4,13 +4,16 @@ View Item
 {% endblock %}
 {% block content %}
 <h3>View Item</h3>
+
 <div class="well">
+	<p>Posted by: {{li.first_name + ' ' + li.last_name}}</p>
 	<p>Title: {{item.title}}</p>
 	<p>Description: {{item.description}}</p>
 	<p>Price: ${{item.price}}</p>
+	<p>Created at: {{item.created_at}}</p>
 </div>
 <p>
-	<a href="/threads/new_thread?about={{item.key().id()}}" class="btn btn-primary">Make a Bid</a>
+	<a href="/threads/new_thread?about={{item.key().id()}}" class="btn">Make a Bid</a>
 	<a href="/items/" class="btn">Back</a>
 </p>
 {% endblock %}

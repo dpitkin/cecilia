@@ -7,31 +7,46 @@ My Items
 <hr />
 <!--
 <table>
-  <form action="/items/search" method="post">
-    <tr><td>Search: </td><td><input type="text" name="query"/></td></tr>
-    <tr><td><button type="submit" value="Search" class="btn">Search</button></td></tr>
-  </form>
+<form action="/items/search" method="post">
+<tr><td>Search: </td><td><input type="text" name="query"/></td></tr>
+<tr><td><button type="submit" value="Search" class="btn">Search</button></td></tr>
+</form>
 </table>-->
 <br/><br/>
 <table class="datatable table table-striped">
-  <thead>
-    <tr><th>Title</th><th>Description</th><th>Price</th></tr>
-  </thead>
-  <tbody>
-	{% for item in items %}
-	<tr>
-		<td>
-			<a href="/items/view_item?item_id={{ item.key().id() }}">
-				<div>{{ item.title }}</div>
-			</a>
-		</td>
-    <td>{{ item.description }}</td>
-    <td>${{ item.price }}</td>
-	</tr>
-	{% endfor %}
-  </tbody>
+	<thead>
+		<tr>
+			<th>Title</th><th>Description</th><th>Price</th>
+			{% if is_admin %}
+			<th>Delete</th>
+			{% endif %}
+		</tr>
+	</thead>
+	<tbody>
+		{% for item in items %}
+		<tr>
+			<td>
+				<a href="/items/view_item?item_id={{ item.key().id() }}">
+					<div>{{ item.title }}</div>
+				</a>
+			</td>
+			<td>{{ item.description }}</td>
+			<td>${{ item.price }}</td>
+			{% if is_admin %}
+			<td>
+				<a href="/items/delete_item?item_id={{ item.key().id() }}">
+					<button class="btn btn-primary" type="submit" value="Delete">Delete Item</button> 
+				</a>
+			</td>
+			{% endif %}
+		</tr>
+		{% endfor %}
+	</tbody>
 </table>
 <br/>
 <br />
+{% if user %}
 <p><a class="btn" href="/items/new_item">New Item</a></p>
+{% endif %}
+
 {% endblock %}

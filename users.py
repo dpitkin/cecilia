@@ -34,6 +34,8 @@ class SaveLIHandler(database.webapp2.RequestHandler):
       li.is_admin = database.users.is_current_user_admin()
       li.avatar = database.db.Blob(database.images.resize(self.request.get('avatar'), 128, 128))
       li.put()
+      database.logging.info("Saving new LoginInformation. Info:\nFirst name: %s\nLast Name: %s\nUserID: %s\nAdmin: %s\n",
+      li.first_name, li.last_name, li.user_id, li.is_admin)
     self.redirect('/')
     
 class DeleteHandler(database.webapp2.RequestHandler):
