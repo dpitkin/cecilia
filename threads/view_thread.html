@@ -5,10 +5,35 @@
 {% block content %}
 <h3>{{ thread.title }}</h3>
 <div class="well">
-{% set tmp_user = None %}
+<table style="width:100%">
+
+{% set tmp_parent = None %}
+{% set first_message = True %}
+{% set needs_close = False %}
 {% for child in children %}
-<p><img src="/images/?avatar_id={{child.created_by_id}}" width="32" height="32"/><i class="icon-share-alt"></i> {{ child.body }}</p>
+	{% if child.get_sender().user_id != tmp_parent.user_id %}
+		{% if first_message %}
+			{% set needs_close = True %}
+			{% set first_message = False %}
+		{% else %}
+			</table></td></tr>
+		{% endif %}
+		<tr>
+			<td><img src="/images/?avatar_id={{child.created_by_id}}" width="32" height="32"/></td>
+			<td><strong>{{ child.get_sender().get_private_display_name() }}</strong></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td><table class="table table-striped">
+	{% endif %}
+	<tr><td>{{ child.body }}</td></tr>
+	{% set tmp_parent = child.get_sender() %}
 {% endfor %}
+
+{% if needs_close %}
+</table></td></tr>
+{% endif %}
+</table>
 </div>
 <form action="/threads/save_message" method="post">
 	<!-- this isn't secure, since the user can modify the ID field and inject messages into other peoples threads -->

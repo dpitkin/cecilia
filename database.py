@@ -82,6 +82,8 @@ class Message(db.Model):
   recipient_id = db.StringProperty()
   read = db.BooleanProperty()
   #belongs_to Thread
+  def get_sender(this):
+    return db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", this.created_by_id).get()
   
 def save_message(message, thread, user):
   message.parent = thread
