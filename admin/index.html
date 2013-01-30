@@ -9,14 +9,14 @@ Admin
 <table class="table table-striped">
 {% for user in activated_users %}
 <tr>
-	<td>
-		<div>
-         <form action="/admin/deactivate_user" method="post">
-            <input type="hidden" name="user_id" value="{{ user.user_id }}"/>
-            <button class="btn btn-primary" type="submit" value="Deactivate">Deactivate</button> 
-            <b>Name:</b> {{ user.first_name }} {{ user.last_name }} <b>User ID:</b> {{ user.user_id }} <b>Active:</b> {{ user.is_active }}</div>
-	     </form>
-    </td>
+  <td>
+	<div>
+      <a href="/admin/user_activation?user_id={{ user.user_id }}">
+        <button class="btn btn-primary" type="submit" value="Deactivate">Deactivate</button> 
+      </a>
+        <b>Name:</b> {{ user.first_name }} {{ user.last_name }} <b>User ID:</b> {{ user.user_id }} <b>Active:</b> {{ user.is_active }}
+    </div>
+  </td>
 </tr>
 {% endfor %}
 </table>
@@ -24,14 +24,14 @@ Admin
 <table class="table table-striped">
 {% for user in deactivated_users %}
 <tr>
-    <td>
-        <div>
-         <form action="/admin/reactivate_user" method="post">
-            <input type="hidden" name="user_id" value="{{ user.user_id }}"/>
-            <button class="btn btn-primary" type="submit" value="Reactivate">Reactivate</button> 
-            <b>Name:</b> {{ user.first_name }} {{ user.last_name }} <b>User ID:</b> {{ user.user_id }} <b>Active:</b> {{ user.is_active }}</div>
-         </form>
-    </td>
+  <td>
+    <div>
+      <a href="/admin/user_activation?user_id={{ user.user_id }}">
+        <button class="btn btn-primary" type="submit" value="Reactivate">Reactivate</button> 
+      </a>
+        <b>Name:</b> {{ user.first_name }} {{ user.last_name }} <b>User ID:</b> {{ user.user_id }} <b>Active:</b> {{ user.is_active }}
+    </div>
+  </td>
 </tr>
 {% endfor %}
 </table>
