@@ -32,5 +32,5 @@ My Items
   </tbody>
 </table>
 <br/>
-<p><a class="btn" href="/items/new_item">New Item</a></p>
+{% if user %}<p><a class="btn" href="/items/new_item">New Item</a></p>{% endif %}
 {% endblock %}
