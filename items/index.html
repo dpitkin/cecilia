@@ -15,7 +15,7 @@ My Items
 <br/><br/>
 <table class="datatable">
   <thead>
-    <tr><th>Title</th></tr>
+    <tr><th>Title</th><th>Description</th><th>Price</th></tr>
   </thead>
   <tbody>
 	{% for item in items %}
@@ -25,6 +25,8 @@ My Items
 				<div>{{ item.title }}</div>
 			</a>
 		</td>
+    <td>{{ item.description }}</td>
+    <td>${{ item.price }}</td>
 	</tr>
 	{% endfor %}
   </tbody>
