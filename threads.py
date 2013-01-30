@@ -90,12 +90,16 @@ class SaveHandler(database.webapp2.RequestHandler):
           thread.title = cgi.escape(self.request.get('title'))
           thread.recipient_id = recipient.user_id
           thread.put()
+          database.logging.info("Created a new thread. Info:\nThreadID: %s\nCreatedBy: %s\nTitle: %s\nSentTo: %s\nCreatedAt: %s", 
+          thread.key().id(), thread.created_by_id, thread.title, thread.recipient_id, thread.created_at)
           message = database.Message(parent=thread)
           message.body = cgi.escape(self.request.get('message'))
           message.created_by_id = thread.created_by_id
           message.recipient_id = thread.recipient_id
           message.read = False
           message.put()
+          database.logging.info("Created a new message under thread #%s\nSentBy: %s\nSentTo: %s\nCreatedAt: %s",
+          message.parent().key().id(), message.created_by_id, message.recipient_id, message.created_at)
       self.redirect('/threads/')
     else:
       self.redirect('/')
@@ -112,6 +116,8 @@ class SaveMessageHandler(database.webapp2.RequestHandler):
       message.recipient_id = thread.recipient_id if user.user_id() == thread.created_by_id else thread.created_by_id
       message.read = False
       message.put()
+      database.logging.info("Created a new message under thread #%s\nSentBy: %s\nSentTo: %s\nCreatedAt: %s",
+      message.parent().key().id(), message.created_by_id, message.recipient_id, message.created_at)
       self.redirect('/threads/view_thread?thread_id='+self.request.get('thread_id'))    
     else:
       self.redirect('/')
