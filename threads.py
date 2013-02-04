@@ -47,6 +47,7 @@ class ViewHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
     if user:
+      database.get_current_li().create_xsrf_token()
       thread_key = db.Key.from_path('Thread', int(self.request.get('thread_id')))
       thread = db.get(thread_key)
       children = db.GqlQuery("SELECT * FROM Message WHERE ANCESTOR is :1", thread_key)
@@ -62,6 +63,7 @@ class NewHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
     if user:
+      database.get_current_li().create_xsrf_token()
       item = None
       if self.request.get("about"): 
         item = db.get(db.Key.from_path('Item', (int(cgi.escape(self.request.get('about'))))))
@@ -73,7 +75,7 @@ class NewHandler(database.webapp2.RequestHandler):
 class SaveHandler(database.webapp2.RequestHandler):
   def post(self):
     user = database.users.get_current_user()
-    if user:
+    if user and database.get_current_li().verify_xsrf_token(self):
       if self.request.get("item_id"):
         item_id = int(cgi.escape(self.request.get('item_id')))
         recipients = [db.get(db.Key.from_path('Item', item_id)).created_by_id]
@@ -107,7 +109,7 @@ class SaveHandler(database.webapp2.RequestHandler):
 class SaveMessageHandler(database.webapp2.RequestHandler):
   def post(self):
     user = database.users.get_current_user()
-    if user:
+    if user and database.get_current_li().verify_xsrf_token(self):
       thread_key = db.Key.from_path('Thread', int(self.request.get('thread_id')))
       thread = db.get(thread_key)
       message = database.Message(parent=thread)

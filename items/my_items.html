@@ -17,7 +17,7 @@ My Items
       <div><a class="btn" href="/items/edit_item?item_id={{ item.key().id() }}">Edit Item</a></div>
     </td>
     <td>
-      <div><a class="btn" href="/items/delete_item?item_id={{ item.key().id() }}" onclick="return confirm('Are you sure?');">Delete Item</a></div>
+      <div><a class="btn" href="/items/delete_item?item_id={{ item.key().id() }}&xsrf_token={{ current_li.xsrf_token }}" onclick="return confirm('Are you sure?');">Delete Item</a></div>
     </td>
 	</tr>
 	{% endfor %}

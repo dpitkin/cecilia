@@ -20,6 +20,8 @@ import os
 import logging
 
 import hashlib
+import random
+import time
 
 import cgi
 
@@ -51,7 +53,7 @@ def render_template(handler_object, file_name, template_values):
   handler_object.response.out.write(template.render(template_values))
   
 def get_current_li():
-  return db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", users.get_current_user.user_id()).get()
+  return db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", users.get_current_user().user_id()).get()
   
 class LoginInformation(db.Model):
   first_name = db.StringProperty()
@@ -63,9 +65,26 @@ class LoginInformation(db.Model):
   avatar = db.BlobProperty()
   nickname = db.StringProperty()
   private = db.BooleanProperty()
+  xsrf_token = db.StringProperty()
   
   def get_private_display_name(this):
     return this.first_name + " " + this.last_name
+    
+  def create_xsrf_token(this):
+    #create a token based off of their name, random number, id, and time, then hash via sha512
+    #won't scale too great, but should be pretty secure
+    this.xsrf_token = hashlib.sha512(str(random.random()) + this.last_name + str(this.key()) + this.first_name + str(time.clock())).hexdigest()
+    this.put()
+    
+  def verify_xsrf_token(this, request):
+    #change the token to make it obsolete
+    old_token = this.xsrf_token
+    this.xsrf_token = hashlib.sha512(this.xsrf_token).hexdigest()
+    this.put()
+    if old_token == request.request.get('xsrf_token'):
+      return True
+    else:
+      return False
   
 class Thread(db.Model):
   title = db.StringProperty()
@@ -95,5 +114,6 @@ class Item(db.Model):
   price = db.StringProperty()
   created_at = db.DateTimeProperty(auto_now_add=True)
   expiration_date = db.DateProperty()
+  image = db.BlobProperty()
   #belongs_to User
   created_by_id = db.StringProperty()

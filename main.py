@@ -16,6 +16,7 @@
 #
 
 import database
+from database import db
 
 cgi = database.cgi
 
@@ -27,12 +28,20 @@ class MainHandler(database.webapp2.RequestHandler):
 class ImageHandler(database.webapp2.RequestHandler):
   def get(self):
     image_id = cgi.escape(self.request.get('avatar_id'))
+    item_id = cgi.escape(self.request.get('item_id'))
     if image_id:
       li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", image_id).get()
       if li.avatar:
         self.response.headers['Content-Type'] = 'image/png'
         self.response.out.write(li.avatar)
       else: 
+        self.error(404)
+    elif item_id:
+      item = db.get(db.Key.from_path('Item', int(self.request.get('item_id'))))
+      if item.image:
+        self.response.headers['Content_type'] = 'image/png'
+        self.response.out.write(item.image)
+      else:
         self.error(404)
     else:
       li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", database.users.get_current_user().user_id()).get()

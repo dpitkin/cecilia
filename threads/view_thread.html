@@ -38,6 +38,7 @@
 <form action="/threads/save_message" method="post">
 	<!-- this isn't secure, since the user can modify the ID field and inject messages into other peoples threads -->
 	<input type="hidden" name="thread_id" value="{{ thread.key().id() }}"/>
+  <input type="hidden" name="xsrf_token" value="{{current_li.xsrf_token}}" />
 	<label>Message:</label><textarea name="message" class="message_box" rows="4" cols="50"></textarea>
 	<p>
 		<button type="submit" value="submit" class="btn btn-primary">Reply</button>
