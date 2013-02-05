@@ -33,8 +33,9 @@ class SaveHandler(database.webapp2.RequestHandler):
       item.description = cgi.escape(self.request.get('description'))
       item.price = '%.2f' % float(cgi.escape(self.request.get('price')))
       item.created_by_id = user.user_id()
-      image = self.request.get('photo')
+      image = database.images.resize(self.request.get('photo'), 512, 512)
       item.image = db.Blob(image)
+      item.expiration_date = database.datetime.date.today() + database.datetime.timedelta(weeks=4) #get 4 weeks of posting
       item.put()
       database.logging.info("Created a new item.\nTitle: %s\nDescription: %s\nPrice: %s\nCreatedBy: %s", item.title, item.description, item.price, item.created_by_id)
       self.redirect('/items/')

@@ -16,15 +16,18 @@ My Items
 <table class="datatable table table-striped">
 	<thead>
 		<tr>
-			<th>Title</th><th>Description</th><th>Price</th>
+      <th width="10%">Posted</th><th>Title</th><th>Description</th><th>Price</th>
 			{% if is_admin %}
-			<th>Delete</th>
+			<th>Delete</th><th width="15%">Expiration Date</th>
 			{% endif %}
 		</tr>
 	</thead>
 	<tbody>
 		{% for item in items %}
 		<tr>
+      <td>
+        <div>{{item.created_at.strftime("%m/%d/%Y")}}</div>
+      </td>
 			<td>
 				<a href="/items/view_item?item_id={{ item.key().id() }}">
 					<div>{{ item.title }}</div>
@@ -38,6 +41,7 @@ My Items
 					<button class="btn btn-primary" type="submit" value="Delete">Delete Item</button> 
 				</a>
 			</td>
+      <td>{{item.expiration_date.strftime("%m/%d/%Y")}}</td>
 			{% endif %}
 		</tr>
 		{% endfor %}

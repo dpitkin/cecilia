@@ -2,7 +2,9 @@
 $(document).ready(function(){
 
 	$(".dropdown-toggle").dropdown();
-	$('.datatable').dataTable();
+	$('.datatable').dataTable({
+    'aaSorting': [[0, 'desc' ]]
+  });
 	
 	$("i.info_button-right").popover({
 		placement:"right",

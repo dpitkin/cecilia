@@ -22,7 +22,10 @@ cgi = database.cgi
 
 class MainHandler(database.webapp2.RequestHandler):
   def get(self):
-    items = database.db.GqlQuery("SELECT * FROM Item ORDER BY created_at DESC")
+    if database.users.is_current_user_admin():
+      items = database.db.GqlQuery("SELECT * FROM Item")
+    else:
+      items = database.db.GqlQuery("SELECT * FROM Item WHERE expiration_date >= :1", database.datetime.date.today())
     database.render_template(self, 'items/index.html', {'items': items})
     
 class ImageHandler(database.webapp2.RequestHandler):
