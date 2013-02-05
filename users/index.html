@@ -7,5 +7,5 @@ Your Profile
     <p>Name: {{ li.first_name + ' ' + li.last_name }}</p>
     <p>Email: {{ user.email() }}</p>
     <p>Avatar: <img src="/images/" alt="Avatar"/></p>
-    <p><a href="/users/delete_user" onclick="return confirm('Are you sure? This will delete all your messages and items');">Click here to delete account</a></p>
+    <p><a href="/users/delete_user?xsrf_token={{current_li.xsrf_token}}" onclick="return confirm('Are you sure? This will delete all your messages and items');">Click here to delete account</a></p>
 {% endblock %}

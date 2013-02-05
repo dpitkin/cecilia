@@ -4,9 +4,9 @@ New Thread
 {% endblock %}
 {% block content %}
 <form action="/threads/save_thread" method="post">
+  <input type="hidden" name="xsrf_token" value="{{current_li.xsrf_token}}" />
 	{% if item %}
   	<input type="hidden" name="item_id" value="{{item.key().id()}}" />
-    <input type="hidden" name="xsrf_token" value="{{current_li.xsrf_token}}" />
 	<p><label>Title:</label><input type="text" name="title" value="Item: {{item.title}}"/></p>
 	{% else %}
 	<p>

@@ -6,6 +6,7 @@ Register User
 <form action="/users/save_user" enctype="multipart/form-data" method="post">
 	<h4>Our records indicate this is your first time logging into our site. Please fill out the information below.</h4>
 	<div class="well">
+    <input type="hidden" name="xsrf_token" value="{{current_li.xsrf_token}}"/>
 		<p>
 			<label>First Name: </label>
 			<input type="text" name="first_name"/>
