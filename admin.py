@@ -23,6 +23,7 @@ class ActivationHandler(database.webapp2.RequestHandler):
       user = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", cgi.escape(self.request.get('user_id'))).get()
       user.is_active = not user.is_active
       user.put()
+      database.logging.info("ActivationHandler used, user#%s active=%s\n", user.user_id, user.is_active)
       self.redirect(self.request.referer)
     else:
       self.redirect('/')

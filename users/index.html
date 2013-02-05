@@ -8,4 +8,35 @@ Your Profile
     <p>Email: {{ user.email() }}</p>
     <p>Avatar: <img src="/images/" alt="Avatar"/></p>
     <p><a href="/users/delete_user?xsrf_token={{current_li.xsrf_token}}" onclick="return confirm('Are you sure? This will delete all your messages and items');">Click here to delete account</a></p>
+    <br/><br/>
+    <h3>Edit Profile</h3>
+    <div class="well">
+    <form action="/users/update_user" enctype="multipart/form-data" method="post">
+      <input type="hidden" name="xsrf_token" value="{{current_li.xsrf_token}}"/>
+      <p>
+			<label>First Name: </label>
+			<input type="text" name="first_name" value="{{li.first_name}}"/>
+		</p>
+		<p>
+			<label>Last Name: </label>
+			<input type="text" name="last_name" value="{{li.last_name}}"/>
+		</p>
+		<p>
+			<label>
+				Nickname: 
+				<i class="icon-info-sign info_button-right" title="Nickname" data-content="This will be displayed instead of your real name if you are marked as private"></i>
+			</label>
+			<input type="text" name="nickname" value="{{li.nickname}}"/> 
+		</p>
+		<p>
+			<label>
+				Private: 
+				<i class="icon-info-sign info_button-right" title="Private" data-content="This dictates whether or not visitors are able to see your real name"></i>
+			</label>
+			<input type="checkbox" name="private" {% if li.private %} checked="true" {% endif %} />
+		</p>
+		<p><input type="file" name="avatar"/></p>
+	</div>
+	<p><button type="submit" value="Submit" class="btn">Submit</button></p>
+    </form>
 {% endblock %}

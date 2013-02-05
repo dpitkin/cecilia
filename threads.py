@@ -109,9 +109,9 @@ class SaveHandler(database.webapp2.RequestHandler):
 class SaveMessageHandler(database.webapp2.RequestHandler):
   def post(self):
     user = database.users.get_current_user()
-    if user and database.get_current_li().verify_xsrf_token(self):
-      thread_key = db.Key.from_path('Thread', int(self.request.get('thread_id')))
-      thread = db.get(thread_key)
+    thread_key = db.Key.from_path('Thread', int(self.request.get('thread_id')))
+    thread = db.get(thread_key)
+    if user and database.get_current_li().verify_xsrf_token(self) and (thread.recipient_id == user.user_id() or thread.created_by_id == user.user_id()):
       message = database.Message(parent=thread)
       message.body = cgi.escape(self.request.get('message'))
       message.created_by_id = user.user_id()

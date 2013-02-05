@@ -20,13 +20,13 @@
 		{% endif %}
 		<tr>
 			<td><img src="/images/?avatar_id={{child.created_by_id}}" width="32" height="32"/></td>
-			<td><strong>{{ child.get_sender().get_private_display_name() }}</strong></td>
+			<td><strong>{{ child.get_sender().get_private_display_name() }} (ID: {{child.get_sender().key().id()}})</strong></td>
 		</tr>
 		<tr>
 			<td></td>
 			<td><table class="table table-striped">
 	{% endif %}
-	<tr><td>{{ child.body }}</td></tr>
+	<tr><td>{{ child.body }} (Sent: {{ child.created_at.strftime("%m/%d/%Y at %H:%M")}})</td></tr>
 	{% set tmp_parent = child.get_sender() %}
 {% endfor %}
 
@@ -36,7 +36,7 @@
 </table>
 </div>
 <form action="/threads/save_message" method="post">
-	<!-- this isn't secure, since the user can modify the ID field and inject messages into other peoples threads -->
+	<!-- FIXED: this isn't secure, since the user can modify the ID field and inject messages into other peoples threads -->
 	<input type="hidden" name="thread_id" value="{{ thread.key().id() }}"/>
   <input type="hidden" name="xsrf_token" value="{{current_li.xsrf_token}}" />
 	<label>Message:</label><textarea name="message" class="message_box" rows="4" cols="50"></textarea>

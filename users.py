@@ -47,6 +47,23 @@ class SaveLIHandler(database.webapp2.RequestHandler):
       li.first_name, li.last_name, li.user_id, li.is_admin)
     self.redirect('/')
     
+class UpdateLIHandler(database.webapp2.RequestHandler):
+  def post(self):
+    user = database.users.get_current_user()
+    if user and database.get_current_li().verify_xsrf_token(self):
+      li = database.get_current_li()
+      li.first_name = cgi.escape(self.request.get('first_name'))
+      li.last_name = cgi.escape(self.request.get('last_name'))
+      li.nickname = cgi.escape(self.request.get('nickname'))
+      li.private = bool(self.request.get('private'))
+      li.avatar = database.db.Blob(database.images.resize(self.request.get('avatar'), 128, 128))
+      li.put()
+      database.logging.info("Updating LoginInformation. Info: \nFirst name: %s\nLast Name: %s\n%UserID: %s\n",
+      li.first_name, li.last_name, li.user_id)
+      self.redirect(self.request.referer)
+    else:
+      self.redirect('/')
+    
 class DeleteHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
@@ -64,4 +81,4 @@ class DeleteHandler(database.webapp2.RequestHandler):
     
     
 app = database.webapp2.WSGIApplication([('/users/', MainHandler), ('/users/verify_user/', RegisterHandler), 
-('/users/save_user', SaveLIHandler), ('/users/delete_user', DeleteHandler)], debug=True)
+('/users/save_user', SaveLIHandler), ('/users/delete_user', DeleteHandler), ('/users/update_user', UpdateLIHandler)], debug=True)
