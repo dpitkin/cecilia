@@ -18,6 +18,11 @@ indexes:
 
 - kind: Item
   properties:
+  - name: is_active
+  - name: expiration_date
+
+- kind: Item
+  properties:
   - name: title
   - name: created_at
     direction: desc

@@ -35,6 +35,16 @@ Edit Item
         <input type="file" name="photo" style="padding-left: 5px;"/>
       </div>
     </p>
+    <p>
+      {% if item.is_expired() %}
+        This item is expired.
+      {% elif not item.is_expired() %}
+        <input type="checkbox" name="show_item" {% if item.is_active %} checked="true" {% endif %}/>
+        Show item (If unchecked, item can only be viewed by you in your virtual shop)
+      {% endif %}
+         
+
+    </p>
 	</div>
 	<button class="btn btn-primary" type="submit" value="Save">Update Item</button>
 	<a class="btn" href="/items/">Cancel</a>
