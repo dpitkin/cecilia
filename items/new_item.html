@@ -3,26 +3,27 @@
 New Item
 {% endblock %}
 {% block content %}
+<script type="text/javascript" src="/js/items/items.js"></script>
 <h3>New Item</h3>
 <form action="/items/save_item" method="post" enctype="multipart/form-data">
 	<div class="well">
   <input type="hidden" name="xsrf_token" value="{{ current_li.xsrf_token }}"/>
 		<p>
-			Title<br />
+			Title*<br />
 			<div class="input-prepend">
 				<span class="add-on"><i class="icon-tag"></i></span>
-				<input name="title" type="text">
+				<input name="title" id="title" type="text">
 			</div>
 		</p>
 		<p>
-			Description<br />
-			<textarea name="description" rows="4" cols="50"></textarea>
+			Description*<br />
+			<textarea name="description" id="description" rows="4" cols="50"></textarea>
 		</p>
 		<p>
-			Price<br />
+			Price*<br />
 			<div class="input-prepend">
 				<span class="add-on">$</span>
-				<input name="price" type="text">
+				<input name="price" id="price" type="text">
 			</div>
 		</p>
     <p>

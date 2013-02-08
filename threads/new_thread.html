@@ -3,17 +3,18 @@
 New Thread
 {% endblock %}
 {% block content %}
+<script type="text/javascript" src="/js/threads.js"></script>
 <form action="/threads/save_thread" method="post">
   <input type="hidden" name="xsrf_token" value="{{current_li.xsrf_token}}" />
 	{% if item %}
   	<input type="hidden" name="item_id" value="{{item.key().id()}}" />
-	<p><label>Title:</label><input type="text" name="title" value="Item: {{item.title}} for ${{item.price}}"/></p>
+	<p><label>Title:*</label><input type="text" id="title" name="title" value="Item: {{item.title}} for ${{item.price}}"/></p>
 	{% else %}
 	<p>
 		<label>Recipients:</label>
 		<input type="text" name="recipients" />
 	</p>
-	<p><label>Title:</label><input type="text" name="title" value="" /></p>
+	<p><label>Title:*</label><input type="text" id="title" name="title" value="" /></p>
 	{% endif %}
 	<p><label>Message:</label><textarea name="message" rows="4" cols="50"></textarea> </p>
 	<p>

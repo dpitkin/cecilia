@@ -3,6 +3,7 @@
 Your Profile
 {% endblock %}
 {% block content %}
+  <script type="text/javascript" src="/js/users/register_user.js"></script>
     <h3>Your info:</h3>
     <p>Name: {{ li.first_name + ' ' + li.last_name }}</p>
     <p>Email: {{ user.email() }}</p>
@@ -14,19 +15,19 @@ Your Profile
     <form action="/users/update_user" enctype="multipart/form-data" method="post">
       <input type="hidden" name="xsrf_token" value="{{current_li.xsrf_token}}"/>
       <p>
-			<label>First Name: </label>
-			<input type="text" name="first_name" value="{{li.first_name}}"/>
+			<label>First Name: *</label>
+			<input type="text" id="first_name" name="first_name" value="{{li.first_name}}"/>
 		</p>
 		<p>
-			<label>Last Name: </label>
-			<input type="text" name="last_name" value="{{li.last_name}}"/>
+			<label>Last Name: *</label>
+			<input type="text" id="last_name" name="last_name" value="{{li.last_name}}"/>
 		</p>
 		<p>
 			<label>
-				Nickname: 
+				Nickname: *
 				<i class="icon-info-sign info_button-right" title="Nickname" data-content="This will be displayed instead of your real name if you are marked as private"></i>
 			</label>
-			<input type="text" name="nickname" value="{{li.nickname}}"/> 
+			<input type="text" id="nickname" name="nickname" value="{{li.nickname}}"/> 
 		</p>
 		<p>
 			<label>

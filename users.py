@@ -59,7 +59,8 @@ class UpdateLIHandler(database.webapp2.RequestHandler):
       li.last_name = cgi.escape(self.request.get('last_name'))
       li.nickname = cgi.escape(self.request.get('nickname'))
       li.private = bool(self.request.get('private'))
-      li.avatar = database.db.Blob(database.images.resize(self.request.get('avatar'), 128, 128))
+      if(self.request.get('avatar')):
+        li.avatar = database.db.Blob(database.images.resize(self.request.get('avatar'), 128, 128))
       li.put()
       database.logging.info("Updating LoginInformation. Info: \nFirst name: %s\nLast Name: %s\n%UserID: %s\n",
       li.first_name, li.last_name, li.user_id)

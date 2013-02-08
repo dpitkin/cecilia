@@ -5,27 +5,28 @@ Edit Item
 {% block content %}
 <h3>Edit Item</h3>
 <hr />
-<form action="/items/update_item" method="post">
+<script type="text/javascript" src="/js/items/items.js"></script>
+<form action="/items/update_item" enctype="multipart/form-data" method="post">
   <input type="hidden" name="item_id" value="{{ item.key().id() }}"/>
   <input type="hidden" name="xsrf_token" value="{{ current_li.xsrf_token }}"/>
 	<div class="well">
 
 		<p>
-			Title<br />
+			Title*<br />
 			<div class="input-prepend">
 				<span class="add-on"><i class="icon-tag"></i></span>
-				<input name="title" value="{{ item.title }}" type="text">
+				<input name="title" id="title" value="{{ item.title }}" type="text">
 			</div>
 		</p>
 		<p>
-			Description<br />
-			<textarea name="description" rows="4" cols="50">{{ item.description }}</textarea>
+			Description*<br />
+			<textarea name="description" id="description" rows="4" cols="50">{{ item.description }}</textarea>
 		</p>
 		<p>
-			Price<br />
+			Price*<br />
 			<div class="input-prepend">
 				<span class="add-on">$</span>
-				<input name="price" type="text" value="{{ item.price }}">
+				<input name="price" id="price" type="text" value="{{ item.price }}">
 			</div>
 		</p>
     <p>
