@@ -11,7 +11,7 @@ View Item
 	<p>Description: {{item.description}}</p>
 	<p>Price: ${{item.price}}</p>
 	<p>Created on: {{item.created_at.strftime("%m/%d/%Y at %H:%M")}}</p>
-  <p><img src="/images/?item_id={{item.key().id()}}" />
+  <p>{{ item.display_image() }}</p>
 </div>
 <p>
 	{% if current_li %}<a href="/threads/new_thread?about={{item.key().id()}}" class="btn">Make a Bid</a>{% endif %}

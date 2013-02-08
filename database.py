@@ -120,5 +120,15 @@ class Item(db.Model):
   created_at = db.DateTimeProperty(auto_now_add=True)
   expiration_date = db.DateProperty()
   image = db.BlobProperty()
+  is_active = db.BooleanProperty()
   #belongs_to User
   created_by_id = db.StringProperty()
+
+  def is_expired(this):
+    return (datetime.date.today() > this.expiration_date)
+
+  def display_image(this):
+    if this.image:
+      return '<img src="/images/?item_id=' + this.key().id() + '"/>'
+    else:
+      return ''

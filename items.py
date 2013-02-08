@@ -33,6 +33,7 @@ class SaveHandler(database.webapp2.RequestHandler):
       item.description = cgi.escape(self.request.get('description'))
       item.price = '%.2f' % float(cgi.escape(self.request.get('price')))
       item.created_by_id = user.user_id()
+      item.is_active = True
       if self.request.get('photo'):
         image = database.images.resize(self.request.get('photo'), 512, 512)
         item.image = db.Blob(image)
@@ -71,9 +72,10 @@ class UpdateHandler(database.webapp2.RequestHandler):
       item = db.get(db.Key.from_path('Item', int(cgi.escape(self.request.get('item_id')))))
       item.title = cgi.escape(self.request.get('title'))
       item.description = cgi.escape(self.request.get('description'))
-      item.price = cgi.escape(self.request.get('price'))
+      item.price = '%.2f' % float(cgi.escape(self.request.get('price')))
+      item.is_active = bool(self.request.get('show_item'))
       if self.request.get('photo'):
-        item.image = database.db.Blob(database.images.resize(self.request.get('photo'), 512 , 512))
+        item.image = database.db.Blob(database.images.resize(self.request.get('photo')))
       database.logging.info("Item #%s changed to:\nTitle: %s\nDescription: %s\nPrice: %s", item.key().id(), item.title, item.description, item.price)
       item.put()
       self.redirect('/items/my_items')
