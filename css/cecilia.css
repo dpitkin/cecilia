@@ -25,6 +25,14 @@ body {
 	float:right;	
 }
 
+.hide {
+  display: none;
+}
+
 .message_box {
 	width:100%;
+}
+
+.error_text {
+  color: red;
 }

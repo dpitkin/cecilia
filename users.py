@@ -22,6 +22,8 @@ class RegisterHandler(database.webapp2.RequestHandler):
       if li.count() == 1:
         self.redirect('/')
       else:
+        li = database.LoginInformation(first_name="",last_name="", user_id=user.user_id(), is_active=True)
+        li.put()
         li.create_xsrf_token()
         database.render_template(self, '/users/register_user.html', {})
     else:
@@ -32,19 +34,20 @@ class SaveLIHandler(database.webapp2.RequestHandler):
     user = database.users.get_current_user()
     li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", user.user_id())
     #check for duplicates
-    if user and li.count() == 0 and li.verify_xsrf_token(self):
-      li = database.LoginInformation()
-      li.first_name = cgi.escape(self.request.get('first_name'))
-      li.last_name = cgi.escape(self.request.get('last_name'))
-      li.nickname = cgi.escape(self.request.get("nickname"))
-      li.private = bool(self.request.get("private"))
-      li.user_id = user.user_id()
-      li.is_active = True
-      li.is_admin = database.users.is_current_user_admin()
-      li.avatar = database.db.Blob(database.images.resize(self.request.get('avatar'), 128, 128))
-      li.put()
-      database.logging.info("Saving new LoginInformation. Info:\nFirst name: %s\nLast Name: %s\nUserID: %s\nAdmin: %s\n",
-      li.first_name, li.last_name, li.user_id, li.is_admin)
+    if user and li.count() == 1:
+      li = database.get_current_li()
+      if li.verify_xsrf_token(self):
+        li.first_name = cgi.escape(self.request.get('first_name'))
+        li.last_name = cgi.escape(self.request.get('last_name'))
+        li.nickname = cgi.escape(self.request.get("nickname"))
+        li.private = bool(self.request.get("private"))
+        li.is_active = True
+        li.is_admin = database.users.is_current_user_admin()
+        if(self.request.get('avatar')):
+          li.avatar = database.db.Blob(database.images.resize(self.request.get('avatar'), 128, 128))
+        li.put()
+        database.logging.info("Saving new LoginInformation. Info:\nFirst name: %s\nLast Name: %s\nUserID: %s\nAdmin: %s\n",
+        li.first_name, li.last_name, li.user_id, li.is_admin)
     self.redirect('/')
     
 class UpdateLIHandler(database.webapp2.RequestHandler):

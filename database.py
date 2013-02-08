@@ -68,6 +68,10 @@ class LoginInformation(db.Model):
   private = db.BooleanProperty()
   xsrf_token = db.StringProperty()
   
+  def display_avatar(this):
+    if this.avatar:
+      return '<img src="/images/?avatar_id=' + this.user_id + '"/>'
+  
   def get_private_display_name(this):
     return this.first_name + " " + this.last_name
     
