@@ -19,6 +19,7 @@ import jinja2
 import os
 import logging
 
+import string
 import hashlib
 import random
 import time
@@ -50,8 +51,12 @@ def render_template(handler_object, file_name, template_values):
     template_values['unread_messages'] = db.GqlQuery("SELECT * FROM Message WHERE recipient_id = :1 AND read = :2", user.user_id(), False).count()
     if li and not(li.is_active):
       file_name = '/users/inactive_notification.html'
-  template = jinja_environment.get_template(file_name)
-  handler_object.response.out.write(template.render(template_values))
+  #check to make sure they've registered (and check for infinite redirects)
+  if user and string.find(handler_object.request.uri, '/users/verify_user/') == -1 and (current_li.first_name == "" or current_li.last_name == "" or current_li.nickname == ""):
+    handler_object.redirect('/users/verify_user/')
+  else: 
+    template = jinja_environment.get_template(file_name)
+    handler_object.response.out.write(template.render(template_values))
   
 def get_current_li():
   return db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", users.get_current_user().user_id()).get()
@@ -98,6 +103,7 @@ class Thread(db.Model):
   #has_many messages
   #belongs_to User
   created_by_id = db.StringProperty()
+  item_details = db.StringProperty()
   
 class Message(db.Model):
   body = db.TextProperty()

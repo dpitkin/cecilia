@@ -19,9 +19,14 @@ class RegisterHandler(database.webapp2.RequestHandler):
     user = database.users.get_current_user()
     if user:
       li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", user.user_id())
-      if li.count() == 1:
-        self.redirect('/')
-      else:
+      if li.count() > 0:
+        li = li.get()
+        if li.first_name == "" or li.last_name == "" or li.nickname == "": #if not valid user, don't create a new li but allow them to visit the page
+          li.create_xsrf_token()
+          database.render_template(self, '/users/register_user.html', {})
+        else: #if they're a valid user, they can't re-register
+          self.redirect('/')
+      else: #create a brand new li
         li = database.LoginInformation(first_name="",last_name="", user_id=user.user_id(), is_active=True)
         li.put()
         li.create_xsrf_token()
@@ -78,6 +83,7 @@ class DeleteHandler(database.webapp2.RequestHandler):
         database.db.delete(item)
       #delete the li
       li = database.get_current_li()
+      database.logging.info("Deleting LoginInformation user_id=%s", li.user_id)
       database.db.delete(li)
       self.redirect(database.users.create_logout_url('/'))
     else:

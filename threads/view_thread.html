@@ -4,6 +4,9 @@
 {% endblock %}
 {% block content %}
 <h3>{{ thread.title }}</h3>
+{% if thread.item_details %}
+  <h4>{{ thread.item_details }} </h4>
+{% endif %}
 <div class="well">
 <table style="width:100%">
 
@@ -20,7 +23,7 @@
 		{% endif %}
 		<tr>
 			<td><img src="/images/?avatar_id={{child.created_by_id}}" width="32" height="32"/></td>
-			<td><strong>{{ child.get_sender().get_private_display_name() }} (ID: {{child.get_sender().key().id()}})</strong></td>
+			<td><strong>{{ child.get_sender().get_private_display_name() }} (ID: {{child.get_sender().user_id}})</strong></td>
 		</tr>
 		<tr>
 			<td></td>

@@ -63,12 +63,13 @@ class NewHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
     if user:
+      lis = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id != :1", user.user_id())
       database.get_current_li().create_xsrf_token()
       item = None
       if self.request.get("about"): 
         item = db.get(db.Key.from_path('Item', (int(cgi.escape(self.request.get('about'))))))
 
-      database.render_template(self, 'threads/new_thread.html', {'item': item})
+      database.render_template(self, 'threads/new_thread.html', {'item': item, 'lis': lis})
     else:
       self.redirect('/')
 
@@ -78,17 +79,20 @@ class SaveHandler(database.webapp2.RequestHandler):
     if user and database.get_current_li().verify_xsrf_token(self):
       if self.request.get("item_id"):
         item_id = int(cgi.escape(self.request.get('item_id')))
-        recipients = [db.get(db.Key.from_path('Item', item_id)).created_by_id]
+        item = db.get(db.Key.from_path('Item', item_id))
+        recipients = [item.created_by_id]
       else:
         recipients = cgi.escape(self.request.get("recipients"))
         #WOAH! Rejects everything but numbers, then maps to integers
         recipients = [y for y in [re.sub("[^0-9]", "", x) for x in recipients.split(",")] if len(y) > 0]
-      
+        database.logging.info("RECIPIENTS: " + str(len(recipients)))
       recipients = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id IN :1", recipients)
       recipients = [r for r in recipients if r != user]
       if len(recipients) > 0:
         for recipient in recipients:
           thread = database.Thread(created_by_id=user.user_id())
+          if item:
+            thread.item_details = 'This is about your item: "' + item.title + '" that you posted for $' + item.price
           thread.title = cgi.escape(self.request.get('title'))
           thread.recipient_id = recipient.user_id
           thread.put()

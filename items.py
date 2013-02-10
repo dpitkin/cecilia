@@ -51,7 +51,7 @@ class DeleteHandler(database.webapp2.RequestHandler):
       item = db.get(db.Key.from_path('Item', int(self.request.get('item_id'))))
       #make sure the person owns this item or they're an admin
       if (item.created_by_id == user.user_id()) or (database.users.is_current_user_admin()):
-        database.logging.info("Deleting item with id %s", item.key().id())
+        database.logging.info("Deleting item with id %s by user_id %s", item.key().id(), user.user_id())
         database.db.delete(item)
     self.redirect(self.request.referer)
     
