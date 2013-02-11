@@ -1,0 +1,28 @@
+{% extends "layouts/layout.html" %}
+{% block title %}
+User Feedback List for Admins
+{% endblock %}
+{% block content %}
+<h3>Rating for user: {{li.nickname}}</h3>
+  <table class="table table-striped">
+    <tr>
+      <th>Rating</th>
+      <th>From</th>
+      {% if is_admin %}<th>Delete</th>{% endif %}
+    </tr>
+    {% for f in feedback %}
+      <tr>
+        <td>{{f.rating}}</td>
+        <td>{{f.created_by_id}}</td>
+        {% if is_admin %}
+          <td>
+            <a href="/users/delete_user_feedback?feedback_id={{ f.key().id() }}&xsrf_token={{current_li.xsrf_token}}">
+              <button class="btn btn-primary"  value="Delete">Delete Item</button> 
+            </a>  
+          </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+  </table>
+  <p><a href="{{back_url}}" class="btn">Back</a></p>
+{% endblock %}

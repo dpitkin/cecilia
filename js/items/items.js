@@ -19,4 +19,28 @@ $(document).ready(function() {
     if(err_msg.length != 0)
       return false;
   });
+  
+  $('#seller_rating').raty({
+    score : 3,
+    click: function(score, evt) {
+      var redir = $('#redirect').text() + score;
+      if(confirm('Are you sure you want to give a rating of ' + score + ' to this seller?'))
+        window.location = redir;
+    }
+  });
+  
+  $('#rating_div').raty({
+    score : 3,
+    click: function(score, evt) {
+      $('#rating').val(score);
+    }
+  });
+  
+  $.each($('.raty_rating'), function(index, value) {
+    var r = $(this).data('rating');
+    $(this).raty({
+      readOnly: true,
+      score : r
+    });
+  });
 });

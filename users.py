@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import database
-
+from database import db
 cgi = database.cgi
 
 class MainHandler(database.webapp2.RequestHandler):
@@ -81,6 +81,22 @@ class DeleteHandler(database.webapp2.RequestHandler):
       items = database.db.GqlQuery("SELECT * FROM Item WHERE created_by_id = :1", user.user_id())
       for item in items:
         database.db.delete(item)
+      # delete messages
+      messages = database.db.GqlQuery("SELECT * FROM Message WHERE created_by_id = :1", user.user_id())
+      for m in messages:
+        database.db.delete(m)
+      # delete threads
+      threads = database.db.GqlQuery("SELECT * FROM Thread WHERE created_by_id = :1", user.user_id())
+      for t in threads:
+        database.db.delete(t)
+      # delete user_feedback
+      user_feedback = database.db.GqlQuery("SELECT * FROM UserFeedback WHERE created_by_id = :1", user.user_id())
+      for f in user_feedback:
+        database.db.delete(f)
+      # delete item_feedback
+      item_feedback = database.db.GqlQuery("SELECT * FROM ItemFeedback WHERE created_by_id = :1", user.user_id())
+      for f in item_feedback:
+        database.db.delete(f)
       #delete the li
       li = database.get_current_li()
       database.logging.info("Deleting LoginInformation user_id=%s", li.user_id)
@@ -88,7 +104,45 @@ class DeleteHandler(database.webapp2.RequestHandler):
       self.redirect(database.users.create_logout_url('/'))
     else:
       self.redirect('/')
+      
+class UserFeedbackHandler(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    if user and database.get_current_li().verify_xsrf_token(self):
+      f = database.db.GqlQuery("SELECT * FROM UserFeedback WHERE for_user_id = :1 AND created_by_id = :2", cgi.escape(self.request.get('for_user_id')), user.user_id())
+      if f.count() == 0 and cgi.escape(self.request.get('for_user_id')) != user.user_id(): #can only rate a seller once and you can't rate yourself
+        user_feedback = database.UserFeedback()
+        user_feedback.created_by_id = user.user_id()
+        user_feedback.for_user_id = cgi.escape(self.request.get('for_user_id'))
+        user_feedback.rating = int(cgi.escape(self.request.get('rating')))
+        user_feedback.put()
+      self.redirect(self.request.referer)
+    else:
+      self.redirect('/')
     
+class ListUserFeedback(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    if user:
+      feedback = database.db.GqlQuery("SELECT * FROM UserFeedback WHERE for_user_id = :1", cgi.escape(self.request.get('user_id')))
+      li = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", cgi.escape(self.request.get('user_id'))).get()
+      database.get_current_li().create_xsrf_token();
+      back_url = self.request.referer
+      database.render_template(self, '/users/list_user_feedback.html', {'feedback': feedback, 'li': li, 'back_url': back_url})
+    else:
+      self.redirect('/')
+      
+class DeleteUserFeedback(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    if user and database.users.is_current_user_admin() and database.get_current_li().verify_xsrf_token(self):
+      feedback_id = cgi.escape(self.request.get('feedback_id'))
+      f = db.get(db.Key.from_path('UserFeedback', int(feedback_id)))
+      db.delete(f)
+      self.redirect(self.request.referer)
+    else:
+      self.redirect('/')
     
 app = database.webapp2.WSGIApplication([('/users/', MainHandler), ('/users/verify_user/', RegisterHandler), 
-('/users/save_user', SaveLIHandler), ('/users/delete_user', DeleteHandler), ('/users/update_user', UpdateLIHandler)], debug=True)
+('/users/save_user', SaveLIHandler), ('/users/delete_user', DeleteHandler), ('/users/update_user', UpdateLIHandler),
+('/users/submit_feedback', UserFeedbackHandler), ('/users/list_user_feedback',ListUserFeedback), ('/users/delete_user_feedback', DeleteUserFeedback)], debug=True)

@@ -20,7 +20,9 @@ My Items
 			{% if is_admin %}
 			<th>Delete</th><th width="15%">Expiration Date</th>
 			{% endif %}
-      <th>Contact</th>
+      {% if user %}
+        <th>Contact</th>
+      {% endif %}
 		</tr>
 	</thead>
 	<tbody>
@@ -38,17 +40,19 @@ My Items
 			<td>${{ item.price }}</td>
 			{% if is_admin %}
 			<td>
-				<a href="/items/delete_item?item_id={{ item.key().id() }}">
+				<a href="/items/delete_item?item_id={{ item.key().id() }}&xsrf_token={{current_li.xsrf_token}}">
 					<button class="btn btn-primary"  value="Delete">Delete Item</button> 
 				</a>
 			</td>
       <td>{{item.expiration_date.strftime("%m/%d/%Y")}}</td>
 			{% endif %}
-      <td>
-        <a href="/threads/new_thread?about={{ item.key().id() }}">
-					<button class="btn btn-primary" value="Contact Seller">Contact Seller</button> 
-        </a>
-      </td>
+      {% if user %}
+        <td>
+          <a href="/threads/new_thread?about={{ item.key().id() }}">
+            <button class="btn btn-primary" value="Contact Seller">Contact Seller</button> 
+          </a>
+        </td>
+      {% endif %}
 		</tr>
 		{% endfor %}
 	</tbody>

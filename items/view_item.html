@@ -3,10 +3,16 @@
 View Item
 {% endblock %}
 {% block content %}
+<script type="text/javascript" src="/js/items/items.js"></script>
 <h3>View Item</h3>
-
+{% if user %}
+  <h5>Rate this seller: <a href="/users/list_user_feedback?user_id={{item.created_by_id}}">List of feedback</a></h5>
+  <div id="seller_rating"></div>
+  <div id="redirect" class="hide">/users/submit_feedback?for_user_id={{item.created_by_id}}&amp;xsrf_token={{current_li.xsrf_token}}&amp;rating=</div><br/>
+{% endif %}
 <div class="well">
 	<p>Posted by: {{li.first_name + ' ' + li.last_name}}</p>
+  <p>Seller rating: <strong>{% if li.get_average_rating() %}{{ li.get_average_rating() }} / 5.00{% else %}None{% endif %}</strong></p>
 	<p>Title: {{item.title}}</p>
 	<p>Description: {{item.description}}</p>
 	<p>Price: ${{item.price}}</p>
@@ -14,7 +20,45 @@ View Item
   <p>{{ item.display_image() }}</p>
 </div>
 <p>
-	{% if current_li %}<a href="/threads/new_thread?about={{item.key().id()}}" class="btn">Make a Bid</a>{% endif %}
+	{% if current_li %}<a href="/threads/new_thread?about={{item.key().id()}}" class="btn">Contact Seller</a>{% endif %}
 	<a href="/items/" class="btn">Back</a>
 </p>
+{% if user %}
+  <p>
+    <form action="/items/submit_feedback" method="post">
+      <input type="hidden" name="item_id" value="{{item.key().id()}}"/>
+      <input type="hidden" name="rating" id="rating" value="3" />
+      <input type="hidden" name="xsrf_token" value="{{current_li.xsrf_token}}"/>
+      <div class="well">
+        <h4>Are you the buyer? Leave your feedback here:</h4>
+        <table>
+          <tr>
+            <td><textarea name="feedback"></textarea></td>
+            <td>Rating:</td>
+            <td><div id="rating_div"></div></td>
+          </tr>
+        </table>
+        <button type="submit" class="btn" value="submit">Submit feedback</button>
+      </div>
+    </form>
+  </p>
+{% endif %}
+{% if feedback.count() > 0 %}
+  <p>
+    <h3>Here's what people had to say about this item:</h3>
+    {% for item_feedback in feedback %}
+      <div class="well">
+        {% if is_admin %}
+          <a href="/items/delete_item_feedback?created_by={{item_feedback.parent().key().id()}}&feedback_id={{item_feedback.key().id()}}&xsrf_token={{current_li.xsrf_token}}">
+            <button class="btn btn-primary"  value="Delete">Delete Feedback</button>
+          </a>
+        {% endif %}
+        <h6>{{item_feedback.parent().nickname}} wrote:</h6>
+        <p>{{item_feedback.feedback}}</p>
+        <h6>And left a rating of:</h6>
+        <p><div class="raty_rating" data-rating="{{item_feedback.rating}}"></div></p>
+      </div>
+    {% endfor %}
+  </p>
+{% endif %}
 {% endblock %}

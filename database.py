@@ -95,6 +95,17 @@ class LoginInformation(db.Model):
       return True
     else:
       return False
+      
+  def get_average_rating(this):
+    #grab all ratings
+    ratings = db.GqlQuery("SELECT * FROM UserFeedback WHERE for_user_id = :1", this.user_id)
+    total = 0
+    for r in ratings:
+      total += r.rating
+    if(ratings.count() > 0):
+      return '%.2f' % float(float(total)/float(ratings.count()))
+    else:
+      return None
   
 class Thread(db.Model):
   title = db.StringProperty()
@@ -127,6 +138,9 @@ class Item(db.Model):
   expiration_date = db.DateProperty()
   image = db.BlobProperty()
   is_active = db.BooleanProperty()
+  feedback = db.TextProperty()
+  rating = db.IntegerProperty()
+  buyer_id = db.StringProperty()
   #belongs_to User
   created_by_id = db.StringProperty()
 
@@ -138,3 +152,16 @@ class Item(db.Model):
       return '<img src="/images/?item_id=' + this.key().id() + '"/>'
     else:
       return ''
+      
+class UserFeedback(db.Model):
+  created_by_id = db.StringProperty()
+  created_at = db.DateTimeProperty(auto_now_add=True)
+  for_user_id = db.StringProperty()
+  rating = db.IntegerProperty()
+  
+class ItemFeedback(db.Model):
+  created_by_id = db.StringProperty()
+  created_at = db.DateTimeProperty(auto_now_add=True)
+  item_id = db.StringProperty()
+  rating = db.IntegerProperty()
+  feedback = db.TextProperty()

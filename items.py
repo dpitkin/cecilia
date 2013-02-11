@@ -22,7 +22,10 @@ class ViewHandler(database.webapp2.RequestHandler):
   def get(self):
     item = db.get(db.Key.from_path('Item', int(self.request.get('item_id'))))
     li = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", item.created_by_id).get()
-    database.render_template(self, 'items/view_item.html', {'item': item, 'li': li})
+    if database.users.get_current_user():
+      database.get_current_li().create_xsrf_token()
+    feedback = db.GqlQuery("SELECT * FROM ItemFeedback WHERE item_id = :1 ORDER BY created_at DESC", str(item.key().id()))
+    database.render_template(self, 'items/view_item.html', {'item': item, 'li': li, 'feedback': feedback})
     
 class SaveHandler(database.webapp2.RequestHandler):
   def post(self):
@@ -48,18 +51,21 @@ class DeleteHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
     if user and database.get_current_li().verify_xsrf_token(self):
-      item = db.get(db.Key.from_path('Item', int(self.request.get('item_id'))))
+      item = db.get(db.Key.from_path('Item', int(cgi.escape(self.request.get('item_id')))))
+      feedback = db.GqlQuery("SELECT * FROM ItemFeedback WHERE item_id = :1", str(item.key().id()))
       #make sure the person owns this item or they're an admin
       if (item.created_by_id == user.user_id()) or (database.users.is_current_user_admin()):
         database.logging.info("Deleting item with id %s by user_id %s", item.key().id(), user.user_id())
         database.db.delete(item)
+        for f in feedback:
+          db.delete(f)
     self.redirect(self.request.referer)
     
 class EditHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
     if user:
-      item = db.get(db.Key.from_path('Item', int(self.request.get('item_id'))))
+      item = db.get(db.Key.from_path('Item', int(cgi.escape(self.request.get('item_id')))))
       database.get_current_li().create_xsrf_token()
       database.render_template(self, 'items/edit_item.html', {'item': item})
     else:
@@ -98,8 +104,32 @@ class SearchHandler(database.webapp2.RequestHandler):
     items = db.GqlQuery("SELECT * FROM Item WHERE title = :1 ORDER BY created_at DESC", query)
     database.render_template(self, 'items/search.html', { 'items': items, 'query': query})
     
+class FeedbackHandler(database.webapp2.RequestHandler):
+  def post(self):
+    user = database.users.get_current_user()
+    if user and database.get_current_li().verify_xsrf_token(self):
+      item_feedback = database.ItemFeedback(parent=database.get_current_li())
+      item_feedback.created_by_id = user.user_id()
+      item_feedback.item_id = cgi.escape(self.request.get('item_id'))
+      item_feedback.rating = int(cgi.escape(self.request.get('rating')))
+      item_feedback.feedback = cgi.escape(self.request.get('feedback'))
+      item_feedback.put()
+      self.redirect(self.request.referer)
+    else:
+      self.redirect('/')
+      
+class DeleteFeedbackHandler(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    if user and database.users.is_current_user_admin() and database.get_current_li().verify_xsrf_token(self):
+      item_feedback = db.get(db.Key.from_path('LoginInformation', int(cgi.escape(self.request.get('created_by'))), 'ItemFeedback', int(cgi.escape(self.request.get('feedback_id')))))
+      db.delete(item_feedback)
+      self.redirect(self.request.referer)
+    else:
+      self.redirect('/')
+    
 
 app = database.webapp2.WSGIApplication([('/items/', MainHandler), ('/items/new_item', NewHandler), 
 ('/items/save_item', SaveHandler), ('/items/view_item', ViewHandler), ('/items/search', SearchHandler),
 ('/items/my_items', ShopHandler), ('/items/delete_item', DeleteHandler), ('/items/edit_item', EditHandler),
-('/items/update_item', UpdateHandler)], debug=True)
+('/items/update_item', UpdateHandler), ('/items/submit_feedback', FeedbackHandler), ('/items/delete_item_feedback', DeleteFeedbackHandler)], debug=True)

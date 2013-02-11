@@ -27,6 +27,18 @@ indexes:
   - name: created_at
     direction: desc
 
+- kind: ItemFeedback
+  properties:
+  - name: item_id
+  - name: created_at
+    direction: desc
+
+- kind: ItemFeedback
+  properties:
+  - name: rating
+  - name: created_at
+    direction: desc
+
 - kind: LoginInformation
   properties:
   - name: is_active
