@@ -5,13 +5,25 @@ My Items
 {% block content %}
 <h3>All Items</h3>
 <hr />
-<!--
-<table>
-<form action="/items/search" method="post">
-<tr><td>Search: </td><td><input type="text" name="query"/></td></tr>
-<tr><td><button type="submit" value="Search" class="btn">Search</button></td></tr>
+<script type="text/javascript">
+  $(document).ready(function() {
+    var items = [];{% for item in items %} items = items.concat("{{item.title}}"); {% endfor %}
+    $('#advanced_search').autocomplete({
+      source: items
+    });
+  });
+</script>
+
+<form action="/items/search" method="get">
+  <div class="well ui-widget">Advanced Search: 
+    <input type="text" id="advanced_search" name="query"/><br/>
+    <button type="submit" value="Search" class="btn">Search</button>
+    {% if user %}
+      <p><br/><a href="/items/old_searches">View Old Searches</a></p>
+    {% endif %}
+  </div>
 </form>
-</table>-->
+
 <br/><br/>
 <table class="datatable table table-striped">
 	<thead>

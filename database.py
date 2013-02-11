@@ -165,3 +165,7 @@ class ItemFeedback(db.Model):
   item_id = db.StringProperty()
   rating = db.IntegerProperty()
   feedback = db.TextProperty()
+  
+class Search(db.Model):
+  created_by_id = db.StringProperty()
+  search = db.StringProperty()

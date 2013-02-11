@@ -1,0 +1,17 @@
+{% extends "layouts/layout.html" %}
+{% block title %}
+Old Searches
+{% endblock %}
+{% block content %}
+<h3>Your Saved Searches</h3>
+<hr />
+<table class="table table-striped">
+  <tr><th>Search</th></tr>
+  {% for s in searches %}
+    <tr>
+      <td><a href="/items/search?query={{s.search}}">{{s.search}}</a></td>
+    </tr>
+	{% endfor %}
+</table>
+<p><a class="btn" href="/items/new_item">New Item</a></p>
+{% endblock %}

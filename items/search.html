@@ -1,11 +1,57 @@
-<html>
-  <head>
-    <title>Search Results</title>
-  </head>
-  <body>
-    <p> You searched: {{ query }}</p>
-    {% for item in items %}
-      <p><a href="/items/view_item?item_id={{ item.key().id() }}">{{ item.title }}</a></p>
-    {% endfor %}
-  </body>
-</html>
+{% extends "layouts/layout.html" %}
+{% block title %}
+Search Results
+{% endblock %}
+{% block content %}
+<h3>You searched for: {{query}}</h3>
+<h4>Results:</h4>
+
+<table class="datatable table table-striped">
+	<thead>
+		<tr>
+      <th width="10%">Posted</th><th>Title</th><th>Description</th><th>Price</th>
+			{% if is_admin %}
+			<th>Delete</th><th width="15%">Expiration Date</th>
+			{% endif %}
+      {% if user %}
+        <th>Contact</th>
+      {% endif %}
+		</tr>
+	</thead>
+	<tbody>
+		{% for item in items %}
+		<tr>
+      <td>
+        <div>{{item.created_at.strftime("%m/%d/%Y")}}</div>
+      </td>
+			<td>
+				<a href="/items/view_item?item_id={{ item.key().id() }}">
+					<div>{{ item.title }}</div>
+				</a>
+			</td>
+			<td>{{ item.description }}</td>
+			<td>${{ item.price }}</td>
+			{% if is_admin %}
+			<td>
+				<a href="/items/delete_item?item_id={{ item.key().id() }}&xsrf_token={{current_li.xsrf_token}}">
+					<button class="btn btn-primary"  value="Delete">Delete Item</button> 
+				</a>
+			</td>
+      <td>{{item.expiration_date.strftime("%m/%d/%Y")}}</td>
+			{% endif %}
+      {% if user %}
+        <td>
+          <a href="/threads/new_thread?about={{ item.key().id() }}">
+            <button class="btn btn-primary" value="Contact Seller">Contact Seller</button> 
+          </a>
+        </td>
+      {% endif %}
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+<br/><br/>
+<a href="/">
+  <button class="btn btn-primary" value="back">Go Back</button> 
+</a>
+{% endblock %}

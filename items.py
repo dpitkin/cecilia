@@ -99,10 +99,38 @@ class ShopHandler(database.webapp2.RequestHandler):
       self.redirect('/')
     
 class SearchHandler(database.webapp2.RequestHandler):
-  def post(self):
+  def get(self):
     query = cgi.escape(self.request.get('query'))
-    items = db.GqlQuery("SELECT * FROM Item WHERE title = :1 ORDER BY created_at DESC", query)
-    database.render_template(self, 'items/search.html', { 'items': items, 'query': query})
+    items = db.GqlQuery("SELECT * FROM Item ORDER BY created_at DESC") #grab all the items first
+    #now tokenize the input by spaces
+    query_tokens = database.string.split(query)
+    results = []
+    for item in items:
+      add = False
+      for tok in query_tokens:
+        if database.string.find(item.title, tok) != -1:
+          add = True
+      if add:
+        results.append(item)
+    user = database.users.get_current_user()
+    if user:
+      searches = db.GqlQuery("SELECT * FROM Search WHERE created_by_id = :1 AND search = :2", user.user_id(), query)
+      if searches.count() == 0:
+        search = database.Search()
+        search.created_by_id = user.user_id()
+        search.search = query
+        search.put()
+      
+    database.render_template(self, 'items/search.html', { 'items': results, 'query': query})
+    
+class OldSearches(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    if user:
+      searches = db.GqlQuery("SELECT * FROM Search WHERE created_by_id = :1", user.user_id())
+      database.render_template(self, 'items/old_searches.html', {'searches': searches})
+    else:
+      self.redirect('/')
     
 class FeedbackHandler(database.webapp2.RequestHandler):
   def post(self):
@@ -132,4 +160,5 @@ class DeleteFeedbackHandler(database.webapp2.RequestHandler):
 app = database.webapp2.WSGIApplication([('/items/', MainHandler), ('/items/new_item', NewHandler), 
 ('/items/save_item', SaveHandler), ('/items/view_item', ViewHandler), ('/items/search', SearchHandler),
 ('/items/my_items', ShopHandler), ('/items/delete_item', DeleteHandler), ('/items/edit_item', EditHandler),
-('/items/update_item', UpdateHandler), ('/items/submit_feedback', FeedbackHandler), ('/items/delete_item_feedback', DeleteFeedbackHandler)], debug=True)
+('/items/update_item', UpdateHandler), ('/items/submit_feedback', FeedbackHandler), ('/items/delete_item_feedback', DeleteFeedbackHandler),
+('/items/old_searches', OldSearches)], debug=True)
