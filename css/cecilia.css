@@ -36,3 +36,30 @@ body {
 .error_text {
   color: red;
 }
+
+/* For styling file inputs */
+.file-wrapper {
+  cursor: pointer;
+  display: inline-block;
+  /*overflow: hidden;*/
+  position: relative;
+}
+
+.file-wrapper .btn{
+  cursor: pointer;
+  display: inline-block;
+}
+
+.file-wrapper input.upload_item {
+  cursor: pointer;
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  filter: alpha(opacity=1);
+  -moz-opacity: 0.01;
+  opacity: 0.01;
+  font-size: 100px;
+}
+
+/* End of styling for file inputs */
