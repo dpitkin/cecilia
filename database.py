@@ -52,14 +52,16 @@ def render_template(handler_object, file_name, template_values):
     if li and not(li.is_active):
       file_name = '/users/inactive_notification.html'
   #check to make sure they've registered (and check for infinite redirects)
-  if user and string.find(handler_object.request.uri, '/users/verify_user/') == -1 and (current_li.first_name == "" or current_li.last_name == "" or current_li.nickname == ""):
+  if user and string.find(handler_object.request.uri, '/users/verify_user/') == -1 and current_li and (current_li.first_name == "" or current_li.last_name == "" or current_li.nickname == ""):
     handler_object.redirect('/users/verify_user/')
   else: 
     template = jinja_environment.get_template(file_name)
     handler_object.response.out.write(template.render(template_values))
   
 def get_current_li():
-  return db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", users.get_current_user().user_id()).get()
+  if users.get_current_user():
+    return db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", users.get_current_user().user_id()).get()
+  return None
   
 class LoginInformation(db.Model):
   first_name = db.StringProperty()
@@ -79,6 +81,17 @@ class LoginInformation(db.Model):
   
   def get_private_display_name(this):
     return this.first_name + " " + this.last_name
+  
+  def get_public_display_name(this):
+    return this.nickname
+    
+  def get_display_name(this):
+    li = get_current_li()
+    if (this.private == False) or (li and this.user_id == li.user_id):
+      return this.get_private_display_name()
+    else:
+      return this.get_public_display_name()
+    
     
   def create_xsrf_token(this):
     #create a token based off of their name, random number, id, and time, then hash via sha512
@@ -149,9 +162,12 @@ class Item(db.Model):
 
   def display_image(this):
     if this.image:
-      return '<img src="/images/?item_id=' + this.key().id() + '"/>'
+      return '<img src="/images/?item_id=' + str(this.key().id()) + '"/>'
     else:
       return ''
+    
+  def get_creator(this):
+    return db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", this.created_by_id).get()
       
 class UserFeedback(db.Model):
   created_by_id = db.StringProperty()

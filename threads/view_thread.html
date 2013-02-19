@@ -14,7 +14,8 @@
 {% set first_message = True %}
 {% set needs_close = False %}
 {% for child in children %}
-	{% if child.get_sender().user_id != tmp_parent.user_id %}
+	{% set sender = child.get_sender() %}
+	{% if sender.user_id != tmp_parent.user_id %}
 		{% if first_message %}
 			{% set needs_close = True %}
 			{% set first_message = False %}
@@ -22,8 +23,15 @@
 			</table></td></tr>
 		{% endif %}
 		<tr>
-			<td><img src="/images/?avatar_id={{child.created_by_id}}" width="32" height="32"/></td>
-			<td><strong>{{ child.get_sender().get_private_display_name() }} (ID: {{child.get_sender().user_id}})</strong></td>
+			<td style="width:70px;">
+				{% if sender.avatar %}
+					<img src="/images/?avatar_id={{child.created_by_id}}" width="48" height="48"/>
+				{% else %}
+					<img src="/img/default_user.png" width="48" height="48" />
+				{% endif %}
+				
+			</td>
+			<td><strong><a href="/users/shop?user_id={{sender.user_id}}">{{ sender.get_display_name()}}</a> (ID: {{child.get_sender().user_id}})</strong></td>
 		</tr>
 		<tr>
 			<td></td>
