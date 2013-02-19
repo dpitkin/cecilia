@@ -26,7 +26,11 @@
 						</li>
 						{% if user %}
 						<li class="">
-							<a href="/threads/">Inbox ({{unread_messages}})</a>
+							{% if unread_messages > 0 %}
+							<a href="/threads/">Inbox <span class="badge badge-info">{{unread_messages}}</span></a>	
+							{% else %}
+							<a href="/threads/">Inbox <span class="badge">{{unread_messages}}</span></a>
+							{% endif %}
 						</li>
 						{% if is_admin %}
 						<li class="">
