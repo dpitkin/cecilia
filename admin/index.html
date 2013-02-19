@@ -14,7 +14,7 @@ Admin
       <a href="/admin/user_activation?user_id={{ user.user_id }}&xsrf_token={{current_li.xsrf_token}}">
         <button class="btn btn-primary" type="submit" value="Deactivate">Deactivate</button> 
       </a>
-        <b>Name:</b> {{ user.first_name }} {{ user.last_name }} <b>User ID:</b> {{ user.user_id }} <b>Active:</b> {{ user.is_active }}
+        <b>Nickname:</b> {{ user.nickname }} <b>User ID:</b> {{ user.user_id }} <b>Active:</b> {{ user.is_active }}
     </div>
   </td>
 </tr>
@@ -29,7 +29,7 @@ Admin
       <a href="/admin/user_activation?user_id={{ user.user_id }}&xsrf_token={{current_li.xsrf_token}}">
         <button class="btn btn-primary" type="submit" value="Reactivate">Reactivate</button> 
       </a>
-        <b>Name:</b> {{ user.first_name }} {{ user.last_name }} <b>User ID:</b> {{ user.user_id }} <b>Active:</b> {{ user.is_active }}
+        <b>Nickname:</b> {{ user.nickname }} <b>User ID:</b> {{ user.user_id }} <b>Active:</b> {{ user.is_active }}
     </div>
   </td>
 </tr>

@@ -16,6 +16,11 @@ $(document).ready(function() {
       $('#price').parent().prev().addClass('error_text');
       err_msg += "Must have a price.<br/>";
     }
+    else if(isNaN(parseInt($('#price').val())))
+    {
+      $('#price').parent().prev().addClass('error_text');
+      err_msg += "Must be a number.<br/>";
+    }  
     if(err_msg.length != 0)
       return false;
   });
