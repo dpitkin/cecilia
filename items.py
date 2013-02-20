@@ -89,7 +89,7 @@ class UpdateHandler(database.webapp2.RequestHandler):
       item.price = '%.2f' % float(cgi.escape(self.request.get('price')))
       item.is_active = bool(self.request.get('show_item'))
       if self.request.get('photo'):
-        item.image = database.db.Blob(database.images.resize(self.request.get('photo')))
+        item.image = database.db.Blob(database.images.resize(self.request.get('photo'), 512, 512))
       database.logging.info("Item #%s changed to:\nTitle: %s\nDescription: %s\nPrice: %s", item.key().id(), item.title, item.description, item.price)
       item.put()
       self.redirect('/items/my_items')

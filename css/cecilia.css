@@ -59,7 +59,6 @@ body {
   filter: alpha(opacity=1);
   -moz-opacity: 0.01;
   opacity: 0.01;
-  font-size: 100px;
 }
 
 /* End of styling for file inputs */
