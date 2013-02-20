@@ -25,18 +25,18 @@
 							<a href="/">Home</a>
 						</li>
 						{% if user %}
-						<li class="">
-							{% if unread_messages > 0 %}
-							<a href="/threads/">Inbox <span class="badge badge-info">{{unread_messages}}</span></a>	
-							{% else %}
-							<a href="/threads/">Inbox <span class="badge">{{unread_messages}}</span></a>
+							<li class="">
+								{% if unread_messages > 0 %}
+								<a href="/threads/">Inbox <span class="badge badge-info">{{unread_messages}}</span></a>	
+								{% else %}
+								<a href="/threads/">Inbox <span class="badge">{{unread_messages}}</span></a>
+								{% endif %}
+							</li>
+							{% if is_admin %}
+							<li class="">
+								<a href="/admin/">Admin</a>
+							</li>
 							{% endif %}
-						</li>
-						{% if is_admin %}
-						<li class="">
-							<a href="/admin/">Admin</a>
-						</li>
-						{% endif %}
 						{% endif %}
 					</ul>
 					<ul class="nav pull-right">

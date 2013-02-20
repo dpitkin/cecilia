@@ -48,7 +48,7 @@ My Items
 					<div>{{ item.title }}</div>
 				</a>
 			</td>
-			<td>{{ item.description }}</td>
+			<td>{% if item.summary %} {{ item.summary }} {% else %} {{ item.description }} {% endif %}</td>
 			<td>${{ item.price }}</td>
 			{% if is_admin %}
 			<td>
