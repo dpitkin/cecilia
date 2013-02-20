@@ -8,7 +8,8 @@ Your Profile
     <p>Name: {{ li.first_name + ' ' + li.last_name }}</p>
     <p>Email: {{ user.email() }}</p>
     <p>Avatar: {{ li.display_avatar() }}</p>
-    <p><a href="/users/delete_user?xsrf_token={{current_li.xsrf_token}}" onclick="return confirm('Are you sure? This will delete all your messages and items');">Click here to delete account</a></p>
+    <p><a href="/users/delete_user?xsrf_token={{current_li.xsrf_token}}" onclick="return confirm('Are you sure? This will delete all your messages and items.');">Click here to delete account</a></p>
+    <p><a href="/users/export_data" onclick="return confirm('Are you sure? This will download a file to your computer.');">Export All Your User Data</a></p>
     <br/><br/>
     <h3>Edit Profile</h3>
     <div class="well">
