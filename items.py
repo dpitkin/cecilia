@@ -34,6 +34,10 @@ class SaveHandler(database.webapp2.RequestHandler):
       item = database.Item()
       item.title = cgi.escape(self.request.get('title'))
       item.description = cgi.escape(self.request.get('description'))
+      if (len(item.description) > 40):
+        item.summary = item.description[:40] + "..."
+      else:
+        item.summary = item.description
       item.price = '%.2f' % float(cgi.escape(self.request.get('price')))
       item.created_by_id = user.user_id()
       item.is_active = True
@@ -78,6 +82,10 @@ class UpdateHandler(database.webapp2.RequestHandler):
       item = db.get(db.Key.from_path('Item', int(cgi.escape(self.request.get('item_id')))))
       item.title = cgi.escape(self.request.get('title'))
       item.description = cgi.escape(self.request.get('description'))
+      if (len(item.description) > 40):
+        item.summary = item.description[:40] + "..."
+      else:
+        item.summary = item.description
       item.price = '%.2f' % float(cgi.escape(self.request.get('price')))
       item.is_active = bool(self.request.get('show_item'))
       if self.request.get('photo'):

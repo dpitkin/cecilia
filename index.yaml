@@ -47,6 +47,18 @@ indexes:
 
 - kind: LoginInformation
   properties:
+  - name: is_active
+  - name: is_admin
+  - name: nickname
+
+- kind: LoginInformation
+  properties:
+  - name: is_active
+  - name: is_admin
+  - name: user_id
+
+- kind: LoginInformation
+  properties:
   - name: is_admin
   - name: first_name
 

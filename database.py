@@ -146,6 +146,7 @@ def save_message(message, thread, user):
 class Item(db.Model):
   title = db.StringProperty()
   description = db.TextProperty()
+  summary = db.TextProperty()
   price = db.StringProperty()
   created_at = db.DateTimeProperty(auto_now_add=True)
   expiration_date = db.DateProperty()
