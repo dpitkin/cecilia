@@ -70,7 +70,7 @@ class UpdateLIHandler(database.webapp2.RequestHandler):
       if(self.request.get('avatar')):
         li.avatar = database.db.Blob(database.images.resize(self.request.get('avatar'), 128, 128))
       li.put()
-      database.logging.info("Updating LoginInformation. Info: \nFirst name: %s\nLast Name: %s\n%UserID: %s\n",
+      database.logging.info("Updating LoginInformation. Info: \nFirst name: %s\nLast Name: %s\nUserID: %s\n",
       li.first_name, li.last_name, li.user_id)
       self.redirect(self.request.referer)
     else:
