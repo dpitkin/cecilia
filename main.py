@@ -22,7 +22,6 @@ cgi = database.cgi
 
 class MainHandler(database.webapp2.RequestHandler):
   def get(self):
-
     if database.get_current_li() and database.get_current_li().is_admin:
       items = database.db.GqlQuery("SELECT * FROM Item")
     else:
