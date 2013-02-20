@@ -7,7 +7,7 @@ from database import db
 class MainHandler(database.webapp2.RequestHandler):
   def get(self):
     items = db.GqlQuery("SELECT * FROM Item ORDER BY created_at DESC")
-    is_admin = database.users.is_current_user_admin()
+    is_admin = database.get_current_li().is_admin
     database.render_template(self, 'items/index.html', {'items': items})
 
 class NewHandler(database.webapp2.RequestHandler):
@@ -58,7 +58,7 @@ class DeleteHandler(database.webapp2.RequestHandler):
       item = db.get(db.Key.from_path('Item', int(cgi.escape(self.request.get('item_id')))))
       feedback = db.GqlQuery("SELECT * FROM ItemFeedback WHERE item_id = :1", str(item.key().id()))
       #make sure the person owns this item or they're an admin
-      if (item.created_by_id == user.user_id()) or (database.users.is_current_user_admin()):
+      if (item.created_by_id == user.user_id()) or (database.get_current_li().is_admin):
         database.logging.info("Deleting item with id %s by user_id %s", item.key().id(), user.user_id())
         database.db.delete(item)
         for f in feedback:
@@ -157,7 +157,7 @@ class FeedbackHandler(database.webapp2.RequestHandler):
 class DeleteFeedbackHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
-    if user and database.users.is_current_user_admin() and database.get_current_li().verify_xsrf_token(self):
+    if user and database.get_current_li().is_admin and database.get_current_li().verify_xsrf_token(self):
       item_feedback = db.get(db.Key.from_path('LoginInformation', int(cgi.escape(self.request.get('created_by'))), 'ItemFeedback', int(cgi.escape(self.request.get('feedback_id')))))
       db.delete(item_feedback)
       self.redirect(self.request.referer)
