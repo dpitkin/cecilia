@@ -39,9 +39,11 @@ def render_template(handler_object, file_name, template_values):
   user = users.get_current_user()
   if user:
     current_li = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", user.user_id()).get()
-    template_values['is_admin'] = current_li.is_admin
   else:
     current_li = None
+  if current_li:
+    template_values['is_admin'] = current_li.is_admin
+  else:
     template_values['is_admin'] = users.is_current_user_admin()
   template_values['current_li'] = current_li
   template_values['user'] = user
