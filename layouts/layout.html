@@ -26,7 +26,11 @@
 						</li>
 						{% if user %}
 						<li class="">
-							<a href="/threads/">Inbox ({{unread_messages}})</a>
+							{% if unread_messages > 0 %}
+							<a href="/threads/">Inbox <span class="badge badge-info">{{unread_messages}}</span></a>	
+							{% else %}
+							<a href="/threads/">Inbox <span class="badge">{{unread_messages}}</span></a>
+							{% endif %}
 						</li>
 						{% if is_admin %}
 						<li class="">
@@ -43,7 +47,7 @@
 							</a>
 							<ul class="dropdown-menu" role="menu" aria-labelledby="drop3">
 								<li><a tabindex="-1" href="/users/">My Info</a></li>
-								<li><a tabindex="-1" href="/items/my_items">My Virtual Shop</a></li>
+								<li><a tabindex="-1" href="/users/shop?user_id={{ current_li.user_id }}">My Virtual Shop</a></li>
 								<li class="divider"></li>
 								<li><a tabindex="-1" href="{{ logout_url }}">Logout</a></li>
 							</ul>

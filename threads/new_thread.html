@@ -4,31 +4,37 @@ New Thread
 {% endblock %}
 {% block content %}
 <script type="text/javascript" src="/js/threads.js"></script>
+<h3>New Thread</h3>
 <form action="/threads/save_thread" method="post">
+<div class="well">
   <input type="hidden" name="xsrf_token" value="{{current_li.xsrf_token}}" />
 	{% if item %}
+	<p>
+		<label>Recipient:</label>
+		<b>{{ item.get_creator().get_display_name() }}</b>
   	<input type="hidden" name="item_id" value="{{item.key().id()}}" />
 	<p><label>Title:*</label><input type="text" id="title" name="title"/></p>
 	{% else %}
 	<p>
 		<label>
-      Recipients:*<i class="icon-info-sign info_button-right" title="Recipient" data-content="Use this dropdown to specify what users should recieve this message"></i>
-    </label>
+      		Recipients:*<i class="icon-info-sign info_button-right" title="Recipient" data-content="Use this dropdown to specify what users should recieve this message"></i>
+    	</label>
 		<select id="recv_holder">
-      <option></option>
-      {% for li in lis %}
-        <option value="{{li.user_id}}">{{li.nickname}}</option>
-      {% endfor %}
-    </select>
-    <div class="hide" id="recv_results"></div>
-    <input type="hidden" id="recipients" name="recipients"/>
+      		<option></option>
+      		{% for li in lis %}
+        	<option value="{{li.user_id}}">{{li.nickname}}</option>
+      		{% endfor %}
+    	</select>
+    	<div class="hide" id="recv_results"></div>
+    	<input type="hidden" id="recipients" name="recipients"/>
 	</p>
 	<p><label>Title:*</label><input type="text" id="title" name="title" value="" /></p>
 	{% endif %}
 	<p><label>Message:</label><textarea name="message" rows="4" cols="50"></textarea> </p>
-	<p>
-		<button type="submit" value="submit" class="btn btn-primary">Post Thread</button>
-		<a href="/threads/" class="btn">Cancel</a>
-	</p>
+</div>
+<p>
+	<button type="submit" value="submit" class="btn btn-primary">Post Thread</button>
+	<a href="/threads/" class="btn">Cancel</a>
+</p>
 </form>
 {% endblock %}
