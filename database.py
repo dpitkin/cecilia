@@ -189,3 +189,6 @@ class ItemFeedback(db.Model):
 class Search(db.Model):
   created_by_id = db.StringProperty()
   search = db.StringProperty()
+
+class IsTestDataLoaded(db.Model):
+  is_test_data_loaded = db.BooleanProperty()
