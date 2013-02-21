@@ -14,7 +14,7 @@ View Item
 	<p>Posted by: {{ li.get_display_name() }}</p>
   <p>Seller rating: <strong>{% if li.get_average_rating() %}{{ li.get_average_rating() }} / 5.00 {% else %} None {% endif %}</strong></p>
 	<p>Title: {{item.title}}</p>
-	<p>Description: {{item.description}}</p>
+	<p>Description: <textarea class="readonlyRichText">{{item.description}}</textarea></p>
 	<p>Price: ${{item.price}}</p>
 	<p>Created on: {{item.created_at.strftime("%m/%d/%Y at %H:%M")}}</p>
   <p>{{ item.display_image() }}</p>

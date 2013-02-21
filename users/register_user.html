@@ -3,7 +3,7 @@
 Register User
 {% endblock %}
 {% block content %}
-<script type="text/javascript" src="/js/users/register_user.js"></script>
+<script type="text/javascript" src="/js/users/users.js"></script>
 <div id="error_messages" class="error_text well hide"></div>
 <form action="/users/save_user" enctype="multipart/form-data" method="post">
 	<h4>Our records indicate this is your first time logging into our site. Please fill out the information below.</h4>
@@ -31,6 +31,7 @@ Register User
 			</label>
 			<input type="checkbox" name="private" />
 		</p>
+    <p><textarea class="richtext" name="desc" rows="40"></textarea></p>
 		<p><input type="file" name="avatar"/></p>
 	</div>
 	<p><button type="submit" value="Submit" class="btn">Submit</button></p>

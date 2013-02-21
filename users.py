@@ -48,6 +48,7 @@ class SaveLIHandler(database.webapp2.RequestHandler):
         li.private = bool(self.request.get("private"))
         li.is_active = True
         li.is_admin = database.users.is_current_user_admin()
+        li.desc = cgi.escape(self.request.get('desc'))
         if(self.request.get('avatar')):
           li.avatar = database.db.Blob(database.images.resize(self.request.get('avatar'), 128, 128))
         li.put()
@@ -64,6 +65,7 @@ class UpdateLIHandler(database.webapp2.RequestHandler):
       li.last_name = cgi.escape(self.request.get('last_name'))
       li.nickname = cgi.escape(self.request.get('nickname'))
       li.private = bool(self.request.get('private'))
+      li.desc = cgi.escape(self.request.get('desc'))
       if(self.request.get('avatar')):
         li.avatar = database.db.Blob(database.images.resize(self.request.get('avatar'), 128, 128))
       li.put()

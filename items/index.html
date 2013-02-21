@@ -5,6 +5,7 @@ My Items
 {% block content %}
 <h3>All Items</h3>
 <hr />
+<script type="text/javascript" src="/js/items/items.js"></script>
 <script type="text/javascript">
   $(document).ready(function() {
     var items = [];{% for item in items %} items = items.concat("{{item.title}}"); {% endfor %}
@@ -48,7 +49,7 @@ My Items
 					<div>{{ item.title }}</div>
 				</a>
 			</td>
-			<td>{% if item.summary %} {{ item.summary }} {% else %} {{ item.description }} {% endif %}</td>
+			<td><textarea class="readonlyRichText" style="width: 50%;" rows="1" cols="1">{% if item.summary %} {{ item.summary }} {% else %} {{ item.description }} {% endif %}</textarea></td>
 			<td>${{ item.price }}</td>
 			{% if is_admin %}
 			<td>

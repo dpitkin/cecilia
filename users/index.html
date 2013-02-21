@@ -3,11 +3,12 @@
 Your Profile
 {% endblock %}
 {% block content %}
-  <script type="text/javascript" src="/js/users/register_user.js"></script>
+  <script type="text/javascript" src="/js/users/users.js"></script>
     <h3>Your info:</h3>
     <p>Name: {{ li.first_name + ' ' + li.last_name }}</p>
     <p>Email: {{ user.email() }}</p>
     <p>Avatar: {{ li.display_avatar() }}</p>
+    <p>Description: <textarea class="readonlyRichText" style="width: 100%;" rows="30">{{li.desc}}</textarea></p>
     <p><a href="/users/delete_user?xsrf_token={{current_li.xsrf_token}}" onclick="return confirm('Are you sure? This will delete all your messages and items.');">Click here to delete account</a></p>
     <p><a href="/users/export_data" onclick="return confirm('Are you sure? This will download a file to your computer.');">Export All Your User Data</a></p>
     <br/><br/>
@@ -48,6 +49,7 @@ Your Profile
 			  <span class="add-on after_photo"></span>
 			</span>
 		</p>
+    <p><textarea name="desc" class="richtext" rows="30">{{li.desc}}</textarea></p>
 	</div>
 	<p><button type="submit" value="Submit" class="btn">Submit</button></p>
     </form>

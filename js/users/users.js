@@ -19,4 +19,13 @@ $(document).ready(function(){
     if(error_msg.length != 0)
       return false;
   });
+  tinyMCE.init({
+        mode : "specific_textareas",
+        editor_selector : "readonlyRichText",
+        readonly: true
+  });
+  tinyMCE.init({
+        mode : "specific_textareas",
+        editor_selector : "richtext"
+  });
 });

@@ -77,6 +77,7 @@ class LoginInformation(db.Model):
   nickname = db.StringProperty()
   private = db.BooleanProperty()
   xsrf_token = db.StringProperty()
+  desc = db.TextProperty()
   
   def display_avatar(this):
     if this.avatar:

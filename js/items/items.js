@@ -48,4 +48,14 @@ $(document).ready(function() {
       score : r
     });
   });
+  
+  tinyMCE.init({
+        mode : "specific_textareas",
+        editor_selector : "readonlyRichText",
+        readonly: true
+  });
+  tinyMCE.init({
+        mode : "specific_textareas",
+        editor_selector : "richtext"
+  });
 });
