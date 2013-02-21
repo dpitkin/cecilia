@@ -7,7 +7,8 @@ from database import db
 class MainHandler(database.webapp2.RequestHandler):
   def get(self):
     items = db.GqlQuery("SELECT * FROM Item ORDER BY created_at DESC")
-    is_admin = database.get_current_li().is_admin
+    if database.get_current_li():
+      is_admin = database.get_current_li().is_admin
     database.render_template(self, 'items/index.html', {'items': items})
 
 class NewHandler(database.webapp2.RequestHandler):

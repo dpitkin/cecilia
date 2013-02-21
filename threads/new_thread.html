@@ -34,7 +34,11 @@ New Thread
 </div>
 <p>
 	<button type="submit" value="submit" class="btn btn-primary">Post Thread</button>
-	<a href="/threads/" class="btn">Cancel</a>
+    {% if item %}
+	  <a href="/" class="btn">Cancel</a>
+    {% else %}
+      <a href="/threads/" class="btn">Cancel</a>
+    {% endif %}
 </p>
 </form>
 {% endblock %}

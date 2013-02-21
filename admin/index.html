@@ -35,5 +35,12 @@ Admin
 </tr>
 {% endfor %}
 </table>
-<p><a class="btn" href="/admin/modify">Go to 'Create Admins'</a></p>
+<p>
+  <a class="btn" href="/admin/modify">Go to 'Create Admins'</a> 
+  {% if is_test_data_loaded %}
+    <a class="btn" href="/admin/load_test_data?xsrf_token={{current_li.xsrf_token}}">Delete test data</a>
+  {% else %}
+    <a class="btn" href="/admin/load_test_data?xsrf_token={{current_li.xsrf_token}}">Load test data</a>
+  {% endif %}
+</p>
 {% endblock %}
