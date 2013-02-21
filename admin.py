@@ -79,7 +79,7 @@ class LoadTestDataHandler(database.webapp2.RequestHandler):
           for j in range(0, 10):
             item = database.Item(title="item" + str((i * 10) + j), description="This is a description of the item. It may contain various amounts of information.", price='%.2f' % float((i * 10) + j), expiration_date=database.datetime.date.today() + database.datetime.timedelta(weeks=4), is_active=True, deactivated=False, created_by_id=li.user_id)
             if (len(item.description) > 40):
-              item.summary = item.description[:40] + "..."
+              item.summary = item.description[:40].rstrip() + "..."
             else:
               item.summary = item.description           
             item.put()

@@ -36,7 +36,7 @@ class SaveHandler(database.webapp2.RequestHandler):
       item.title = cgi.escape(self.request.get('title'))
       item.description = cgi.escape(self.request.get('description'))
       if (len(item.description) > 40):
-        item.summary = item.description[:40] + "..."
+        item.summary = item.description[:40].rstrip() + "..."
       else:
         item.summary = item.description
       item.price = '%.2f' % float(cgi.escape(self.request.get('price')))
