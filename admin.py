@@ -67,7 +67,7 @@ class LoadTestDataHandler(database.webapp2.RequestHandler):
           li.put()
           database.logging.info("Creating test data user_id=%s", li.user_id)
           for j in range(0, 10):
-            item = database.Item(title="item" + str((i + 1) * (j + 1)), description="Description", summary="Description", price='%.2f' % float((i + 1) * (j + 1)), expiration_date=database.datetime.date.today() + database.datetime.timedelta(weeks=4), is_active=True, created_by_id=li.user_id)
+            item = database.Item(title="item" + str((i * 10) + j), description="Description", summary="Description", price='%.2f' % float((i * 10) + j), expiration_date=database.datetime.date.today() + database.datetime.timedelta(weeks=4), is_active=True, created_by_id=li.user_id)
             item.put()
       else:
         for i in range(0, 25):
