@@ -71,6 +71,7 @@ class LoginInformation(db.Model):
   last_name = db.StringProperty()
   #belongs_to User
   user_id = db.StringProperty()
+  email = db.StringProperty()
   is_active = db.BooleanProperty()
   is_admin = db.BooleanProperty()
   avatar = db.BlobProperty()
@@ -156,6 +157,7 @@ class Item(db.Model):
   expiration_date = db.DateProperty()
   image = db.BlobProperty()
   is_active = db.BooleanProperty()
+  deactivated = db.BooleanProperty()
   feedback = db.TextProperty()
   rating = db.IntegerProperty()
   buyer_id = db.StringProperty()

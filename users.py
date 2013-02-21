@@ -66,6 +66,7 @@ class UpdateLIHandler(database.webapp2.RequestHandler):
       li = database.get_current_li()
       li.first_name = cgi.escape(self.request.get('first_name'))
       li.last_name = cgi.escape(self.request.get('last_name'))
+      li.email = user.email()
       li.nickname = cgi.escape(self.request.get('nickname'))
       li.private = bool(self.request.get('private'))
       li.desc = cgi.escape(self.request.get('desc'))

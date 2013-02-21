@@ -42,6 +42,7 @@ class SaveHandler(database.webapp2.RequestHandler):
       item.price = '%.2f' % float(cgi.escape(self.request.get('price')))
       item.created_by_id = user.user_id()
       item.is_active = True
+      item.deactivated = False
       if self.request.get('photo'):
         image = database.images.resize(self.request.get('photo'), 512, 512)
         item.image = db.Blob(image)
@@ -64,7 +65,10 @@ class DeleteHandler(database.webapp2.RequestHandler):
         database.db.delete(item)
         for f in feedback:
           db.delete(f)
-    self.redirect(self.request.referer)
+      self.redirect(self.request.referer)
+    else:
+      self.redirect('/')
+
     
 class EditHandler(database.webapp2.RequestHandler):
   def get(self):
