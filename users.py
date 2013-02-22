@@ -184,7 +184,7 @@ class ShowUserShop(database.webapp2.RequestHandler):
       database.get_current_li().create_xsrf_token();
     can_show = li.private == False or (current_li and li.user_id == current_li.user_id)
     items = db.GqlQuery("SELECT * FROM Item WHERE created_by_id = :1 ORDER BY created_at DESC", li.user_id)
-    collections = db.GqlQuery("SELECT * FROM ItemCollection WHERE created_by_id = :1 ORDER BY created_at DESC", current_li.user_id)
+    collections = db.GqlQuery("SELECT * FROM ItemCollection WHERE created_by_id = :1 ORDER BY created_at DESC", li.user_id)
     database.render_template(self, '/users/shop.html', { 'li' : li, 'can_show' : can_show, 'items' : items, 'collections': collections })
     
 app = database.webapp2.WSGIApplication([('/users/', MainHandler), ('/users/verify_user/', RegisterHandler), 
