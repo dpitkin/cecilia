@@ -120,7 +120,12 @@ class UserFeedbackHandler(database.webapp2.RequestHandler):
         user_feedback = database.UserFeedback()
         user_feedback.created_by_id = user.user_id()
         user_feedback.for_user_id = cgi.escape(self.request.get('for_user_id'))
-        user_feedback.rating = int(cgi.escape(self.request.get('rating')))
+        rating = int(cgi.escape(self.request.get('rating')))
+        if(rating < 0):
+          rating = 0
+        elif(rating > 5):
+          rating = 5
+        user_feedback.rating = rating
         user_feedback.put()
       self.redirect(self.request.referer)
     else:

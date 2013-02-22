@@ -163,7 +163,12 @@ class FeedbackHandler(database.webapp2.RequestHandler):
       item_feedback = database.ItemFeedback(parent=database.get_current_li())
       item_feedback.created_by_id = user.user_id()
       item_feedback.item_id = cgi.escape(self.request.get('item_id'))
-      item_feedback.rating = int(cgi.escape(self.request.get('rating')))
+      rating = int(cgi.escape(self.request.get('rating')))
+      if(rating < 0):
+        rating = 0
+      elif(rating > 5):
+        rating = 5
+      item_feedback.rating = rating
       item_feedback.feedback = cgi.escape(self.request.get('feedback'))
       item_feedback.put()
       self.redirect(self.request.referer)
