@@ -22,13 +22,19 @@ class NewHandler(database.webapp2.RequestHandler):
     
 class ViewHandler(database.webapp2.RequestHandler):
   def get(self):
+    current_li = database.get_current_li()
     item = db.get(db.Key.from_path('Item', int(self.request.get('item_id'))))
     li = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", item.created_by_id).get()
     if database.users.get_current_user():
       database.get_current_li().create_xsrf_token()
     feedback = db.GqlQuery("SELECT * FROM ItemFeedback WHERE item_id = :1 ORDER BY created_at DESC", str(item.key().id()))
-    buyer = database.get_user(item.highest_bid_id)
-    database.render_template(self, 'items/view_item.html', {'item': item, 'li': li, 'feedback': feedback, 'buyer': buyer})
+    buyer = database.get_user(item.highest_bid_id) 
+    rating = None
+    if current_li:
+      f = database.db.GqlQuery("SELECT * FROM UserFeedback WHERE for_user_id = :1 AND created_by_id = :2", li.user_id, current_li.user_id)
+      if f.count() > 0:
+        rating = int(f.get().rating)
+    database.render_template(self, 'items/view_item.html', {'item': item, 'li': li, 'feedback': feedback, 'buyer': buyer, 'rating':rating})
     
 class SaveHandler(database.webapp2.RequestHandler):
   def post(self):
