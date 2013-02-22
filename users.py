@@ -162,8 +162,17 @@ class ExportDataHandler(database.webapp2.RequestHandler):
       database.render_template(self, "/users/export_data.txt", template_values)
     else:
       self.redirect('/')
+      
+class ShowUserShop(database.webapp2.RequestHandler):
+  def get(self):
+    li = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", cgi.escape(self.request.get('user_id'))).get() 
+    database.get_current_li().create_xsrf_token();
+    current_li = database.get_current_li();
+    can_show = li.private == False or (current_li and li.user_id == current_li.user_id)
+    items = db.GqlQuery("SELECT * FROM Item WHERE created_by_id = :1 ORDER BY created_at DESC", li.user_id)
+    database.render_template(self, '/users/shop.html', { 'li' : li, 'can_show' : can_show, 'items' : items })
     
 app = database.webapp2.WSGIApplication([('/users/', MainHandler), ('/users/verify_user/', RegisterHandler), 
 ('/users/save_user', SaveLIHandler), ('/users/delete_user', DeleteHandler), ('/users/update_user', UpdateLIHandler),
 ('/users/submit_feedback', UserFeedbackHandler), ('/users/list_user_feedback',ListUserFeedback), ('/users/delete_user_feedback', DeleteUserFeedback),
-('/users/export_data', ExportDataHandler)], debug=True)
+('/users/export_data', ExportDataHandler), ('/users/shop', ShowUserShop)], debug=True)
