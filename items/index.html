@@ -49,7 +49,7 @@ My Items
 					<div>{{ item.title }}</div>
 				</a>
 			</td>
-			<td><textarea class="readonlyRichText" style="width: 50%;" rows="1" cols="1">{% if item.summary %} {{ item.summary }} {% else %} {{ item.description }} {% endif %}</textarea></td>
+			<td>{% if item.summary %} {{ item.summary }} {% else %} {{ item.description }} {% endif %}</td>
 			<td>${{ item.price }}</td>
 			{% if is_admin %}
 			<td>

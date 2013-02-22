@@ -6,11 +6,11 @@ $(document).ready(function() {
       $('#title').parent().prev().addClass('error_text');
       err_msg += "Must have a title.<br/>";
     }
-    if($('#description').val().length == 0)
+    /*if($('#description').val().length == 0)
     {
       $('#description').parent().addClass('error_text');
       err_msg += "Must have a description.<br/>";
-    }
+    }*/
     if($('#price').val().length == 0)
     {
       $('#price').parent().prev().addClass('error_text');
