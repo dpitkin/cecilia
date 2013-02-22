@@ -47,7 +47,7 @@ View Item
 {% endif %}
 <div class="well">
 	<p>
-    Posted by: {{ li.get_display_name() }}
+    Posted by: <a href='/users/shop?user_id={{ li.user_id }}'>{{ li.get_display_name() }}</a>
     {% if item.deactivated %}
       &lt<i>Deactivated</i>&gt
     {% endif %}
