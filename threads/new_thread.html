@@ -13,7 +13,7 @@ New Thread
 		<label>Recipient:</label>
 		<b>{{ item.get_creator().get_display_name() }}</b>
   	<input type="hidden" name="item_id" value="{{item.key().id()}}" />
-	<p><label>Title:*</label><input type="text" id="title" name="title" value="RE: {{item.title}}" /></p>
+	<p><label>Title:*</label><input type="text" id="title" name="title" value="RE: {{item.title}} (${{item.price}})" /></p>
 	{% else %}
 	<p>
 		<label>
