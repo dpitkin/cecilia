@@ -199,6 +199,8 @@ class UserFeedback(db.Model):
   for_user_id = db.StringProperty()
   rating = db.IntegerProperty()
   
+  def get_creator(this):
+    return db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", this.created_by_id).get()
 class ItemFeedback(db.Model):
   created_by_id = db.StringProperty()
   created_at = db.DateTimeProperty(auto_now_add=True)
