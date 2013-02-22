@@ -14,7 +14,7 @@ class MainHandler(database.webapp2.RequestHandler):
     push = False
     
     #ew, (n+1) queries
-    if user:
+    if database.get_current_li():
       sent_threads = db.GqlQuery("SELECT * FROM Thread WHERE created_by_id = :1 ORDER BY created_at DESC", user.user_id())
       for thread in sent_threads:
         children = db.GqlQuery("SELECT * FROM Message WHERE ANCESTOR is :1", thread.key())
@@ -68,8 +68,9 @@ class NewHandler(database.webapp2.RequestHandler):
       item = None
       if self.request.get("about"): 
         item = db.get(db.Key.from_path('Item', (int(cgi.escape(self.request.get('about'))))))
-
-      database.render_template(self, 'threads/new_thread.html', {'item': item, 'lis': lis})
+      
+      bad_code = ",".join(["{id:\""+str(li.user_id)+"\", name: \""+li.get_display_name()+"\"}" for li in lis if li.get_display_name()])
+      database.render_template(self, 'threads/new_thread.html', {'item': item, 'lis': lis, 'list':bad_code})
     else:
       self.redirect('/')
 
@@ -77,6 +78,7 @@ class SaveHandler(database.webapp2.RequestHandler):
   def post(self):
     user = database.users.get_current_user()
     if user and database.get_current_li().verify_xsrf_token(self):
+      item = None
       if self.request.get("item_id"):
         item_id = int(cgi.escape(self.request.get('item_id')))
         item = db.get(db.Key.from_path('Item', item_id))
@@ -85,11 +87,11 @@ class SaveHandler(database.webapp2.RequestHandler):
         recipients = cgi.escape(self.request.get("recipients"))
         #WOAH! Rejects everything but numbers, then maps to integers
         recipients = [y for y in [re.sub("[^0-9]", "", x) for x in recipients.split(",")] if len(y) > 0]
-        database.logging.info("RECIPIENTS: " + str(len(recipients)))
       recipients = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id IN :1", recipients)
       recipients = [r for r in recipients if r != user]
       if len(recipients) > 0:
         for recipient in recipients:
+          database.logging.info("HERE");
           thread = database.Thread(created_by_id=user.user_id())
           if item:
             thread.item_details = 'This is about your item: "' + item.title + '" that you posted for $' + item.price

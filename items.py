@@ -107,7 +107,8 @@ class UpdateHandler(database.webapp2.RequestHandler):
 class ShopHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
-    if user:
+    current_li = database.get_current_li()
+    if user and current_li:
       database.get_current_li().create_xsrf_token()
       items = db.GqlQuery("SELECT * FROM Item WHERE created_by_id = :1 ORDER BY created_at DESC", user.user_id())
       database.render_template(self, 'items/my_items.html', {'items': items})

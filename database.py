@@ -91,7 +91,7 @@ class LoginInformation(db.Model):
     return this.first_name + " " + this.last_name
   
   def get_public_display_name(this):
-    return this.nickname
+    return this.nickname 
     
   def get_display_name(this):
     li = get_current_li()

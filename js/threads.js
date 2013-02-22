@@ -15,9 +15,9 @@ $(document).ready(function() {
     var recip = $('#recipients');
     recip.val(recip.val().replace(',',''));
     if(error)
-      return false;    
+    return false;    
   });
-  
+
   $('#recv_holder').change(function() {
     var sel = $(this).find('option:selected');
     var recv = $('#recv_results');
