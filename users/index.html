@@ -7,8 +7,16 @@ Your Profile
     <h3>Your info:</h3>
     <p>Name: {{ li.first_name + ' ' + li.last_name }}</p>
     <p>Email: {{ user.email() }}</p>
-    <p>Avatar: {{ li.display_avatar() }}</p>
-    <p>Description: <textarea class="readonlyRichText" style="width: 100%;" rows="20">{{li.desc}}</textarea></p>
+    <table style="width:100%">
+    <tr>
+        <td style="width:128px; padding:10px;">
+            {{ li.display_avatar() }}
+        </td>
+        <td>
+            <p>Description: <textarea class="readonlyRichText" style="width: 100%;" rows="5">{{li.desc}}</textarea></p>
+        </td>
+    </tr>
+    </table>
     <p><a href="/users/delete_user?xsrf_token={{current_li.xsrf_token}}" onclick="return confirm('Are you sure? This will delete all your messages and items.');">Click here to delete account</a></p>
     <p><a href="/users/export_data" onclick="return confirm('Are you sure? This will generate a file with all your data.');">Export All Your User Data</a></p>
     <br/><br/>
