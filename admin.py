@@ -28,6 +28,16 @@ class ActivationHandler(database.webapp2.RequestHandler):
       user = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", cgi.escape(self.request.get('user_id'))).get()
       user.is_active = not user.is_active
       user.put()
+      if not user.is_active:
+        items = database.db.GqlQuery("SELECT * FROM Item WHERE created_by_id = :1", user.user_id)
+        for item in items:
+          item.deactivated = True
+          item.put()
+      else:
+        items = database.db.GqlQuery("SELECT * FROM Item WHERE created_by_id = :1", user.user_id)
+        for item in items:
+          item.deactivated = False
+          item.put()
       database.logging.info("ActivationHandler used, user#%s active=%s\n", user.user_id, user.is_active)
       self.redirect(self.request.referer)
     else:
@@ -63,11 +73,15 @@ class LoadTestDataHandler(database.webapp2.RequestHandler):
       is_test_data_loaded = test_data.is_test_data_loaded 
       if not is_test_data_loaded:
         for i in range(0, 25):
-          li = database.LoginInformation(first_name="user",last_name=str(i), user_id="00" + str(i).zfill(2), is_active=True, is_admin=False, nickname="user" + str(i), private=False)
+          li = database.LoginInformation(first_name="user",last_name=str(i), user_id="00" + str(i).zfill(2), email="user" + str(i) + "@example.com", is_active=True, is_admin=False, nickname="user" + str(i), private=False)
           li.put()
           database.logging.info("Creating test data user_id=%s", li.user_id)
           for j in range(0, 10):
-            item = database.Item(title="item" + str((i * 10) + j), description="Description", summary="Description", price='%.2f' % float((i * 10) + j), expiration_date=database.datetime.date.today() + database.datetime.timedelta(weeks=4), is_active=True, created_by_id=li.user_id)
+            item = database.Item(title="item" + str((i * 10) + j), description="This is a description of the item. It may contain various amounts of information.", price='%.2f' % float((i * 10) + j), expiration_date=database.datetime.date.today() + database.datetime.timedelta(weeks=4), is_active=True, deactivated=False, created_by_id=li.user_id)
+            if (len(item.description) > 40):
+              item.summary = item.description[:40].rstrip() + "..."
+            else:
+              item.summary = item.description           
             item.put()
       else:
         for i in range(0, 25):

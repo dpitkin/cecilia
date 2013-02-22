@@ -11,7 +11,12 @@ View Item
   <div id="redirect" class="hide">/users/submit_feedback?for_user_id={{item.created_by_id}}&amp;xsrf_token={{current_li.xsrf_token}}&amp;rating=</div><br/>
 {% endif %}
 <div class="well">
-	<p>Posted by: {{ li.get_display_name() }}</p>
+	<p>
+    Posted by: {{ li.get_display_name() }}
+    {% if item.deactivated %}
+      &lt<i>Deactivated</i>&gt
+    {% endif %}
+  </p>
   <p>Seller rating: <strong>{% if li.get_average_rating() %}{{ li.get_average_rating() }} / 5.00 {% else %} None {% endif %}</strong></p>
 	<p>Title: {{item.title}}</p>
 	<p>Description: <textarea class="readonlyRichText">{{item.description}}</textarea></p>

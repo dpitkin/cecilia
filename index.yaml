@@ -18,6 +18,12 @@ indexes:
 
 - kind: Item
   properties:
+  - name: deactivated
+  - name: is_active
+  - name: expiration_date
+
+- kind: Item
+  properties:
   - name: is_active
   - name: expiration_date
 
