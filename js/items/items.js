@@ -34,20 +34,6 @@ $(document).ready(function() {
     }
   });
   
-  $('#seller_rating').raty({
-    score : 3,
-    click: function(score, evt) {
-      if(score > 5){
-        score = 5;
-      }else if(score < 0){
-        score = 0;
-      }
-      var redir = $('#redirect').text() + score;
-      if(confirm('Are you sure you want to give a rating of ' + score + ' to this seller?'))
-        window.location = redir;
-    }
-  });
-  
   $('#rating_div').raty({
     score : 3,
     click: function(score, evt) {
