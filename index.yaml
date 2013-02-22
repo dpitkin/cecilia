@@ -71,6 +71,11 @@ indexes:
 - kind: LoginInformation
   properties:
   - name: is_admin
+  - name: nickname
+
+- kind: LoginInformation
+  properties:
+  - name: is_admin
   - name: user_id
 
 - kind: Thread

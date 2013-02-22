@@ -5,6 +5,20 @@ Admin
 {% block content %}
 <h3>Create Admins</h3>
 <hr />
+<h5>Admin users</h5>
+<table class="table table-striped">
+{% for user in admin_users %}
+<tr>
+  <td>
+    <div>
+      <a href="/admin/create_admin?user_id={{ user.user_id }}&xsrf_token={{current_li.xsrf_token}}">
+      </a>
+        <b>Nickname:</b> {{ user.nickname }} <b>Name:</b> {% if user.private %} &lt<i>Private</i>&gt {% else %} {{ user.first_name }} {{ user.last_name }} {% endif %} <b>User ID:</b> {{ user.user_id }} <b>Active:</b> {{ user.is_active }}
+    </div>
+  </td>
+</tr>
+{% endfor %}
+</table>
 <h5>Registered users</h5>
 <table class="table table-striped">
 {% for user in registered_users %}

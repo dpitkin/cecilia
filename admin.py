@@ -49,7 +49,8 @@ class ModifyHandler(database.webapp2.RequestHandler):
     if user and database.get_current_li() and database.get_current_li().is_admin:
       database.get_current_li().create_xsrf_token()
       registered_users = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE is_admin = :1 AND is_active = :2 ORDER BY nickname", False, True)
-      database.render_template(self, '/admin/modify.html', {'registered_users': registered_users})
+      admin_users = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE is_admin = :1 ORDER BY nickname", True)
+      database.render_template(self, '/admin/modify.html', {'registered_users': registered_users, 'admin_users': admin_users})
     else:
       self.redirect('/')
 
