@@ -51,7 +51,7 @@ New Thread
 				if (existing_val === "") {
 					$('#recipients').val(item.id);
 				}else {
-					$('#recipients').val(existing_val + ',' + item.id);
+					$('#recipients').val(existing_val + '||' + item.id);
 				}
 			}
 		}

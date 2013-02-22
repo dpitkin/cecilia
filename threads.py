@@ -86,7 +86,7 @@ class SaveHandler(database.webapp2.RequestHandler):
       else:
         recipients = cgi.escape(self.request.get("recipients"))
         #WOAH! Rejects everything but numbers, then maps to integers
-        recipients = [y for y in [re.sub("[^0-9]", "", x) for x in recipients.split(",")] if len(y) > 0]
+        recipients = [y for y in [re.sub("[^0-9]", "", x) for x in recipients.split("||")] if len(y) > 0]
       recipients = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id IN :1", recipients)
       recipients = [r for r in recipients if r != user]
       if len(recipients) > 0:

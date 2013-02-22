@@ -2,13 +2,16 @@
 {% block title %}
 My Items
 {% endblock %}
+{% block includes %}
+<script type="text/javascript" src="/js/users/users.js"></script>
+{% endblock %}
 {% block content %}
 <h3>{{ li.get_display_name() }}'s Shop</h3>
+
+{% if can_show %}
 <p>Avatar: {{ li.display_avatar() }}</p>
 <p>Seller rating: <strong>{% if li.get_average_rating() %}{{ li.get_average_rating() }} / 5.00 {% else %} None {% endif %}</strong></p>
 <p>Description: <textarea class="readonlyRichText" style="width: 100%;" rows="5">{{li.desc}}</textarea></p>
-
-{% if can_show %}
 <hr />
 <table class="table table-striped">
   <tr>
