@@ -5,7 +5,7 @@ New Item
 {% block content %}
 <script type="text/javascript" src="/js/items/items.js"></script>
 <h3>New Item</h3>
-<form action="/items/save_item" method="post" enctype="multipart/form-data">
+<form action="/items/save_item" id="item_form" method="post" enctype="multipart/form-data">
 	<div class="well">
   <input type="hidden" name="xsrf_token" value="{{ current_li.xsrf_token }}"/>
 		<p>
@@ -34,6 +34,13 @@ New Item
 		  <span class="btn">Choose a Photo</span>
 		  <span class="add-on after_photo"></span>
 		</span>
+    </p>
+    <p>
+      <label>
+				Enable Bidding? 
+				<i class="icon-info-sign info_button-right" title="Enable Bidding" data-content="If checked, then buyers can bid on your item."></i>
+			</label>
+			<input type="checkbox" name="bidding_enabled" />
     </p>
 	</div>
 	<button class="btn btn-primary" type="submit" value="Save">Post Item</button>

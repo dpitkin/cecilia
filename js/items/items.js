@@ -1,5 +1,5 @@
 $(document).ready(function() {
-  $('form').submit(function() {
+  $('#item_form').submit(function() {
     var err_msg = "";
     if($('#title').val().length == 0)
     {
@@ -23,6 +23,15 @@ $(document).ready(function() {
     }  
     if(err_msg.length != 0)
       return false;
+  });
+  
+  $('#bid_form').submit(function() {
+    if(isNaN(parseInt($('#bid').val())))
+    {
+      $('#bid').addClass('error_text');
+      alert('Bid must be a number.');
+      return false;
+    }
   });
   
   $('#seller_rating').raty({

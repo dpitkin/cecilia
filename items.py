@@ -26,7 +26,8 @@ class ViewHandler(database.webapp2.RequestHandler):
     if database.users.get_current_user():
       database.get_current_li().create_xsrf_token()
     feedback = db.GqlQuery("SELECT * FROM ItemFeedback WHERE item_id = :1 ORDER BY created_at DESC", str(item.key().id()))
-    database.render_template(self, 'items/view_item.html', {'item': item, 'li': li, 'feedback': feedback})
+    buyer = database.get_user(item.highest_bid_id)
+    database.render_template(self, 'items/view_item.html', {'item': item, 'li': li, 'feedback': feedback, 'buyer': buyer})
     
 class SaveHandler(database.webapp2.RequestHandler):
   def post(self):
@@ -43,6 +44,7 @@ class SaveHandler(database.webapp2.RequestHandler):
       item.created_by_id = user.user_id()
       item.is_active = True
       item.deactivated = False
+      item.bidding_enabled = bool(self.request.get('bidding_enabled'))
       if self.request.get('photo'):
         image = database.images.resize(self.request.get('photo'), 512, 512)
         item.image = db.Blob(image)
@@ -87,6 +89,7 @@ class UpdateHandler(database.webapp2.RequestHandler):
       item = db.get(db.Key.from_path('Item', int(cgi.escape(self.request.get('item_id')))))
       item.title = cgi.escape(self.request.get('title'))
       item.description = cgi.escape(self.request.get('description'))
+      item.bidding_enabled = bool(self.request.get('bidding_enabled'))
       if (len(item.description) > 40):
         item.summary = item.description[:40] + "..."
       else:
@@ -168,10 +171,42 @@ class DeleteFeedbackHandler(database.webapp2.RequestHandler):
       self.redirect(self.request.referer)
     else:
       self.redirect('/')
-    
+      
+class BidHandler(database.webapp2.RequestHandler):
+  def post(self):
+    user = database.users.get_current_user()
+    current_li = database.get_current_li()
+    if user and current_li and current_li.verify_xsrf_token(self):
+      bid = float(cgi.escape(self.request.get('bid')))
+      item_id = int(cgi.escape(self.request.get('item_id')))
+      item = db.get(db.Key.from_path('Item', item_id))
+      if item.highest_bid:
+        if(bid > float(item.highest_bid) and item.bidding_enabled):
+          item.highest_bid = '%.2f' % bid
+          item.highest_bid_id = user.user_id()
+          item.put()
+      else:
+        item.highest_bid = '%.2f' % bid
+        item.highest_bid_id = user.user_id()
+        item.put()
+      self.redirect(self.request.referer)
+    else:
+      self.redirect('/')
+      
+class SoldHandler(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    current_li = database.get_current_li()
+    item = db.get(db.Key.from_path('Item', int(cgi.escape(self.request.get('item_id')))))
+    if user and current_li and current_li.verify_xsrf_token(self) and item.created_by_id == user.user_id():
+      item.sold = True
+      item.put()
+      self.redirect(self.request.referer)
+    else:
+      self.redirect('/')
 
 app = database.webapp2.WSGIApplication([('/items/', MainHandler), ('/items/new_item', NewHandler), 
 ('/items/save_item', SaveHandler), ('/items/view_item', ViewHandler), ('/items/search', SearchHandler),
 ('/items/my_items', ShopHandler), ('/items/delete_item', DeleteHandler), ('/items/edit_item', EditHandler),
 ('/items/update_item', UpdateHandler), ('/items/submit_feedback', FeedbackHandler), ('/items/delete_item_feedback', DeleteFeedbackHandler),
-('/items/old_searches', OldSearches)], debug=True)
+('/items/old_searches', OldSearches), ('/items/submit_bid', BidHandler), ('/items/item_sold', SoldHandler)], debug=True)

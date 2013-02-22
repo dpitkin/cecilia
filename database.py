@@ -60,6 +60,9 @@ def render_template(handler_object, file_name, template_values):
   else: 
     template = jinja_environment.get_template(file_name)
     handler_object.response.out.write(template.render(template_values))
+    
+def get_user(user_id):
+  return db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", user_id).get()
   
 def get_current_li():
   if users.get_current_user():
@@ -165,6 +168,10 @@ class Item(db.Model):
   buyer_id = db.StringProperty()
   #belongs_to User
   created_by_id = db.StringProperty()
+  bidding_enabled = db.BooleanProperty()
+  highest_bid = db.StringProperty()
+  highest_bid_id = db.StringProperty()
+  sold = db.BooleanProperty()
 
   def is_expired(this):
     return (datetime.date.today() > this.expiration_date)

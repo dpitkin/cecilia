@@ -9,6 +9,41 @@ View Item
   <h5>Rate this seller: <a href="/users/list_user_feedback?user_id={{item.created_by_id}}">List of feedback</a></h5>
   <div id="seller_rating"></div>
   <div id="redirect" class="hide">/users/submit_feedback?for_user_id={{item.created_by_id}}&amp;xsrf_token={{current_li.xsrf_token}}&amp;rating=</div><br/>
+  {% if item.bidding_enabled %}
+    <div class="well">
+      <p>
+        {% if item.highest_bid %}
+          {% if not(item.sold) %}
+            <h4>
+              The highest bid right now is: ${{item.highest_bid}}
+              {% if item.created_by_id == user.user_id() %}
+                | <a href="/items/item_sold?item_id={{item.key().id()}}&xsrf_token={{current_li.xsrf_token}}">Click here if you would like to mark this item as sold.</a>
+              {%endif%}
+            </h4>
+          {% endif %}
+        {% else %}
+          <h4>There are no bids on this item yet.</h4>
+        {% endif %}
+        {% if item.sold %}
+          <h4>This item was bought by {{buyer.nickname}} for ${{item.highest_bid}}.</h4>
+        {% else %}
+          <h5>Place your bid (the asking price is: ${{item.price}}):</h5>
+          <form action="/items/submit_bid" id="bid_form" method="post">
+            <input type="hidden" name="item_id" value="{{item.key().id()}}"/>
+            <input type="hidden" name="xsrf_token" value="{{current_li.xsrf_token}}"/>
+            <p>
+              Bid:<br />
+              <div class="input-prepend">
+                <span class="add-on">$</span>
+                <input name="bid" id="bid" type="text">
+              </div>
+            </p>
+            <button class="btn btn-primary" type="submit" value="Save">Submit Bid</button>
+          </form>
+        {% endif %}
+      </p>
+    </div>
+  {% endif %}
 {% endif %}
 <div class="well">
 	<p>
