@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import database
+import re
 from database import cgi
 from database import db
 
@@ -217,9 +218,66 @@ class SoldHandler(database.webapp2.RequestHandler):
       self.redirect(self.request.referer)
     else:
       self.redirect('/')
+      
+class NewCollectionHandler(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    current_li = database.get_current_li()
+    if user and current_li:
+      current_li.create_xsrf_token()
+      items = db.GqlQuery("SELECT * FROM Item WHERE expiration_date >= :1 AND is_active = :2 AND deactivated = :3", database.datetime.date.today(), True, False)
+      bad_code = ",".join(["{id:\""+str(item.key().id())+"\", name: \""+item.title+"\"}" for item in items])
+      database.render_template(self, '/items/new_collection.html', {'list': bad_code})
+    else:
+      self.redirect('/')
+
+class SaveCollectionHandler(database.webapp2.RequestHandler):
+  def post(self):
+    user = database.users.get_current_user()
+    current_li = database.get_current_li()
+    if user and current_li and current_li.verify_xsrf_token(self):
+      collection = database.ItemCollection()
+      collection.title = cgi.escape(self.request.get('title'))
+      collection.created_by_id = user.user_id()
+      items = cgi.escape(self.request.get('items'))
+      items = [y for y in [re.sub("[^0-9]", "", x) for x in items.split("||")] if len(y) > 0]
+      item_collection = []
+      for item in items:
+        item_collection.append(int(item))
+      collection.items = item_collection
+      collection.put()
+      self.redirect('/users/shop')
+    else:
+      self.redirect('/')
+  
+class ViewCollectionHandler(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    current_li = database.get_current_li()
+    collection = db.get(db.Key.from_path('ItemCollection', int(cgi.escape(self.request.get('collection_id')))))
+    if user and current_li and collection.created_by_id == user.user_id():
+      if len(collection.get_items()) > 0:
+        database.render_template(self, '/items/view_collection.html', {'items': collection.get_items()})
+      else:
+        db.delete(collection)
+        self.redirect(self.request.referer)
+    else:
+      self.redirect('/')
+      
+class DeleteCollectionHandler(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    current_li = database.get_current_li()
+    collection = db.get(db.Key.from_path('ItemCollection', int(cgi.escape(self.request.get('collection_id')))))
+    if user and current_li and (collection.created_by_id == user.user_id() or current_li.is_admin):
+      db.delete(collection)
+      self.redirect(self.request.referer)
+    else:
+      self.redirect('/')
 
 app = database.webapp2.WSGIApplication([('/items/', MainHandler), ('/items/new_item', NewHandler), 
 ('/items/save_item', SaveHandler), ('/items/view_item', ViewHandler), ('/items/search', SearchHandler),
 ('/items/my_items', ShopHandler), ('/items/delete_item', DeleteHandler), ('/items/edit_item', EditHandler),
 ('/items/update_item', UpdateHandler), ('/items/submit_feedback', FeedbackHandler), ('/items/delete_item_feedback', DeleteFeedbackHandler),
-('/items/old_searches', OldSearches), ('/items/submit_bid', BidHandler), ('/items/item_sold', SoldHandler)], debug=True)
+('/items/old_searches', OldSearches), ('/items/submit_bid', BidHandler), ('/items/item_sold', SoldHandler), ('/items/new_collection', NewCollectionHandler),
+('/items/save_collection', SaveCollectionHandler), ('/items/view_collection', ViewCollectionHandler), ('/items/delete_collection', DeleteCollectionHandler)], debug=True)

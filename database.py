@@ -161,6 +161,19 @@ def save_message(message, thread, user):
   message.parent = thread
   message.put()
 
+class ItemCollection(db.Model):
+  title = db.StringProperty()
+  created_at = db.DateTimeProperty(auto_now_add=True)
+  created_by_id = db.StringProperty()
+  items = db.ListProperty(int,indexed=False,default=None)
+  def get_items(this):
+    item_collection = []
+    for id in this.items:
+      item_obj = db.get(db.Key.from_path('Item', id))
+      if item_obj:
+        item_collection.append(item_obj)
+    return item_collection
+  
 class Item(db.Model):
   title = db.StringProperty()
   description = db.TextProperty()
@@ -192,6 +205,9 @@ class Item(db.Model):
     
   def get_creator(this):
     return db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", this.created_by_id).get()
+    
+  def get_feedback(this):
+    return db.GqlQuery("SELECT * FROM ItemFeedback WHERE item_id = :1", str(this.key().id()))
       
 class UserFeedback(db.Model):
   created_by_id = db.StringProperty()

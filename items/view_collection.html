@@ -1,0 +1,49 @@
+{% extends "layouts/layout.html" %}
+{% block title %}
+View Collection
+{% endblock %}
+{% block content %}
+<h3>View Collection</h3>
+
+<script type="text/javascript">
+  $(document).ready(function() {
+    $.each($('.raty_rating'), function(index, value) {
+      var r = $(this).data('rating');
+      $(this).raty({
+        readOnly: true,
+        score : r
+      });
+    });
+
+    tinyMCE.init({
+          mode : "specific_textareas",
+          editor_selector : "readonlyRichText",
+          readonly: true
+    });
+  });
+</script>
+{% for item in items %}
+  <div class="well">
+    <h4>Item: {{item.title}}</h4>
+    <p>Seller rating: <strong>{% if item.get_creator().get_average_rating() %}{{ item.get_creator().get_average_rating() }} / 5.00 {% else %} None {% endif %}</strong></p>
+    <p>Description: <textarea class="readonlyRichText">{{item.description}}</textarea></p>
+    <p>Price: ${{item.price}}</p>
+    <p>Created on: {{item.created_at.strftime("%m/%d/%Y at %H:%M")}}</p>
+    <p>{{ item.display_image() }}</p>
+    {% if item.get_feedback().count() > 0 %}
+      <p>
+        <h5>Here's what people had to say about this item:</h5>
+        {% for item_feedback in item.get_feedback() %}
+          <div class="well">
+            <h6>{{item_feedback.parent().nickname}} wrote:</h6>
+            <p>{{item_feedback.feedback}}</p>
+            <h6>And left a rating of:</h6>
+            <p><div class="raty_rating" data-rating="{{item_feedback.rating}}"></div></p>
+          </div>
+        {% endfor %}
+      </p>
+    {% endif %}
+  </div>
+{% endfor %}
+  
+{% endblock %}

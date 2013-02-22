@@ -61,6 +61,42 @@ My Items
 	</tr>
 </table>
 
+<table style="width:100%">
+	<tr>
+		<td style="width:0%">
+			
+		</td>
+		<td style="width:100%">
+			<h4>{{ li.get_display_name() }}'s Collections</h4>
+			<table class="table table-striped">
+			  <tr>
+			    <th>Title</th>
+          {% if current_li.user_id == li.user_id %}
+            <th>Delete</th>
+          {% endif %}
+			  </tr>
+				{% for collection in collections %}
+				<tr>
+					<td>
+						<a href="/items/view_collection?collection_id={{ collection.key().id() }}">
+							<div>{{ collection.title }}</div>
+						</a>
+					</td>
+				{% if current_li.user_id == collection.created_by_id or current_li.is_admin %}
+			    <td>
+			      <div><a class="btn" href="/items/delete_collection?collection_id={{ collection.key().id() }}&xsrf_token={{ current_li.xsrf_token }}" onclick="return confirm('Are you sure?');">Delete Collection</a></div>
+			    </td>
+				{% endif %}
+				</tr>
+				{% endfor %}
+			</table>
+			{% if current_li.user_id == li.user_id %}
+			<p style="text-align:right"><a class="btn" href="/items/new_collection">New Collection</a></p>	
+			{% endif %}
+		</td>		
+	</tr>
+</table>
+
 {% else %}
 <div class="alert">
   <strong>Uh oh!</strong> This user has their shop marked as private

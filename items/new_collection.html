@@ -1,0 +1,61 @@
+{% extends "layouts/layout.html" %}
+{% block title %}
+New Collection
+{% endblock %}
+{% block content %}
+<h3>New Collection</h3>
+<div class="well">
+  <form action="/items/save_collection" method="post">
+    <input type="hidden" name="xsrf_token" value="{{ current_li.xsrf_token }}"/>
+    <p>
+      Title*<br />
+      <div class="input-prepend">
+        <span class="add-on"><i class="icon-tag"></i></span>
+        <input name="title" id="title" type="text">
+      </div>
+    </p>
+    <p>
+      <label>
+        Items:*<i class="icon-info-sign info_button-right" title="Items" data-content="Use this dropdown to specify what items should be in this collection"></i>
+      </label>
+      <input type="text" id="items_token_field" />
+      <input type="hidden" id="items" name="items"/>
+    </p>
+    <button type="submit" value="Submit" class="btn">Submit</button>
+  </form>
+</div>
+
+<script type="text/javascript">
+  $(document).ready(function() {
+    $('form').submit(function() {
+      if($('#title').val().length == 0)
+      {
+        $('#title').parent().prev().addClass('error_text');
+        return false;
+      }
+      if($('#items').val().length == 0)
+      {
+        $('#items').parent().addClass('error_text');
+        return false;
+      }
+    });
+    $("#items_token_field").tokenInput(
+      [
+      {{ list }}
+      ],
+      {
+        theme:"facebook",
+        preventDuplicates: true, 
+        onAdd: function (item) {
+          var existing_val = $('#items').val();
+          if (existing_val === "") {
+            $('#items').val(item.id);
+          }else {
+            $('#items').val(existing_val + '||' + item.id);
+          }
+        }
+      }
+    );
+  });
+	</script>
+{% endblock %}

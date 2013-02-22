@@ -33,6 +33,12 @@ indexes:
   - name: created_at
     direction: desc
 
+- kind: ItemCollection
+  properties:
+  - name: created_by_id
+  - name: created_at
+    direction: desc
+
 - kind: ItemFeedback
   properties:
   - name: item_id

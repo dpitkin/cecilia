@@ -40,22 +40,24 @@ New Thread
 	</form>
 
 	<script type="text/javascript">
-	$("#recipients_token_field").tokenInput(
-		[
-		{{ list }}
-		],
-		{
-			theme:"facebook",
-			onAdd: function (item) {
-				var existing_val = $('#recipients').val();
-				if (existing_val === "") {
-					$('#recipients').val(item.id);
-				}else {
-					$('#recipients').val(existing_val + '||' + item.id);
-				}
-			}
-		}
-	);
+    $(document).ready(function() {
+      $("#recipients_token_field").tokenInput(
+        [
+        {{ list }}
+        ],
+        {
+          theme:"facebook",
+          onAdd: function (item) {
+            var existing_val = $('#recipients').val();
+            if (existing_val === "") {
+              $('#recipients').val(item.id);
+            }else {
+              $('#recipients').val(existing_val + '||' + item.id);
+            }
+          }
+        }
+      );
+    });
 	</script>
 
 	{% endblock %}

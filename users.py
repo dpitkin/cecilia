@@ -103,6 +103,10 @@ class DeleteHandler(database.webapp2.RequestHandler):
       item_feedback = database.db.GqlQuery("SELECT * FROM ItemFeedback WHERE created_by_id = :1", user.user_id())
       for f in item_feedback:
         database.db.delete(f)
+      #delete item_collections
+      item_collections = database.db.GqlQuery("SELECT * FROM ItemCollection WHERE created_by_id = :1", user.user_id())
+      for i in item_collections:
+        database.db.delete(i)
       #delete the li
       li = database.get_current_li()
       database.logging.info("Deleting LoginInformation user_id=%s", li.user_id)
@@ -170,13 +174,18 @@ class ExportDataHandler(database.webapp2.RequestHandler):
       
 class ShowUserShop(database.webapp2.RequestHandler):
   def get(self):
-    li = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", cgi.escape(self.request.get('user_id'))).get() 
     current_li = database.get_current_li();
+    if self.request.get('user_id'):
+      user_id = cgi.escape(self.request.get('user_id'))
+    else:
+      user_id = current_li.user_id
+    li = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", user_id).get() 
     if current_li:
       database.get_current_li().create_xsrf_token();
     can_show = li.private == False or (current_li and li.user_id == current_li.user_id)
     items = db.GqlQuery("SELECT * FROM Item WHERE created_by_id = :1 ORDER BY created_at DESC", li.user_id)
-    database.render_template(self, '/users/shop.html', { 'li' : li, 'can_show' : can_show, 'items' : items })
+    collections = db.GqlQuery("SELECT * FROM ItemCollection WHERE created_by_id = :1 ORDER BY created_at DESC", current_li.user_id)
+    database.render_template(self, '/users/shop.html', { 'li' : li, 'can_show' : can_show, 'items' : items, 'collections': collections })
     
 app = database.webapp2.WSGIApplication([('/users/', MainHandler), ('/users/verify_user/', RegisterHandler), 
 ('/users/save_user', SaveLIHandler), ('/users/delete_user', DeleteHandler), ('/users/update_user', UpdateLIHandler),
