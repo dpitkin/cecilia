@@ -1,0 +1,53 @@
+{{current_li.get_private_display_name()}}'s Data:
+
+First name: {{current_li.first_name}}
+Last name: {{current_li.last_name}}
+Nickname: {{current_li.nickname}}
+Info: {{current_li.desc}}
+Rating: {{current_li.get_average_rating()}}
+
+Your items:
+  
+{% for item in items %}
+  Title: {{item.title}}
+  Description: {{item.description}}
+  Price: ${{item.price}}
+  Created on: {{item.created_at.strftime("%m/%d/%Y at %H:%M")}}
+  Expiration Date: {{item.expiration_date.strftime("%m/%d/%Y")}}
+  Active: {{item.is_active}}
+  Feedback: {{item.feedback}}
+  Rating: {{item.rating}}
+{% endfor %}
+
+Messages:
+
+Conversations Started by you:
+{% if sent_threads.count() != 0 %}{% for thread in sent_threads %}
+  Subject: {{thread.title}}
+  Sent to user: {{thread.recipient_id}}
+  Created on: {{thread.created_at.strftime("%m/%d/%Y at %H:%M")}}
+  Item Details: {{thread.item_details}}
+  Conversation:
+  {% for message in thread.messages() %}
+    From: {% if message.created_by_id == user.user_id() %}You{%else%}{{message.created_by_id}}{%endif%}
+    Message: {{message.body}}
+    Sent on: {{message.created_at.strftime("%m/%d/%Y at %H:%M")}}
+  {% endfor %}{% endfor %}
+{% else %}
+  None
+{% endif %}
+Conversations Sent to you:
+{% if recv_threads.count() != 0 %}{% for thread in recv_threads %}
+  Subject: {{thread.title}}
+  Sent to user: {{thread.recipient_id}}
+  Created on: {{thread.created_at.strftime("%m/%d/%Y at %H:%M")}}
+  Item Details: {{thread.item_details}}
+  Conversation:
+  {% for message in thread.messages() %}
+    From: {% if message.created_by_id == user.user_id() %}You{%else%}{{message.created_by_id}}{%endif%}
+    Message: {{message.body}}
+    Sent on: {{message.created_at.strftime("%m/%d/%Y at %H:%M")}}
+  {% endfor %}{% endfor %}
+{% else %}
+  None
+{% endif %}

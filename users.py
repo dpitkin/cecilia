@@ -147,7 +147,22 @@ class DeleteUserFeedback(database.webapp2.RequestHandler):
       self.redirect(self.request.referer)
     else:
       self.redirect('/')
+      
+class ExportDataHandler(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    li = database.get_current_li()
+    if user and li:
+      items = database.db.GqlQuery("SELECT * FROM Item WHERE created_by_id = :1", user.user_id())
+      sent_threads = database.db.GqlQuery("SELECT * FROM Thread WHERE created_by_id = :1", user.user_id())
+      recv_threads = database.db.GqlQuery("SELECT * FROM Thread WHERE recipient_id = :1", user.user_id())
+      template_values = {'items': items, 'sent_threads': sent_threads, 'recv_threads': recv_threads}
+      self.response.headers['Content-Type'] = 'text/plain'
+      database.render_template(self, "/users/export_data.txt", template_values)
+    else:
+      self.redirect('/')
     
 app = database.webapp2.WSGIApplication([('/users/', MainHandler), ('/users/verify_user/', RegisterHandler), 
 ('/users/save_user', SaveLIHandler), ('/users/delete_user', DeleteHandler), ('/users/update_user', UpdateLIHandler),
-('/users/submit_feedback', UserFeedbackHandler), ('/users/list_user_feedback',ListUserFeedback), ('/users/delete_user_feedback', DeleteUserFeedback)], debug=True)
+('/users/submit_feedback', UserFeedbackHandler), ('/users/list_user_feedback',ListUserFeedback), ('/users/delete_user_feedback', DeleteUserFeedback),
+('/users/export_data', ExportDataHandler)], debug=True)

@@ -132,6 +132,8 @@ class Thread(db.Model):
   #belongs_to User
   created_by_id = db.StringProperty()
   item_details = db.StringProperty()
+  def messages(this):
+    return db.GqlQuery("SELECT * FROM Message WHERE ANCESTOR is :1", this.key())
   
 class Message(db.Model):
   body = db.TextProperty()
