@@ -3,9 +3,16 @@
 {{ thread.title }}
 {% endblock %}
 {% block content %}
-<h3>{{ thread.title }}</h3>
+
+<h3>{{ thread.title }}
+{% if thread.created_by_id == current_li.user_id %}
+( <a href="/users/shop?user_id={{thread.recipient_id}}">{{ thread.get_recipient().get_display_name() }}</a> )
+{% else %}
+( <a href="/users/shop?user_id={{thread.get_creator_id}}">{{ thread.get_creator().get_display_name() }}</a> )
+{% endif %}
+</h3>
 {% if thread.item_details %}
-  <h4>{{ thread.item_details }} </h4>
+  <p>{{ thread.item_details }} </p>
 {% endif %}
 <div class="well">
 <table style="width:100%">

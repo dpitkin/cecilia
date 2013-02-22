@@ -86,6 +86,8 @@ class LoginInformation(db.Model):
   def display_avatar(this):
     if this.avatar:
       return '<img src="/images/?avatar_id=' + this.user_id + '"/>'
+    else:
+      return '<img src="/img/default_user.png" />'
   
   def get_private_display_name(this):
     return this.first_name + " " + this.last_name
@@ -138,6 +140,12 @@ class Thread(db.Model):
   item_details = db.StringProperty()
   def messages(this):
     return db.GqlQuery("SELECT * FROM Message WHERE ANCESTOR is :1", this.key())
+  
+  def get_recipient(this):
+    return db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", this.recipient_id).get()
+
+  def get_creator(this):
+    return db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", this.created_by_id).get()
   
 class Message(db.Model):
   body = db.TextProperty()
