@@ -76,32 +76,38 @@ class DeleteHandler(database.webapp2.RequestHandler):
 class EditHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
-    if user:
+    current_li = database.get_current_li()
+    if user and current_li:
       item = db.get(db.Key.from_path('Item', int(cgi.escape(self.request.get('item_id')))))
-      database.get_current_li().create_xsrf_token()
-      database.render_template(self, 'items/edit_item.html', {'item': item})
+      if item.created_by_id == current_li.user_id:
+        database.get_current_li().create_xsrf_token()
+        database.render_template(self, 'items/edit_item.html', {'item': item})
+      else:
+        self.redirect('/')
     else:
       self.redirect('/')
       
 class UpdateHandler(database.webapp2.RequestHandler):
   def post(self):
     user = database.users.get_current_user()
-    if user and database.get_current_li().verify_xsrf_token(self):
+    current_li = database.get_current_li()
+    if user and current_li and current_li.verify_xsrf_token(self):
       item = db.get(db.Key.from_path('Item', int(cgi.escape(self.request.get('item_id')))))
-      item.title = cgi.escape(self.request.get('title'))
-      item.description = cgi.escape(self.request.get('description'))
-      item.bidding_enabled = bool(self.request.get('bidding_enabled'))
-      if (len(item.description) > 40):
-        item.summary = item.description[:40] + "..."
-      else:
-        item.summary = item.description
-      item.price = '%.2f' % float(cgi.escape(self.request.get('price')))
-      item.is_active = bool(self.request.get('show_item'))
-      if self.request.get('photo'):
-        item.image = database.db.Blob(database.images.resize(self.request.get('photo'), 512, 512))
-      database.logging.info("Item #%s changed to:\nTitle: %s\nDescription: %s\nPrice: %s", item.key().id(), item.title, item.description, item.price)
-      item.put()
-      self.redirect('/items/my_items')
+      if item.created_by_id == current_li.user_id:
+        item.title = cgi.escape(self.request.get('title'))
+        item.description = cgi.escape(self.request.get('description'))
+        item.bidding_enabled = bool(self.request.get('bidding_enabled'))
+        if (len(item.description) > 40):
+          item.summary = item.description[:40] + "..."
+        else:
+          item.summary = item.description
+        item.price = '%.2f' % float(cgi.escape(self.request.get('price')))
+        item.is_active = bool(self.request.get('show_item'))
+        if self.request.get('photo'):
+          item.image = database.db.Blob(database.images.resize(self.request.get('photo'), 512, 512))
+        database.logging.info("Item #%s changed to:\nTitle: %s\nDescription: %s\nPrice: %s", item.key().id(), item.title, item.description, item.price)
+        item.put()
+        self.redirect('/items/my_items')
     else:
       self.redirect('/')
     
