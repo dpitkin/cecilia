@@ -6,15 +6,19 @@
 	<link rel="stylesheet" href="/css/bootstrap-responsive.css" />	
 	<link rel="stylesheet" href="/css/cecilia.css" />	
 	<link rel="stylesheet" href="/css/jquery.dataTables.css" />	
-  <link rel="stylesheet" href="/css/ui-lightness/jquery-ui-1.10.0.custom.min.css"/>
+	<link rel="stylesheet" href="/css/ui-lightness/jquery-ui-1.10.0.custom.min.css"/>
+	<link rel="stylesheet" href="/css/token-input-facebook.css"/>	
+	<link rel="stylesheet" href="/css/token-input-mac.css"/>
+	<link rel="stylesheet" href="/css/token-input.css"/>	
 	<script type="text/javascript" src="/js/jquery.min.js"></script>
 	<script type="text/javascript" src="/js/bootstrap.js"></script>
 	<script type="text/javascript" src="/js/cecilia.js"></script>	
 	<script type="text/javascript" src="/js/jquery.dataTables.min.js"></script>	
-  <script type="text/javascript" src="/js/jquery.raty.min.js"></script>
-  <script type="text/javascript" src="/js/jquery-ui-1.10.0.custom.min.js"></script>
-  <script type="text/javascript" src="/js/tiny_mce_popup.js"></script>
-  <script type="text/javascript" src="/js/tiny_mce.js"></script>
+	<script type="text/javascript" src="/js/jquery.raty.min.js"></script>
+	<script type="text/javascript" src="/js/jquery-ui-1.10.0.custom.min.js"></script>
+	<script type="text/javascript" src="/js/tiny_mce_popup.js"></script>
+	<script type="text/javascript" src="/js/tiny_mce.js"></script>
+	<script type="text/javascript" src="/js/jquery.tokeninput.js"></script>
 </head>
 <body>
 	<div class="navbar navbar-inverse navbar-fixed-top">
@@ -26,19 +30,19 @@
 						<li class="">
 							<a href="/">Home</a>
 						</li>
-						{% if user %}
-							<li class="">
-								{% if unread_messages > 0 %}
-								<a href="/threads/">Inbox <span class="badge badge-info">{{unread_messages}}</span></a>	
-								{% else %}
-								<a href="/threads/">Inbox <span class="badge">{{unread_messages}}</span></a>
-								{% endif %}
-							</li>
-							{% if is_admin %}
-							<li class="">
-								<a href="/admin/">Admin</a>
-							</li>
+						{% if current_li %}
+						<li class="">
+							{% if unread_messages > 0 %}
+							<a href="/threads/">Inbox <span class="badge badge-info">{{unread_messages}}</span></a>	
+							{% else %}
+							<a href="/threads/">Inbox</a>
 							{% endif %}
+						</li>
+						{% if is_admin %}
+						<li class="">
+							<a href="/admin/">Admin</a>
+						</li>
+						{% endif %}
 						{% endif %}
 					</ul>
 					<ul class="nav pull-right">
@@ -49,22 +53,22 @@
 							</a>
 							<ul class="dropdown-menu" role="menu" aria-labelledby="drop3">
 								<li><a tabindex="-1" href="/users/">My Info</a></li>
-								<li><a tabindex="-1" href="/items/my_items?user_id={{ current_li.user_id }}">My Virtual Shop</a></li>
+								<li><a tabindex="-1" href="/users/shop?user_id={{ current_li.user_id }}">My Virtual Shop</a></li>
 								<li class="divider"></li>
 								<li><a tabindex="-1" href="{{ logout_url }}">Logout</a></li>
 							</ul>
 							{% else %}
 							<a id="user_info" href="{{login_url}}">Login</a>
 							{% endif %}
-							</li>
-						</ul>
-					</div>
+						</li>
+					</ul>
 				</div>
 			</div>
 		</div>
-		<div class="container">
-			{% block content %}
-			{% endblock %}
-		</div>
-	</body>
-	</html>
+	</div>
+	<div class="container">
+		{% block content %}
+		{% endblock %}
+	</div>
+</body>
+</html>
