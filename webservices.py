@@ -36,7 +36,7 @@ class AddItemRatingHandler(database.webapp2.RequestHandler):
     j = json.dumps({"success": success, "message": err_mess, "feedback_id": feedback.key().id()})
     self.response.out.write(j)
     
-def AddUserRatingHandler(database.webapp2.RequestHandler):
+class AddUserRatingHandler(database.webapp2.RequestHandler):
   def post(self):
     #fill out the user feedback
     feedback = database.UserFeedback()
