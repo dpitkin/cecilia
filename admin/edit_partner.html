@@ -1,0 +1,35 @@
+{% extends "layouts/layout.html" %}
+{% block title %}
+Admin
+{% endblock %}
+{% block content %}
+<h3>Edit Trusted Partner</h3>
+<hr />
+<div class="well">
+<form action="/admin/update_partner?base_url={{partner.base_url}}" enctype="multipart/form-data" method="post">
+    <input type="hidden" name="xsrf_token" value="{{xsrf_token}}"/>
+        <p>
+            <label>Name: </label>
+            <input type="text" id="name" name="name" value="{{partner.name}}"/>
+        </p>
+        <p>
+            <label>URL: </label>
+            <input type="text" id="url" name="url" value="{{partner.base_url}}"/>
+        </p>
+        <p>
+            <label>Foreign Auth token: </label>
+            <input type="text" id="foreign_auth_token" name="foreign_auth_token" value="{{partner.foreign_auth_token}}"/>
+        </p>
+    <p><button type="submit" value="Submit" class="btn">Submit</button></p>
+</form>
+</div>
+<div class="well">
+    <p>
+        <label>Local Auth token: </label>
+        <span>{{partner.local_auth_token}}</span>
+
+    </p>
+    <p><a class="btn" href="/admin/generate_local_auth_token?url={{partner.base_url}}&xsrf_token={{xsrf_token}}">Generate new token</a></p>
+</div>
+<p><a class="btn" href="/admin/partners">Go back</a></p>
+{% endblock %}
