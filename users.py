@@ -42,16 +42,16 @@ class SaveLIHandler(database.webapp2.RequestHandler):
     if user and li.count() == 1:
       li = database.get_current_li()
       if li.verify_xsrf_token(self):
-        li.first_name = cgi.escape(self.request.get('first_name'))
-        li.last_name = cgi.escape(self.request.get('last_name'))
-        li.nickname = cgi.escape(self.request.get("nickname"))
+        li.first_name = cgi.escape(database.quick_sanitize(self.request.get('first_name')))
+        li.last_name = cgi.escape(database.quick_sanitize(self.request.get('last_name')))
+        li.nickname = cgi.escape(database.quick_sanitize(self.request.get("nickname")))
         li.private = bool(self.request.get("private"))
         li.is_active = True
         if user.email() == 'hardcodetest1@gmail.com' or user.email() == 'hardcodetest2@gmail.com':
           li.is_admin = True
         else:
           li.is_admin = database.users.is_current_user_admin()
-        li.desc = cgi.escape(self.request.get('desc'))
+        li.desc = cgi.escape(database.sanitizeHTML(self.request.get('desc')))
         if(self.request.get('avatar')):
           li.avatar = database.db.Blob(database.images.resize(self.request.get('avatar'), 128, 128))
         li.put()
@@ -64,12 +64,12 @@ class UpdateLIHandler(database.webapp2.RequestHandler):
     user = database.users.get_current_user()
     if user and database.get_current_li().verify_xsrf_token(self):
       li = database.get_current_li()
-      li.first_name = cgi.escape(self.request.get('first_name'))
-      li.last_name = cgi.escape(self.request.get('last_name'))
+      li.first_name = cgi.escape(database.quick_sanitize(self.request.get('first_name')))
+      li.last_name = cgi.escape(database.quick_sanitize(self.request.get('last_name')))
       li.email = user.email()
-      li.nickname = cgi.escape(self.request.get('nickname'))
+      li.nickname = cgi.escape(database.quick_sanitize(self.request.get('nickname')))
       li.private = bool(self.request.get('private'))
-      li.desc = cgi.escape(self.request.get('desc'))
+      li.desc = cgi.escape(database.sanitizeHTML(self.request.get('desc')))
       if(self.request.get('avatar')):
         li.avatar = database.db.Blob(database.images.resize(self.request.get('avatar'), 128, 128))
       li.put()

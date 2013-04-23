@@ -18,7 +18,7 @@ import webapp2
 import jinja2
 import os
 import logging
-
+import re
 import string
 import hashlib
 import random
@@ -33,7 +33,42 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
 from google.appengine.api import images
 
+from urlparse import urljoin
+from bs4 import BeautifulSoup, Comment
+
 jinja_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
+
+def sanitizeHTML(value, base_url=None):
+    rjs = r'[\s]*(&#x.{1,7})?'.join(list('javascript:'))
+    rvb = r'[\s]*(&#x.{1,7})?'.join(list('vbscript:'))
+    re_scripts = re.compile('(%s)|(%s)' % (rjs, rvb), re.IGNORECASE)
+    validTags = 'p i strong b u a h1 h2 h3 pre br img input'.split()
+    validAttrs = 'href src width height class name id type value'.split()
+    urlAttrs = 'href src'.split() # Attributes which should have a URL
+    soup = BeautifulSoup(value)
+    for comment in soup.findAll(text=lambda text: isinstance(text, Comment)):
+        # Get rid of comments
+        comment.extract()
+    for tag in soup.findAll(True):
+        if tag.name not in validTags:
+            tag.hidden = True
+        attrs = dict(tag.attrs)
+        tag.attrs = {}
+        for attr, val in attrs.iteritems():
+            if attr in validAttrs:
+                val = re_scripts.sub('', val) # Remove scripts (vbs & js)
+                if attr in urlAttrs:
+                    val = urljoin(base_url, val) # Calculate the absolute url
+                tag.attrs[attr] = val
+    ret = soup.renderContents().decode('utf8')
+    #if strip_quotes:
+    #  ret = re.sub(r"[\"']", '', ret)
+    return ret
+    
+jinja_environment.globals.update(sanitizeHTML=sanitizeHTML)
+
+def quick_sanitize(input):
+  return re.sub(r"[^a-zA-Z0-9 \$\%\-_\!]", '', input)
 
 def render_template(handler_object, file_name, template_values):
   user = users.get_current_user()
@@ -106,6 +141,7 @@ class LoginInformation(db.Model):
   def create_xsrf_token(this):
     #create a token based off of their name, random number, id, and time, then hash via sha512
     #won't scale too great, but should be pretty secure
+    random.seed(os.urandom(32))
     this.xsrf_token = hashlib.sha512(str(random.random()) + this.last_name + str(this.key()) + this.first_name + str(time.clock())).hexdigest()
     logging.info("created xsrf_token " + this.xsrf_token)
     this.put()

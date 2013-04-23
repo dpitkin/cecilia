@@ -26,18 +26,18 @@ Your Profile
       <input type="hidden" name="xsrf_token" value="{{xsrf_token}}"/>
       <p>
 			<label>First Name: *</label>
-			<input type="text" id="first_name" name="first_name" value="{{li.first_name}}"/>
+			{{ sanitizeHTML('<input type="text" id="first_name" name="first_name" value="' + li.first_name + '" />') }}
 		</p>
 		<p>
 			<label>Last Name: *</label>
-			<input type="text" id="last_name" name="last_name" value="{{li.last_name}}"/>
+			{{ sanitizeHTML('<input type="text" id="last_name" name="last_name" value="' + li.last_name + '" />') }}
 		</p>
 		<p>
 			<label>
 				Nickname: *
 				<i class="icon-info-sign info_button-right" title="Nickname" data-content="This will be displayed instead of your real name if you are marked as private"></i>
 			</label>
-			<input type="text" id="nickname" name="nickname" value="{{li.nickname}}"/> 
+			{{ sanitizeHTML('<input type="text" id="nickname" name="nickname" value="' + li.nickname + '"/>') }} 
 		</p>
 		<p>
 			<label>

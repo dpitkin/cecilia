@@ -15,6 +15,7 @@ class MainHandler(database.webapp2.RequestHandler):
     
     #ew, (n+1) queries
     if database.get_current_li():
+      token = database.get_current_li().create_xsrf_token()
       sent_threads = db.GqlQuery("SELECT * FROM Thread WHERE created_by_id = :1 ORDER BY created_at DESC", user.user_id())
       for thread in sent_threads:
         children = db.GqlQuery("SELECT * FROM Message WHERE ANCESTOR is :1", thread.key())
@@ -39,23 +40,26 @@ class MainHandler(database.webapp2.RequestHandler):
         in_unread_thread.append(True) if push else in_unread_thread.append(False)
       
       database.render_template(self, 'threads/index.html', {'sent_threads': sent_threads, 'in_threads': in_threads, 'out_unread_thread': out_unread_thread,
-      'in_unread_thread': in_unread_thread})
+      'in_unread_thread': in_unread_thread, 'xsrf_token': token})
     else:
       self.redirect('/')
     
 class ViewHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
-    if user:
+    if user and database.get_current_li().verify_xsrf_token(self):
       token = database.get_current_li().create_xsrf_token()
       thread_key = db.Key.from_path('Thread', int(self.request.get('thread_id')))
       thread = db.get(thread_key)
-      children = db.GqlQuery("SELECT * FROM Message WHERE ANCESTOR is :1", thread_key)
-      for child in children:
-        if child.recipient_id == user.user_id():
-          child.read = True
-          child.put()
-      database.render_template(self, 'threads/view_thread.html', {'thread': thread, 'children': children, 'xsrf_token' : token})
+      if thread.recipient_id == user.user_id() or thread.created_by_id == user.user_id():
+        children = db.GqlQuery("SELECT * FROM Message WHERE ANCESTOR is :1", thread_key)
+        for child in children:
+          if child.recipient_id == user.user_id():
+            child.read = True
+            child.put()
+        database.render_template(self, 'threads/view_thread.html', {'thread': thread, 'children': children, 'xsrf_token' : token})
+      else:
+        self.redirect('/')
     else:
       self.redirect('/')
     

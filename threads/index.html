@@ -11,7 +11,7 @@ Threads
 {% for thread in in_threads %}
 <tr>
 	<td>
-		<a href="/threads/view_thread?thread_id={{ thread.key().id() }}">
+		<a href="/threads/view_thread?thread_id={{ thread.key().id() }}&xsrf_token={{ xsrf_token }}">
 			<div>{% if in_unread_thread[i] %}(Unread message) {% endif %}{{ thread.title }}</div>
 		</a>
 	</td>
@@ -25,7 +25,7 @@ Threads
 {% for thread in sent_threads %}
 <tr>
 	<td>
-		<a href="/threads/view_thread?thread_id={{ thread.key().id() }}">
+		<a href="/threads/view_thread?thread_id={{ thread.key().id() }}&xsrf_token={{ xsrf_token }}">
 			<div>{% if out_unread_thread[i] %}(Unread message) {% endif %}{{ thread.title }}</div>
 		</a>
 	</td>

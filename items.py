@@ -44,8 +44,8 @@ class SaveHandler(database.webapp2.RequestHandler):
     user = database.users.get_current_user()
     if user and database.get_current_li().verify_xsrf_token(self):
       item = database.Item()
-      item.title = cgi.escape(self.request.get('title'))
-      item.description = cgi.escape(self.request.get('description'))
+      item.title = cgi.escape(database.quick_sanitize(self.request.get('title')))
+      item.description = cgi.escape(database.sanitizeHTML(self.request.get('description')))
       if (len(item.description) > 40):
         item.summary = item.description[:40].rstrip() + "..."
       else:
@@ -103,8 +103,8 @@ class UpdateHandler(database.webapp2.RequestHandler):
     if user and current_li and current_li.verify_xsrf_token(self):
       item = db.get(db.Key.from_path('Item', int(cgi.escape(self.request.get('item_id')))))
       if item.created_by_id == current_li.user_id:
-        item.title = cgi.escape(self.request.get('title'))
-        item.description = cgi.escape(self.request.get('description'))
+        item.title = cgi.escape(database.quick_sanitize(self.request.get('title')))
+        item.description = cgi.escape(database.sanitizeHTML(self.request.get('description')))
         item.bidding_enabled = bool(self.request.get('bidding_enabled'))
         if (len(item.description) > 40):
           item.summary = item.description[:40] + "..."

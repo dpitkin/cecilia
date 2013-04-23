@@ -9,7 +9,7 @@ Old Searches
   <tr><th>Search</th></tr>
   {% for s in searches %}
     <tr>
-      <td><a href="/items/search?query={{s.search}}">{{s.search}}</a></td>
+      <td>{{ sanitizeHTML('<a href="/items/search?query=' + s.search + '">' + s.search + '</a>') }}</td>
     </tr>
 	{% endfor %}
 </table>
