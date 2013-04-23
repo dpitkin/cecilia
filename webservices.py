@@ -10,13 +10,21 @@ def item_to_dictionary(item, self):
 		"id" : item.key().id(),
 		"title" : item.title,
 		"description" : item.description,
-		"seller" : item.get_creator().get_display_name(),
 		"image" : self.request.host + item.display_image_url(),
+		"seller" : seller_to_dictionary(item.get_creator()),
 		"price" : item.price,
 		"url" : self.request.host + "/items/view_item?item_id=" + str(item.key().id()),
 		"created_at" : item.created_at.strftime("%m/%d/%Y"),
 		"expiration_date" : item.expiration_date.strftime("%m/%d/%Y")
 	}
+
+
+def seller_to_dictionary(seller):
+	return {
+		"id" : seller.user_id,
+		"username" : seller.get_display_name()
+	}
+
   
 class AddItemRatingHandler(database.webapp2.RequestHandler):
   def post(self):
@@ -157,5 +165,22 @@ class WebservicesSearchHandler(database.webapp2.RequestHandler):
 		b = json.dumps({ "items" : results, "results_left" : len(list(tmp_results)) - counter, "total" : len(list(tmp_results)) })
 		self.response.out.write(b)
 
+
+class WebservicesItemHandler(database.webapp2.RequestHandler):
+	def get(self):
+		auth_token = cgi.escape(self.request.get('auth_token'))
+		item_id = cgi.escape(self.request.get('item_id'))
+		try:
+			item = db.get(db.Key.from_path('Item', int(item_id)))
+			self.response.out.write(item_to_dictionary(item))
+		except ValueError:
+			failure = json.dumps({ "success" : False, "message" : "item_id does not exist"})
+			self.response.out.write(failure)
+		except AttributeError:
+			failure = json.dumps({ "success" : False, "message" : "item_id does not exist"})
+			self.response.out.write(failure)
+
+
 app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), 
-('/webservices/add_item_rating', AddItemRatingHandler)], debug=True)
+('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler)], debug=True)
+
