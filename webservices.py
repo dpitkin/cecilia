@@ -115,7 +115,7 @@ class WebservicesSearchHandler(database.webapp2.RequestHandler):
 				count = count + 1
 				results.append(res)
 
-		b = json.dumps({ "search_by" : search_by, "items" : results, "sort_options" : sort_options, "results_left" : len(list(tmp_results)) - counter, "total" : len(list(tmp_results)) })
+		b = json.dumps({ "items" : results, "results_left" : len(list(tmp_results)) - counter, "total" : len(list(tmp_results)) })
 		self.response.out.write(b)
 
 app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler)], debug=True)
