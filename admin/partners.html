@@ -1,0 +1,47 @@
+{% extends "layouts/layout.html" %}
+{% block title %}
+Admin
+{% endblock %}
+{% block content %}
+<h3>Trusted Partners</h3>
+<hr />
+<table class="table table-striped">
+<tr><th>Name:</th><th>URL:</th><th>Local Auth token:</th><th>Foreign Auth token:</th><th>Edit:</th><th>Delete:</th></tr>
+{% for partner in partners %}
+<tr>
+  <td>  
+    {{ partner.name }}
+  </td>
+  <td>
+    {{ partner.base_url }} 
+  </td>
+  <td>
+    {{ partner.local_auth_token }}
+  </td>
+  <td>
+    {{ partner.foreign_auth_token }}
+  </td>
+  <td>
+    <a href="/admin/edit_partner?url={{ partner.base_url }}&xsrf_token={{xsrf_token}}">
+      <button class="btn btn-primary" type="submit" value="Edit">Edit</button>
+    </a>
+  </td>
+  <td>
+    <div>
+      <a href="/admin/delete_partner?url={{ partner.base_url }}&xsrf_token={{xsrf_token}}">
+        <button class="btn btn-primary" type="submit" value="Delete">Delete</button>
+      </a>
+    </div>
+  </td>
+</tr>
+{% endfor %}
+</table>
+<p>
+  <form action="/admin/save_partner" id="item_form" method="post">
+    <input type="hidden" name="xsrf_token" value="{{ xsrf_token }}" key="{{ current_li.key().id() }}"/>
+    Enter Name: <input type="text" name="name" id="name"/> URL: <input type="text" name="url" id="url"/> Foreign Auth token: <input type="text" name="auth_token" id="auth_token"/>
+    <input class="btn btn-primary" type="submit" value="Save Partner" />    
+  </form>
+</p>
+<p><a class="btn" href="/admin/">Go back</a></p>
+{% endblock %}

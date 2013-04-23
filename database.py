@@ -262,6 +262,7 @@ class UserFeedback(db.Model):
   
   def get_creator(this):
     return db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", this.created_by_id).get()
+
 class ItemFeedback(db.Model):
   created_by_id = db.StringProperty()
   created_at = db.DateTimeProperty(auto_now_add=True)
@@ -275,3 +276,9 @@ class Search(db.Model):
 
 class IsTestDataLoaded(db.Model):
   is_test_data_loaded = db.BooleanProperty()
+
+class TrustedPartner(db.Model):
+  name = db.StringProperty()
+  base_url = db.StringProperty()
+  local_auth_token = db.StringProperty()
+  foreign_auth_token = db.StringProperty()
