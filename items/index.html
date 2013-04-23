@@ -7,6 +7,41 @@ Items
 <hr />
 <script type="text/javascript" src="/js/items/items.js"></script>
 <script type="text/javascript">
+  function load_item(item){
+    $parent = $(item).parent();
+    console.log(parent);
+    $limit = parseInt($("#query_limit").val());
+    $page = parseInt($parent.attr("data-page"));
+    $offset = $page * $limit;
+    $search_by = $("#query_search_by").val();
+    $query = $("#query_field").val();
+    $(item).append("<h4>Loading...</h4>");
+    console.log($(item));
+    $(item).find("tbody").html("");
+    $parent.attr("data-loading", "loading");
+    $sort_order = JSON.stringify([
+      {"type" : $("#query_sortA").val(), "ordering" : $("#query_orderA").val()},
+      {"type" : $("#query_sortB").val(), "ordering" : $("#query_orderB").val()}      
+    ]);
+    console.log($sort_order);
+    $.get("/webservices/search", { "limit" : $limit, "offset" : $offset, "search_by" : $search_by, "query" : $query, "sort_options" : $sort_order }, function(resp){
+      console.log(resp);
+      $parent.attr("data-loading", "");
+      resp = JSON.parse(resp);
+      $(item).find("h4").remove();
+      $tbody = $(item).find("tbody");
+      for(var i = 0; i < resp.items.length; i++){
+        var it = resp.items[i];
+        $tbody.append("<tr><td>" + "1/1/1" + "</td><td>" + it.title + "</td><td>" + it.description + "</td><td>" + it.price + "</td></tr>");
+      }
+      var start = $offset + 1;
+      var end = $offset + resp.items.length;
+      var showing_string = "Showing " + start + " - " + end + " out of " + resp.total;
+      if (resp.items.length == 0) {showing_string = "Showing 0 of " + resp.total};
+      $(item).parent().find("span.showing_indicator").html(showing_string);
+    });
+  }
+
   $(document).ready(function() {
     var items = [];{% for item in items %} items = items.concat("{{item.title}}"); {% endfor %}
     $('#advanced_search').autocomplete({
@@ -14,25 +49,30 @@ Items
     });
 
     $("#query_submit").click(function(){
-      $limit = $("#query_limit").val();
-      $offset = 0;
-      $search_by = $("#query_search_by").val();
-      $query = $("#query_field").val();
       $(".remote_search_table").each(function(index, item){
-        $(item).append("<h4>Loading...</h4>");
-        var url = $(item).attr("data-api-url");
-        $(item).find("tbody").html("");
-        console.log(url);
-        $.get("/webservices/search", { "limit" : $limit, "offset" : $offset, "search_by" : $search_by, "query" : $query }, function(resp){
-          resp = JSON.parse(resp);
-          $(item).find("h4").remove();
-          $tbody = $(item).find("tbody");
-          for(var i = 0; i < resp.items.length; i++){
-            var it = resp.items[i];
-            $tbody.append("<tr><td>" + "1/1/1" + "</td><td>" + it.title + "</td><td>" + it.description + "</td><td>" + it.price + "</td></tr>");
-          }
-        });
+        $(item).parent().attr("data-page", 0);
+        load_item(item);
       });
+    });
+
+    $(".search_prev").click(function(){
+      $parent = $(this).parent();
+      $page = parseInt($parent.attr("data-page"));
+      if ($page > 0 && $parent.attr("data-loading").length == 0) {
+        $page = $page - 1;
+        $parent.attr("data-page", $page);
+        load_item($parent.find(".remote_search_table"));
+      };
+    });
+
+    $(".search_next").click(function(){
+      $parent = $(this).parent();
+      $page = parseInt($parent.attr("data-page"));
+      if ($parent.attr("data-loading").length == 0) {
+        $page = $page + 1;
+        $parent.attr("data-page", $page);
+        load_item($parent.find(".remote_search_table"));
+      };
     });
 
   });
@@ -60,24 +100,49 @@ Items
           <option value="description">Description</option>
           <option value="price">Price</option>
         </select>
+  <br />
+  Sort By:
+  <select id="query_sortA" value="title">
+          <option value="title">Title</option>
+          <option value="description">Description</option>
+          <option value="price">Price</option>
+          <option value="time_create">Time Created</option>
+          <option value="location">Location</option>
+        </select>
+  <select id="query_orderA" value="desc">
+    <option value="desc">DESC</option>
+    <option value="asc">ASC</option>    
+  </select>
+  And:
+  <select id="query_sortB" value="title">
+          <option value="title">Title</option>
+          <option value="description">Description</option>
+          <option value="price">Price</option>
+          <option value="time_create">Time Created</option>
+          <option value="location">Location</option>
+        </select>
+  <select id="query_orderB" value="desc">
+    <option value="desc">DESC</option>
+    <option value="asc">ASC</option>    
+  </select>
+  <br />
   Query: <input type="text" id="query_field" /><br />
-  <input type="submit" id="query_submit" \>
+  <input type="submit" id="query_submit" class="btn" value="Search" \>
 </div>
 
-<div class="remote_search_table_wrapper">
-<table class="table table-striped remote_search_table" data-api-url="localhost:8081">
+<div class="remote_search_table_wrapper" data-page="0" data-loading="" data-api-url="localhost:8081">
+  <h3>Local Results</h3>
+<table class="table table-striped remote_search_table">
   <thead>
     <th width="10%">Posted</th><th>Title</th><th>Description</th><th>Price</th>
   </thead>
   <tbody>
-    <tr>
-      <td>a</td>
-      <td>b</td>
-      <td>c</td>
-      <td>d</td>
-    </tr>
+
   </tbody>
 </table>
+<span class="showing_indicator">Showing 0 of 0</span><br />
+<a href="#" class="search_prev" onclick="return false;">&lt;Prev</a>
+<a href="#" class="search_next" style="padding-left:20px;" onclick="return false;">Next&gt;</a>
 </div>
 
 <br/><br/>

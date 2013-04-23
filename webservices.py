@@ -72,11 +72,12 @@ def AddUserRatingHandler(database.webapp2.RequestHandler):
 class WebservicesSearchHandler(database.webapp2.RequestHandler):
 	def get(self):
 		search_by_params = ["title", "description", "price"]
+		sort_types = ["title", "description", "price", "time_create", "location"]
 		query = cgi.escape(self.request.get("query"))
 		limit = cgi.escape(self.request.get("limit"))
 		offset = cgi.escape(self.request.get("offset"))
 		search_by = cgi.escape(self.request.get("search_by"))
-		sort_options = self.request.get("sort_options")
+		sort_options = json.loads(self.request.get("sort_options"))
 
 		if len(str(limit)) == 0:
 			limit = "10"
@@ -102,8 +103,37 @@ class WebservicesSearchHandler(database.webapp2.RequestHandler):
 		except ValueError, e:
 			offset = 0
 
-		items = db.GqlQuery("SELECT * FROM Item ORDER BY created_at DESC")
+		directionA = ""
+		directionB = ""
+
+		print [l.description for l in list(db.GqlQuery("SELECT description FROM Item").run(limit=5))]
+
+		if sort_options[0]["ordering"] == "desc":
+			directionA = "DESC"
+		else:
+			directionA = "ASC"
+
+		if sort_options[1]["ordering"] == "desc":
+			directionB = "DESC"
+		else:
+			directionB = "ASC"
+
+		if not(sort_options[0]["type"] in sort_types):
+			sort_options[0]["type"] = "title"
+		elif sort_options[0]["type"] == "time_create":
+			sort_options[0]["type"] = "created_at"
+
+		if not(sort_options[1]["type"] in sort_types):
+			sort_options[1]["type"] = "title"
+		elif sort_options[1]["type"] == "time_create":
+			sort_options[1]["type"] = "created_at"
+
+		orderA = directionA + sort_options[0]["type"]
+		orderB = directionB + sort_options[1]["type"]		
+
+		items = db.GqlQuery("SELECT * FROM Item ORDER BY " + sort_options[0]["type"] + " " + directionA)
 		#now tokenize the input by spaces
+
 		query_tokens = database.string.split(query)
 		tmp_results = []
 		for item in items:
