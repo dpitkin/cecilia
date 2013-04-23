@@ -22,13 +22,13 @@ Admin
     {{ partner.foreign_auth_token }}
   </td>
   <td>
-    <a href="/admin/edit_partner?url={{ partner.base_url }}&xsrf_token={{xsrf_token}}">
+    <a href="/admin/edit_partner?partner_id={{ partner.key().id() }}">
       <button class="btn btn-primary" type="submit" value="Edit">Edit</button>
     </a>
   </td>
   <td>
     <div>
-      <a href="/admin/delete_partner?url={{ partner.base_url }}&xsrf_token={{xsrf_token}}">
+      <a href="/admin/delete_partner?url={{ partner.key().id() }}&xsrf_token={{xsrf_token}}">
         <button class="btn btn-primary" type="submit" value="Delete">Delete</button>
       </a>
     </div>

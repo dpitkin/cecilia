@@ -68,7 +68,7 @@ def sanitizeHTML(value, base_url=None):
 jinja_environment.globals.update(sanitizeHTML=sanitizeHTML)
 
 def quick_sanitize(input):
-  return re.sub(r"[^a-zA-Z0-9 \$\%\-_\!]", '', input)
+  return re.sub(r"[^a-zA-Z0-9 \$\%\-_\!\.&=/:\?]", '', input)
 
 def render_template(handler_object, file_name, template_values):
   user = users.get_current_user()
