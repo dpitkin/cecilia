@@ -2,6 +2,9 @@
 
 import database
 from database import db
+import hashlib
+import random
+import time
 
 cgi = database.cgi
 
@@ -117,7 +120,95 @@ class LoadTestDataHandler(database.webapp2.RequestHandler):
     else:
       self.redirect('/')
 
+class TrustedPartnersHandler(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    if user and database.get_current_li() and database.get_current_li().is_admin:
+      token = database.get_current_li().create_xsrf_token()
+      partners = database.db.GqlQuery("SELECT * FROM TrustedPartner")
+      database.render_template(self, '/admin/partners.html', {'partners' : partners, 'xsrf_token' : token })
+    else:
+      self.redirect('/')
 
-app = database.webapp2.WSGIApplication([('/admin/', MainHandler), ('/admin/user_activation', ActivationHandler), ('/admin/modify', ModifyHandler), ('/admin/create_admin', CreateAdminHandler), ('/admin/load_test_data', LoadTestDataHandler)], debug=True)
+class SaveTrustedPartnerHandler(database.webapp2.RequestHandler):
+  def post(self):
+    user = database.users.get_current_user()
+    if user and database.get_current_li() and database.get_current_li().is_admin and database.get_current_li().verify_xsrf_token(self):
+      token = cgi.escape(self.request.get('xsrf_token'))
+      name = cgi.escape(self.request.get('name'))
+      url = cgi.escape(self.request.get('url'))
+      foreign_auth_token = cgi.escape(self.request.get('auth_token'))
+      local_auth_token = hashlib.sha1(str(random.random()) + url + str(time.clock())).hexdigest()
+      partner = database.TrustedPartner()
+      partner.name = name
+      partner.base_url = url
+      partner.local_auth_token = local_auth_token
+      if foreign_auth_token != "":
+        partner.foreign_auth_token = foreign_auth_token
+      else:
+        partner.foreign_auth_token = "-1"
+      if url != "" and database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE base_url = :1", url).get() == None:
+        partner.put()
+      self.redirect(self.request.referer)
+    else:
+      self.redirect('/')
+
+class DeleteTrustedPartnerHandler(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    if user and database.get_current_li() and database.get_current_li().is_admin and database.get_current_li().verify_xsrf_token(self):
+      token = cgi.escape(self.request.get('xsrf_token'))
+      url = cgi.escape(self.request.get('url'))
+      partner = database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE base_url = :1", url).get()
+      if partner:
+        database.logging.info("Deleting Trusted Partner: %s", partner.base_url)
+        database.db.delete(partner)
+      self.redirect(self.request.referer)
+    else:
+      self.redirect('/') 
+
+class EditTrustedPartnerHandler(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    if user and database.get_current_li() and database.get_current_li().is_admin:
+      token = cgi.escape(self.request.get('xsrf_token'))
+      url = cgi.escape(self.request.get('url'))
+      partner = database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE base_url = :1", url).get()
+      database.render_template(self, '/admin/edit_partner.html', {'partner' : partner, 'xsrf_token' : token})
+    else:
+      self.redirect('/')
+
+class GenerateLocalAuthTokenHandler(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    if user and database.get_current_li() and database.get_current_li().is_admin and database.get_current_li().verify_xsrf_token(self):
+      token = cgi.escape(self.request.get('xsrf_token'))
+      url = cgi.escape(self.request.get('url'))
+      partner = database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE base_url = :1", url).get()
+      partner.local_auth_token = hashlib.sha1(str(random.random()) + url + str(time.clock())).hexdigest()
+      partner.put()
+      self.redirect('/admin/partners')
+    else:
+      self.redirect('/')
+
+class UpdatePartnerHandler(database.webapp2.RequestHandler):
+  def post(self):
+    user = database.users.get_current_user()
+    if user and database.get_current_li() and database.get_current_li().is_admin and database.get_current_li().verify_xsrf_token(self):
+      token = cgi.escape(self.request.get('xsrf_token'))
+      url = cgi.escape(self.request.get('base_url'))
+      partner = database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE base_url = :1", url).get()
+      new_name = cgi.escape(self.request.get('name'))
+      new_url = cgi.escape(self.request.get('url'))
+      new_foreign_auth_token = cgi.escape(self.request.get('foreign_auth_token'))
+      if new_url != "" and database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE base_url = :1", new_url).get() == None:
+        partner.base_url = new_url
+      partner.foreign_auth_token = new_foreign_auth_token
+      partner.put()
+      self.redirect('/admin/partners')
+    else:
+      self.redirect('/')
+
+app = database.webapp2.WSGIApplication([('/admin/', MainHandler), ('/admin/user_activation', ActivationHandler), ('/admin/modify', ModifyHandler), ('/admin/create_admin', CreateAdminHandler), ('/admin/load_test_data', LoadTestDataHandler), ('/admin/partners', TrustedPartnersHandler), ('/admin/save_partner', SaveTrustedPartnerHandler), ('/admin/delete_partner', DeleteTrustedPartnerHandler), ('/admin/edit_partner', EditTrustedPartnerHandler), ('/admin/generate_local_auth_token', GenerateLocalAuthTokenHandler), ('/admin/update_partner', UpdatePartnerHandler)], debug=True)
 
 
