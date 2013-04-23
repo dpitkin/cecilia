@@ -12,17 +12,21 @@ handlers:
 - url: /
   script: main.app
   secure: always
-  
+
 - url: /users/.*
   script: users.app
   secure: always
-  
+
 - url: /items/.*
   script: items.app
   secure: always
-  
+
 - url: /threads/.*
   script: threads.app
+  secure: always
+
+- url: /webservices/.*
+  script: webservices.app
   secure: always
 
 - url: /admin/.*
@@ -31,7 +35,7 @@ handlers:
 
 - url: /css
   static_dir: css
-  
+
 - url: /images/
   script: main.app
   secure: optional
@@ -41,7 +45,7 @@ handlers:
 
 - url: /js
   static_dir: js
-  
+
 libraries:
 - name: webapp2
   version: "2.5.2"

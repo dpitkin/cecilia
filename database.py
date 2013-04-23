@@ -242,7 +242,12 @@ class Item(db.Model):
       return '<img src="/images/?item_id=' + str(this.key().id()) + '"/>'
     else:
       return ''
-    
+  def display_image_url(this):
+    if this.image:
+      return '/images/?item_id=' + str(this.key().id())
+    else:
+      return ''
+      
   def get_creator(this):
     return db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", this.created_by_id).get()
     
