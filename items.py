@@ -16,8 +16,9 @@ class MainHandler(database.webapp2.RequestHandler):
 class NewHandler(database.webapp2.RequestHandler):
   def get(self):
     if database.users.get_current_user():
-      database.get_current_li().create_xsrf_token()
-      database.render_template(self, 'items/new_item.html', {})
+      token = database.get_current_li().create_xsrf_token()
+      database.logging.info("li id: " + str(database.get_current_li().key().id()))
+      database.render_template(self, 'items/new_item.html', {"xsrf_token" : token})
     else:
       self.redirect('/')
     
@@ -26,8 +27,9 @@ class ViewHandler(database.webapp2.RequestHandler):
     current_li = database.get_current_li()
     item = db.get(db.Key.from_path('Item', int(self.request.get('item_id'))))
     li = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", item.created_by_id).get()
+    token = ""
     if database.users.get_current_user():
-      database.get_current_li().create_xsrf_token()
+      token = database.get_current_li().create_xsrf_token()
     feedback = db.GqlQuery("SELECT * FROM ItemFeedback WHERE item_id = :1 ORDER BY created_at DESC", str(item.key().id()))
     buyer = database.get_user(item.highest_bid_id) 
     rating = None
@@ -35,7 +37,7 @@ class ViewHandler(database.webapp2.RequestHandler):
       f = database.db.GqlQuery("SELECT * FROM UserFeedback WHERE for_user_id = :1 AND created_by_id = :2", li.user_id, current_li.user_id)
       if f.count() > 0:
         rating = int(f.get().rating)
-    database.render_template(self, 'items/view_item.html', {'item': item, 'li': li, 'feedback': feedback, 'buyer': buyer, 'rating':rating})
+    database.render_template(self, 'items/view_item.html', {'item': item, 'li': li, 'feedback': feedback, 'buyer': buyer, 'rating':rating, 'xsrf_token' : token})
     
 class SaveHandler(database.webapp2.RequestHandler):
   def post(self):
@@ -87,8 +89,8 @@ class EditHandler(database.webapp2.RequestHandler):
     if user and current_li:
       item = db.get(db.Key.from_path('Item', int(cgi.escape(self.request.get('item_id')))))
       if item.created_by_id == current_li.user_id:
-        database.get_current_li().create_xsrf_token()
-        database.render_template(self, 'items/edit_item.html', {'item': item})
+        token = database.get_current_li().create_xsrf_token()
+        database.render_template(self, 'items/edit_item.html', {'item': item, 'xsrf_token' : token})
       else:
         self.redirect('/')
     else:
@@ -123,9 +125,9 @@ class ShopHandler(database.webapp2.RequestHandler):
     user = database.users.get_current_user()
     current_li = database.get_current_li()
     if user and current_li:
-      database.get_current_li().create_xsrf_token()
+      token = database.get_current_li().create_xsrf_token()
       items = db.GqlQuery("SELECT * FROM Item WHERE created_by_id = :1 ORDER BY created_at DESC", user.user_id())
-      database.render_template(self, 'items/my_items.html', {'items': items})
+      database.render_template(self, 'items/my_items.html', {'items': items, 'xsrf_token' : token})
     else:
       self.redirect('/')
     
@@ -230,10 +232,10 @@ class NewCollectionHandler(database.webapp2.RequestHandler):
     user = database.users.get_current_user()
     current_li = database.get_current_li()
     if user and current_li:
-      current_li.create_xsrf_token()
+      token = current_li.create_xsrf_token()
       items = db.GqlQuery("SELECT * FROM Item WHERE expiration_date >= :1 AND is_active = :2 AND deactivated = :3", database.datetime.date.today(), True, False)
       bad_code = ",".join(["{id:\""+str(item.key().id())+"\", name: \""+item.title+"\"}" for item in items])
-      database.render_template(self, '/items/new_collection.html', {'list': bad_code})
+      database.render_template(self, '/items/new_collection.html', {'list': bad_code, 'xsrf_token' : token})
     else:
       self.redirect('/')
 

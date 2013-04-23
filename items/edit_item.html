@@ -8,7 +8,7 @@ Edit Item
 <script type="text/javascript" src="/js/items/items.js"></script>
 <form action="/items/update_item" id="item_form" enctype="multipart/form-data" method="post">
   <input type="hidden" name="item_id" value="{{ item.key().id() }}"/>
-  <input type="hidden" name="xsrf_token" value="{{ current_li.xsrf_token }}"/>
+  <input type="hidden" name="xsrf_token" value="{{ xsrf_token }}"/>
 	<div class="well">
 
 		<p>

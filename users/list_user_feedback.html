@@ -16,7 +16,7 @@ User Feedback List for Admins
         <td><a href="/users/shop?user_id={{f.created_by_id}}">{{f.get_creator().get_display_name()}}</td>
         {% if is_admin %}
           <td>
-            <a href="/users/delete_user_feedback?feedback_id={{ f.key().id() }}&xsrf_token={{current_li.xsrf_token}}">
+            <a href="/users/delete_user_feedback?feedback_id={{ f.key().id() }}&xsrf_token={{xsrf_token}}">
               <button class="btn btn-primary"  value="Delete">Delete Item</button> 
             </a>  
           </td>

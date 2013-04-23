@@ -107,16 +107,20 @@ class LoginInformation(db.Model):
     #create a token based off of their name, random number, id, and time, then hash via sha512
     #won't scale too great, but should be pretty secure
     this.xsrf_token = hashlib.sha512(str(random.random()) + this.last_name + str(this.key()) + this.first_name + str(time.clock())).hexdigest()
+    logging.info("created xsrf_token " + this.xsrf_token)
     this.put()
+    return this.xsrf_token
     
   def verify_xsrf_token(this, request):
     #change the token to make it obsolete
     old_token = this.xsrf_token
     this.xsrf_token = hashlib.sha512(this.xsrf_token).hexdigest()
     this.put()
+    logging.info("__li id: " + str(this.key().id()))
     if old_token == request.request.get('xsrf_token'):
       return True
     else:
+      logging.info("verify_xsrf_token failed: " + old_token + ", " + request.request.get('xsrf_token'))
       return False
       
   def get_average_rating(this):

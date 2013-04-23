@@ -47,7 +47,7 @@ class ViewHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
     if user:
-      database.get_current_li().create_xsrf_token()
+      token = database.get_current_li().create_xsrf_token()
       thread_key = db.Key.from_path('Thread', int(self.request.get('thread_id')))
       thread = db.get(thread_key)
       children = db.GqlQuery("SELECT * FROM Message WHERE ANCESTOR is :1", thread_key)
@@ -55,7 +55,7 @@ class ViewHandler(database.webapp2.RequestHandler):
         if child.recipient_id == user.user_id():
           child.read = True
           child.put()
-      database.render_template(self, 'threads/view_thread.html', {'thread': thread, 'children': children})
+      database.render_template(self, 'threads/view_thread.html', {'thread': thread, 'children': children, 'xsrf_token' : token})
     else:
       self.redirect('/')
     
@@ -64,13 +64,13 @@ class NewHandler(database.webapp2.RequestHandler):
     user = database.users.get_current_user()
     if user:
       lis = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id != :1", user.user_id())
-      database.get_current_li().create_xsrf_token()
+      token = database.get_current_li().create_xsrf_token()
       item = None
       if self.request.get("about"): 
         item = db.get(db.Key.from_path('Item', (int(cgi.escape(self.request.get('about'))))))
       
       bad_code = ",".join(["{id:\""+str(li.user_id)+"\", name: \""+li.get_display_name()+"\"}" for li in lis if li.get_display_name()])
-      database.render_template(self, 'threads/new_thread.html', {'item': item, 'lis': lis, 'list':bad_code})
+      database.render_template(self, 'threads/new_thread.html', {'item': item, 'lis': lis, 'list':bad_code, 'xsrf_token' : token})
     else:
       self.redirect('/')
 

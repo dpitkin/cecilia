@@ -33,7 +33,7 @@ Search Results
 			<td>${{ item.price }}</td>
 			{% if is_admin %}
 			<td>
-				<a href="/items/delete_item?item_id={{ item.key().id() }}&xsrf_token={{current_li.xsrf_token}}">
+				<a href="/items/delete_item?item_id={{ item.key().id() }}&xsrf_token={{xsrf_token}}">
 					<button class="btn btn-primary"  value="Delete">Delete Item</button> 
 				</a>
 			</td>

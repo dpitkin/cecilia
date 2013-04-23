@@ -6,7 +6,7 @@ New Collection
 <h3>New Collection</h3>
 <div class="well">
   <form action="/items/save_collection" method="post">
-    <input type="hidden" name="xsrf_token" value="{{ current_li.xsrf_token }}"/>
+    <input type="hidden" name="xsrf_token" value="{{ xsrf_token }}"/>
     <p>
       Title*<br />
       <div class="input-prepend">

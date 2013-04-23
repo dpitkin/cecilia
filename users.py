@@ -9,8 +9,8 @@ class MainHandler(database.webapp2.RequestHandler):
     user = database.users.get_current_user()
     if user:
       li = database.get_current_li()
-      li.create_xsrf_token()
-      database.render_template(self, '/users/index.html', {'li': li})
+      token = li.create_xsrf_token()
+      database.render_template(self, '/users/index.html', {'li': li, 'xsrf_token' : token})
     else:
       self.redirect('/')
 
@@ -22,15 +22,15 @@ class RegisterHandler(database.webapp2.RequestHandler):
       if li.count() > 0:
         li = li.get()
         if li.first_name == "" or li.last_name == "" or li.nickname == "": #if not valid user, don't create a new li but allow them to visit the page
-          li.create_xsrf_token()
-          database.render_template(self, '/users/register_user.html', {'new_li': li})
+          token = li.create_xsrf_token()
+          database.render_template(self, '/users/register_user.html', {'new_li': li, 'xsrf_token' : token})
         else: #if they're a valid user, they can't re-register
           self.redirect('/')
       else: #create a brand new li
         li = database.LoginInformation(first_name="",last_name="", user_id=user.user_id(), is_active=True)
         li.put()
-        li.create_xsrf_token()
-        database.render_template(self, '/users/register_user.html', {'new_li': li})
+        token = li.create_xsrf_token()
+        database.render_template(self, '/users/register_user.html', {'new_li': li, 'xsrf_token' : token})
     else:
       self.redirect('/')
       
@@ -141,9 +141,9 @@ class ListUserFeedback(database.webapp2.RequestHandler):
     if user:
       feedback = database.db.GqlQuery("SELECT * FROM UserFeedback WHERE for_user_id = :1", cgi.escape(self.request.get('user_id')))
       li = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", cgi.escape(self.request.get('user_id'))).get()
-      database.get_current_li().create_xsrf_token();
+      token = database.get_current_li().create_xsrf_token();
       back_url = self.request.referer
-      database.render_template(self, '/users/list_user_feedback.html', {'feedback': feedback, 'li': li, 'back_url': back_url})
+      database.render_template(self, '/users/list_user_feedback.html', {'feedback': feedback, 'li': li, 'back_url': back_url, 'xsrf_token' : token })
     else:
       self.redirect('/')
       
@@ -180,12 +180,13 @@ class ShowUserShop(database.webapp2.RequestHandler):
     else:
       user_id = current_li.user_id
     li = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", user_id).get() 
+    token = ""
     if current_li:
-      database.get_current_li().create_xsrf_token();
+      token = database.get_current_li().create_xsrf_token();
     can_show = li.private == False or (current_li and li.user_id == current_li.user_id)
     items = db.GqlQuery("SELECT * FROM Item WHERE created_by_id = :1 ORDER BY created_at DESC", li.user_id)
     collections = db.GqlQuery("SELECT * FROM ItemCollection WHERE created_by_id = :1 ORDER BY created_at DESC", li.user_id)
-    database.render_template(self, '/users/shop.html', { 'li' : li, 'can_show' : can_show, 'items' : items, 'collections': collections })
+    database.render_template(self, '/users/shop.html', { 'li' : li, 'can_show' : can_show, 'items' : items, 'collections': collections, 'xsrf_token' : token })
     
 app = database.webapp2.WSGIApplication([('/users/', MainHandler), ('/users/verify_user/', RegisterHandler), 
 ('/users/save_user', SaveLIHandler), ('/users/delete_user', DeleteHandler), ('/users/update_user', UpdateLIHandler),

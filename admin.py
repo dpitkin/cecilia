@@ -9,7 +9,7 @@ class MainHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
     if user and database.get_current_li() and database.get_current_li().is_admin:
-      database.get_current_li().create_xsrf_token()
+      token = database.get_current_li().create_xsrf_token()
       test_data = database.db.GqlQuery("SELECT * FROM IsTestDataLoaded").get()
       if not test_data:
         test_data = database.IsTestDataLoaded(test_data_loaded=False)
@@ -17,7 +17,7 @@ class MainHandler(database.webapp2.RequestHandler):
       is_test_data_loaded = test_data.is_test_data_loaded
       activated_users = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE is_admin = :1 AND is_active = :2 ORDER BY nickname", False, True)
       deactivated_users = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE is_admin = :1 AND is_active = :2 ORDER BY nickname", False, False)
-      database.render_template(self, '/admin/index.html', {'activated_users': activated_users, 'deactivated_users': deactivated_users, 'is_test_data_loaded': is_test_data_loaded})
+      database.render_template(self, '/admin/index.html', {'activated_users': activated_users, 'deactivated_users': deactivated_users, 'is_test_data_loaded': is_test_data_loaded, 'xsrf_token' : token })
     else:
       self.redirect('/')
 
@@ -47,10 +47,10 @@ class ModifyHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
     if user and database.get_current_li() and database.get_current_li().is_admin:
-      database.get_current_li().create_xsrf_token()
+      token = database.get_current_li().create_xsrf_token()
       registered_users = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE is_admin = :1 AND is_active = :2 ORDER BY nickname", False, True)
       admin_users = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE is_admin = :1 ORDER BY nickname", True)
-      database.render_template(self, '/admin/modify.html', {'registered_users': registered_users, 'admin_users': admin_users})
+      database.render_template(self, '/admin/modify.html', {'registered_users': registered_users, 'admin_users': admin_users, 'xsrf_token' : token })
     else:
       self.redirect('/')
 

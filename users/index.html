@@ -17,13 +17,13 @@ Your Profile
         </td>
     </tr>
     </table>
-    <p><a href="/users/delete_user?xsrf_token={{current_li.xsrf_token}}" onclick="return confirm('Are you sure? This will delete all your messages and items.');">Click here to delete account</a></p>
+    <p><a href="/users/delete_user?xsrf_token={{xsrf_token}}" onclick="return confirm('Are you sure? This will delete all your messages and items.');">Click here to delete account</a></p>
     <p><a href="/users/export_data" onclick="return confirm('Are you sure? This will generate a file with all your data.');">Export All Your User Data</a></p>
     <br/><br/>
     <h3>Edit Profile</h3>
     <div class="well">
     <form action="/users/update_user" enctype="multipart/form-data" method="post">
-      <input type="hidden" name="xsrf_token" value="{{current_li.xsrf_token}}"/>
+      <input type="hidden" name="xsrf_token" value="{{xsrf_token}}"/>
       <p>
 			<label>First Name: *</label>
 			<input type="text" id="first_name" name="first_name" value="{{li.first_name}}"/>

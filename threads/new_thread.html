@@ -7,7 +7,7 @@ New Thread
 <h3>New Thread</h3>
 <form action="/threads/save_thread" method="post">
 	<div class="well">
-		<input type="hidden" name="xsrf_token" value="{{current_li.xsrf_token}}" />
+		<input type="hidden" name="xsrf_token" value="{{xsrf_token}}" />
 		{% if item %}
 		<p>
 			<label>Recipient:</label>

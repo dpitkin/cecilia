@@ -7,7 +7,7 @@ New Item
 <h3>New Item</h3>
 <form action="/items/save_item" id="item_form" method="post" enctype="multipart/form-data">
 	<div class="well">
-  <input type="hidden" name="xsrf_token" value="{{ current_li.xsrf_token }}"/>
+  <input type="hidden" name="xsrf_token" value="{{ xsrf_token }}" key="{{ current_li.key().id() }}"/>
 		<p>
 			Title*<br />
 			<div class="input-prepend">

@@ -11,7 +11,7 @@ Admin
 <tr>
   <td>
 	<div>
-      <a href="/admin/user_activation?user_id={{ user.user_id }}&xsrf_token={{current_li.xsrf_token}}">
+      <a href="/admin/user_activation?user_id={{ user.user_id }}&xsrf_token={{xsrf_token}}">
         <button class="btn btn-primary" type="submit" value="Deactivate">Deactivate</button> 
       </a>
         <b>Nickname:</b> {{ user.nickname }} <b>Name:</b> {% if user.private %} &lt<i>Private</i>&gt {% else %} {{ user.first_name }} {{ user.last_name }} {% endif %} <b>User ID:</b> {{ user.user_id }} <b>Active:</b> {{ user.is_active }}
@@ -26,7 +26,7 @@ Admin
 <tr>
   <td>
     <div>
-      <a href="/admin/user_activation?user_id={{ user.user_id }}&xsrf_token={{current_li.xsrf_token}}">
+      <a href="/admin/user_activation?user_id={{ user.user_id }}&xsrf_token={{xsrf_token}}">
         <button class="btn btn-primary" type="submit" value="Reactivate">Reactivate</button> 
       </a>
         <b>Nickname:</b> {{ user.nickname }} <b>Name:</b> {% if user.private %} &lt<i>Private</i>&gt {% else %} {{ user.first_name }} {{ user.last_name }} {% endif %} <b>User ID:</b> {{ user.user_id }} <b>Active:</b> {{ user.is_active }}
@@ -38,9 +38,9 @@ Admin
 <p>
   <a class="btn" href="/admin/modify">Go to 'Create Admins'</a> 
   {% if is_test_data_loaded %}
-    <a class="btn" href="/admin/load_test_data?xsrf_token={{current_li.xsrf_token}}">Delete test data</a>
+    <a class="btn" href="/admin/load_test_data?xsrf_token={{xsrf_token}}">Delete test data</a>
   {% else %}
-    <a class="btn" href="/admin/load_test_data?xsrf_token={{current_li.xsrf_token}}">Load test data</a>
+    <a class="btn" href="/admin/load_test_data?xsrf_token={{xsrf_token}}">Load test data</a>
   {% endif %}
 </p>
 {% endblock %}

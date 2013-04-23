@@ -11,7 +11,7 @@ Admin
 <tr>
   <td>
     <div>
-      <a href="/admin/create_admin?user_id={{ user.user_id }}&xsrf_token={{current_li.xsrf_token}}">
+      <a href="/admin/create_admin?user_id={{ user.user_id }}&xsrf_token={{xsrf_token}}">
       </a>
         <b>Nickname:</b> {{ user.nickname }} <b>Name:</b> {% if user.private %} &lt<i>Private</i>&gt {% else %} {{ user.first_name }} {{ user.last_name }} {% endif %} <b>User ID:</b> {{ user.user_id }} <b>Active:</b> {{ user.is_active }}
     </div>
@@ -25,7 +25,7 @@ Admin
 <tr>
   <td>
     <div>
-      <a href="/admin/create_admin?user_id={{ user.user_id }}&xsrf_token={{current_li.xsrf_token}}">
+      <a href="/admin/create_admin?user_id={{ user.user_id }}&xsrf_token={{xsrf_token}}">
         <button class="btn btn-primary" type="submit" value="Make Admin">Make Admin</button> 
       </a>
         <b>Nickname:</b> {{ user.nickname }} <b>Name:</b> {% if user.private %} &lt<i>Private</i>&gt {% else %} {{ user.first_name }} {{ user.last_name }} {% endif %} <b>User ID:</b> {{ user.user_id }} <b>Active:</b> {{ user.is_active }}
