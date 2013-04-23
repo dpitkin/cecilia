@@ -5,20 +5,6 @@ import json
 from database import db
 cgi = database.cgi
 
-def authenticate_filter(fn):
-  def inner_function(self):
-      
-      return fn(self)
-	return inner_function
-  
-  
-  
-def before_filter(fn):
-    def inner_function(self):
-        # do stuff before
-        return fn(self)
-    return inner_function
-
 def item_to_dictionary(item):
 	return {
 		"id" : item.key().id(),
