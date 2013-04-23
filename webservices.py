@@ -5,9 +5,6 @@ import json
 from database import db
 cgi = database.cgi
 
-def authenticate_user(webservice_params):
-	return True
-
 def item_to_dictionary(item):
 	return {
 		"id" : item.key().id(),
@@ -18,6 +15,46 @@ def item_to_dictionary(item):
 		"price" : item.price,
 		"url" : "/items/view_item?item_id=" + str(item.key().id())
 	}
+  
+class AddItemRatingHandler(database.webapp2.RequestHandler):
+  def post(self):
+    #fill out the item feedback
+    feedback = database.ItemFeedback()
+    feedback.created_by_id = cgi.escape(self.request.get('user_id'))
+    feedback.item_id = cgi.escape(self.request.get('target_item_id'))
+    feedback.rating = int(cgi.escape(self.request.get('rating')))
+    feedback.feedback = cgi.escape(self.request.get('feedback'))
+    success = False
+    err_mess = ""
+    try:
+      feedback.put()
+      success = True
+      err_mess = "Saved to datastore successfully."
+    except TransactionFailedError:
+      success = False
+      err_mess = "Could not save to datastore."
+    j = json.dumps({"success": success, "message": err_mess, "feedback_id": feedback.key().id()})
+    self.response.out.write(j)
+    
+def AddUserRatingHandler(database.webapp2.RequestHandler):
+  def post(self):
+    #fill out the user feedback
+    feedback = database.UserFeedback()
+    feedback.created_by_id = cgi.escape(self.request.get('user_id'))
+    feedback.for_user_id = cgi.escape(self.request.get('target_user_id'))
+    feedback.rating = int(cgi.escape(self.request.get('rating')))
+    success = False
+    err_mess = ""
+    try:
+      feedback.put()
+      success = True
+      err_mess = "Saved to datastore successfully."
+    except TransactionFailedError:
+      success = False
+      err_mess = "Could not save to datastore."
+    j = json.dumps({"success": success, "message": err_mess, "feedback_id": feedback.key().id()})
+    self.response.out.write(j)
+  
 class WebservicesSearchHandler(database.webapp2.RequestHandler):
 	def get(self):
 		search_by_params = ["title", "description", "price"]
@@ -118,4 +155,5 @@ class WebservicesSearchHandler(database.webapp2.RequestHandler):
 		b = json.dumps({ "items" : results, "results_left" : len(list(tmp_results)) - counter, "total" : len(list(tmp_results)) })
 		self.response.out.write(b)
 
-app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler)], debug=True)
+app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), 
+('/webservices/add_item_rating', AddItemRatingHandler)], debug=True)

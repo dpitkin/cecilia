@@ -134,10 +134,9 @@ class SaveTrustedPartnerHandler(database.webapp2.RequestHandler):
   def post(self):
     user = database.users.get_current_user()
     if user and database.get_current_li() and database.get_current_li().is_admin and database.get_current_li().verify_xsrf_token(self):
-      token = cgi.escape(self.request.get('xsrf_token'))
-      name = cgi.escape(self.request.get('name'))
-      url = cgi.escape(self.request.get('url'))
-      foreign_auth_token = cgi.escape(self.request.get('auth_token'))
+      name = cgi.escape(database.quick_sanitize(self.request.get('name')))
+      url = cgi.escape(database.quick_sanitize(self.request.get('url')))
+      foreign_auth_token = cgi.escape(database.quick_sanitize(self.request.get('auth_token')))
       local_auth_token = hashlib.sha1(str(random.random()) + url + str(time.clock())).hexdigest()
       partner = database.TrustedPartner()
       partner.name = name
@@ -157,9 +156,7 @@ class DeleteTrustedPartnerHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
     if user and database.get_current_li() and database.get_current_li().is_admin and database.get_current_li().verify_xsrf_token(self):
-      token = cgi.escape(self.request.get('xsrf_token'))
-      url = cgi.escape(self.request.get('url'))
-      partner = database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE base_url = :1", url).get()
+      partner = database.db.get(db.Key.from_path('TrustedPartner', int(cgi.escape(self.request.get('partner_id')))))
       if partner:
         database.logging.info("Deleting Trusted Partner: %s", partner.base_url)
         database.db.delete(partner)
@@ -170,10 +167,10 @@ class DeleteTrustedPartnerHandler(database.webapp2.RequestHandler):
 class EditTrustedPartnerHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
-    if user and database.get_current_li() and database.get_current_li().is_admin:
-      token = cgi.escape(self.request.get('xsrf_token'))
-      url = cgi.escape(self.request.get('url'))
-      partner = database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE base_url = :1", url).get()
+    current_li = database.get_current_li()
+    if user and current_li and current_li.is_admin:
+      token = current_li.create_xsrf_token()
+      partner = database.db.get(db.Key.from_path('TrustedPartner', int(cgi.escape(self.request.get('partner_id')))))
       database.render_template(self, '/admin/edit_partner.html', {'partner' : partner, 'xsrf_token' : token})
     else:
       self.redirect('/')
@@ -194,13 +191,12 @@ class GenerateLocalAuthTokenHandler(database.webapp2.RequestHandler):
 class UpdatePartnerHandler(database.webapp2.RequestHandler):
   def post(self):
     user = database.users.get_current_user()
-    if user and database.get_current_li() and database.get_current_li().is_admin and database.get_current_li().verify_xsrf_token(self):
-      token = cgi.escape(self.request.get('xsrf_token'))
-      url = cgi.escape(self.request.get('base_url'))
-      partner = database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE base_url = :1", url).get()
-      new_name = cgi.escape(self.request.get('name'))
-      new_url = cgi.escape(self.request.get('url'))
-      new_foreign_auth_token = cgi.escape(self.request.get('foreign_auth_token'))
+    current_li = database.get_current_li()
+    if user and current_li and current_li.is_admin and current_li.verify_xsrf_token(self):
+      partner = database.db.get(db.Key.from_path('TrustedPartner', int(cgi.escape(self.request.get('partner_id')))))
+      partner.name = cgi.escape(database.quick_sanitize(self.request.get('name')))
+      new_url = cgi.escape(database.quick_sanitize(self.request.get('url')))
+      new_foreign_auth_token = cgi.escape(database.quick_sanitize(self.request.get('foreign_auth_token')))
       if new_url != "" and database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE base_url = :1", new_url).get() == None:
         partner.base_url = new_url
       partner.foreign_auth_token = new_foreign_auth_token
