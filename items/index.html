@@ -12,6 +12,25 @@ Items
     $('#advanced_search').autocomplete({
       source: items
     });
+
+
+
+    $(".remote_search_table").each(function(index, item){
+      $(item).append("<h4>Loading...</h4>");
+      var url = $(item).attr("data-api-url");
+      $(item).find("tbody").html("");
+      console.log(url);
+      $.get("/webservices/search", { "limit" : 10, "offset" : 0, "search_by" : "title", "query" : "item" }, function(resp){
+        resp = JSON.parse(resp);
+        $(item).find("h4").remove();
+        $tbody = $(item).find("tbody");
+        for(var i = 0; i < resp.items.length; i++){
+          var it = resp.items[i];
+          $tbody.append("<tr><td>" + "1/1/1" + "</td><td>" + it.title + "</td><td>" + it.description + "</td><td>" + it.price + "</td></tr>");
+        }
+      });
+    });
+
   });
 </script>
 
@@ -24,6 +43,22 @@ Items
     {% endif %}
   </div>
 </form>
+
+<div class="remote_search_table_wrapper">
+<table class="table table-striped remote_search_table" data-api-url="localhost:8081">
+  <thead>
+    <th width="10%">Posted</th><th>Title</th><th>Description</th><th>Price</th>
+  </thead>
+  <tbody>
+    <tr>
+      <td>a</td>
+      <td>b</td>
+      <td>c</td>
+      <td>d</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
 <br/><br/>
 <table class="datatable table table-striped">
