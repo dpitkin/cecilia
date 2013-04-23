@@ -13,11 +13,18 @@ def item_to_dictionary(item):
 		"id" : item.key().id(),
 		"title" : item.title,
 		"description" : item.description,
-		"seller" : item.get_creator().get_display_name(),
+		"seller" : seller_to_dictionary(item.get_creator()),
 		"image" : item.display_image_url(),
 		"price" : item.price,
 		"url" : "/items/view_item?item_id=" + str(item.key().id())
 	}
+
+def seller_to_dictionary(seller):
+	return {
+		"id" : seller.user_id,
+		"username" : seller.get_display_name()
+	}
+
 class WebservicesSearchHandler(database.webapp2.RequestHandler):
 	def get(self):
 		search_by_params = ["title", "description", "price"]
@@ -88,4 +95,17 @@ class WebservicesSearchHandler(database.webapp2.RequestHandler):
 		b = json.dumps({ "search_by" : search_by, "items" : results, "sort_options" : sort_options, "results_left" : len(list(tmp_results)) - counter, "total" : len(list(tmp_results)) })
 		self.response.out.write(b)
 
-app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler)], debug=True)
+class WebservicesItemHandler(database.webapp2.RequestHandler):
+	def get(self):
+		auth_token = cgi.escape(self.request.get('auth_token'))
+		item_id = cgi.escape(self.request.get('item_id'))
+		try:
+			item = db.get(db.Key.from_path('Item', int(item_id)))
+			self.response.out.write(item_to_dictionary(item))
+		except ValueError:
+			failure = json.dumps({ "success" : False, "message" : "item_id does not exist"})
+
+
+app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/item', WebservicesItemHandler)], debug=True)
+
+
