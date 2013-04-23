@@ -9,6 +9,7 @@ Items
 <script type="text/javascript">
   function load_item(item){
     $parent = $(item).parent();
+    $is_local = $parent.attr("id") == "local_search_results"
     console.log(parent);
     $limit = parseInt($("#query_limit").val());
     $page = parseInt($parent.attr("data-page"));
@@ -32,8 +33,25 @@ Items
       $tbody = $(item).find("tbody");
       for(var i = 0; i < resp.items.length; i++){
         var it = resp.items[i];
-        $tbody.append("<tr><td>" + "1/1/1" + "</td><td>" + it.title + "</td><td>" + it.description + "</td><td>" + it.price + "</td></tr>");
+        if ($is_local) {
+          string = "<tr><td>" + it.created_at + "</td><td>" 
+          + "<a href=\"/items/view_item?item_id=" + it.id + "\"><div>" + it.title + "</div></a></td><td>" 
+          + it.description + "</td>"
+          + "<td> $" + it.price + "</td>" + 
+          {% if is_admin %} "<td><a href=\"/items/delete_item?item_id=" + it.id +  "&xsrf_token={{xsrf_token}}\"><button class=\"btn btn-primary\"  \value=\"Delete\">Delete Item</button></a></td>" + "<td>" + it.expiration_date + "</td>" +
+          {% endif %} 
+          {% if user %}
+          "<td><a href=\"/threads/new_thread?about=" + it.id + "\"><button class=\"btn btn-primary\" value=\"Contact Seller\">Contact Seller</button></a></td>" +
+          {% endif %}
+          "</tr>"
+          console.log(string);
+          $tbody.append(string);  
+        }else {
+          $tbody.append("<tr><td>" + it.title + "</td><td>" + it.description + "</td><td>" + it.price + "</td></tr>");
+        }
+        
       }
+      $parent.attr('data-results-left', resp.results_left);
       var start = $offset + 1;
       var end = $offset + resp.items.length;
       var showing_string = "Showing " + start + " - " + end + " out of " + resp.total;
@@ -73,7 +91,7 @@ Items
     $(".search_next").click(function(){
       $parent = $(this).parent();
       $page = parseInt($parent.attr("data-page"));
-      if ($parent.attr("data-loading").length == 0) {
+      if ($parent.attr("data-loading").length == 0 && parseInt($parent.attr("data-results-left")) > 0) {
         $page = $page + 1;
         $parent.attr("data-page", $page);
         load_item($parent.find(".remote_search_table"));
@@ -302,11 +320,17 @@ transform:scale(.3)}
   <input type="submit" id="query_submit" class="btn" value="Search" \>
 </div>
 
-<div class="remote_search_table_wrapper" data-page="0" data-loading="" data-api-url="localhost:8081">
+<div class="remote_search_table_wrapper" data-results-left="0" data-page="0" data-loading="" data-api-url="localhost:8081" id="local_search_results">
   <h3>Local Results</h3>
 <table class="table table-striped remote_search_table">
   <thead>
     <th width="10%">Posted</th><th>Title</th><th>Description</th><th>Price</th>
+      {% if is_admin %}
+      <th>Delete</th><th width="15%">Expiration Date</th>
+      {% endif %}
+      {% if user %}
+        <th>Contact</th>
+      {% endif %}
   </thead>
   <tbody>
 
@@ -317,6 +341,7 @@ transform:scale(.3)}
 <a href="#" class="search_next" style="padding-left:20px;" onclick="return false;">Next&gt;</a>
 </div>
 
+{% if false %}
 <br/><br/>
 <table class="datatable table table-striped">
 	<thead>
@@ -364,6 +389,7 @@ transform:scale(.3)}
 </table>
 <br/>
 <br />
+{% endif %}
 {% if user %}
 <p><a class="btn" href="/items/new_item">New Item</a></p>
 {% endif %}

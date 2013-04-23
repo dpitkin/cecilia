@@ -5,15 +5,17 @@ import json
 from database import db
 cgi = database.cgi
 
-def item_to_dictionary(item):
+def item_to_dictionary(item, self):
 	return {
 		"id" : item.key().id(),
 		"title" : item.title,
 		"description" : item.description,
 		"seller" : item.get_creator().get_display_name(),
-		"image" : item.display_image_url(),
+		"image" : self.request.host + item.display_image_url(),
 		"price" : item.price,
-		"url" : "/items/view_item?item_id=" + str(item.key().id())
+		"url" : self.request.host + "/items/view_item?item_id=" + str(item.key().id()),
+		"created_at" : item.created_at.strftime("%m/%d/%Y"),
+		"expiration_date" : item.expiration_date.strftime("%m/%d/%Y")
 	}
   
 class AddItemRatingHandler(database.webapp2.RequestHandler):
@@ -36,7 +38,7 @@ class AddItemRatingHandler(database.webapp2.RequestHandler):
     j = json.dumps({"success": success, "message": err_mess, "feedback_id": feedback.key().id()})
     self.response.out.write(j)
     
-def AddUserRatingHandler(database.webapp2.RequestHandler):
+class AddUserRatingHandler(database.webapp2.RequestHandler):
   def post(self):
     #fill out the user feedback
     feedback = database.UserFeedback()
@@ -137,7 +139,7 @@ class WebservicesSearchHandler(database.webapp2.RequestHandler):
 					if database.string.find(item.price, tok) != -1:
 						add = True
 			if add:
-				tmp_results.append(item_to_dictionary(item))
+				tmp_results.append(item_to_dictionary(item, self))
 
 		results = []
 		tmp_offset = offset
