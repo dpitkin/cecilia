@@ -15,7 +15,7 @@ Edit Item
 			Title*<br />
 			<div class="input-prepend">
 				<span class="add-on"><i class="icon-tag"></i></span>
-				<input name="title" id="title" value="{{ item.title }}" type="text">
+				{{ sanitizeHTML('<input name="title" id="title" value="' + item.title + '" type="text" />') }}
 			</div>
 		</p>
 		<p>
