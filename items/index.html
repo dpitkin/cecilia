@@ -13,21 +13,25 @@ Items
       source: items
     });
 
-
-
-    $(".remote_search_table").each(function(index, item){
-      $(item).append("<h4>Loading...</h4>");
-      var url = $(item).attr("data-api-url");
-      $(item).find("tbody").html("");
-      console.log(url);
-      $.get("/webservices/search", { "limit" : 10, "offset" : 0, "search_by" : "title", "query" : "item" }, function(resp){
-        resp = JSON.parse(resp);
-        $(item).find("h4").remove();
-        $tbody = $(item).find("tbody");
-        for(var i = 0; i < resp.items.length; i++){
-          var it = resp.items[i];
-          $tbody.append("<tr><td>" + "1/1/1" + "</td><td>" + it.title + "</td><td>" + it.description + "</td><td>" + it.price + "</td></tr>");
-        }
+    $("#query_submit").click(function(){
+      $limit = $("#query_limit").val();
+      $offset = 0;
+      $search_by = $("#query_search_by").val();
+      $query = $("#query_field").val();
+      $(".remote_search_table").each(function(index, item){
+        $(item).append("<h4>Loading...</h4>");
+        var url = $(item).attr("data-api-url");
+        $(item).find("tbody").html("");
+        console.log(url);
+        $.get("/webservices/search", { "limit" : $limit, "offset" : $offset, "search_by" : $search_by, "query" : $query }, function(resp){
+          resp = JSON.parse(resp);
+          $(item).find("h4").remove();
+          $tbody = $(item).find("tbody");
+          for(var i = 0; i < resp.items.length; i++){
+            var it = resp.items[i];
+            $tbody.append("<tr><td>" + "1/1/1" + "</td><td>" + it.title + "</td><td>" + it.description + "</td><td>" + it.price + "</td></tr>");
+          }
+        });
       });
     });
 
@@ -43,6 +47,22 @@ Items
     {% endif %}
   </div>
 </form>
+
+<div id="search_forms">
+  Limit: <select id="query_limit" value="10">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>                              
+        </select>
+  Search By: <select id="query_search_by" value="title">
+          <option value="title">Title</option>
+          <option value="description">Description</option>
+          <option value="price">Price</option>
+        </select>
+  Query: <input type="text" id="query_field" /><br />
+  <input type="submit" id="query_submit" \>
+</div>
 
 <div class="remote_search_table_wrapper">
 <table class="table table-striped remote_search_table" data-api-url="localhost:8081">
