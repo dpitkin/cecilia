@@ -173,6 +173,7 @@ class WebservicesItemHandler(database.webapp2.RequestHandler):
 			self.response.out.write(item_to_dictionary(item))
 		except ValueError:
 			failure = json.dumps({ "success" : False, "message" : "item_id does not exist"})
+			self.response.out.write(failure)
 
 
 app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), 
