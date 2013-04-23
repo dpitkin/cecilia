@@ -6,8 +6,9 @@ Admin
 <h3>Edit Trusted Partner</h3>
 <hr />
 <div class="well">
-<form action="/admin/update_partner?base_url={{partner.base_url}}" enctype="multipart/form-data" method="post">
+<form action="/admin/update_partner" enctype="multipart/form-data" method="post">
     <input type="hidden" name="xsrf_token" value="{{xsrf_token}}"/>
+    <input type="hidden" name="partner_id" value="{{partner.key().id()}}" />
         <p>
             <label>Name: </label>
             <input type="text" id="name" name="name" value="{{partner.name}}"/>

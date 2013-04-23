@@ -5,9 +5,6 @@ import json
 from database import db
 cgi = database.cgi
 
-def authenticate_user(webservice_params):
-	return True
-
 def item_to_dictionary(item):
 	return {
 		"id" : item.key().id(),
@@ -19,20 +16,62 @@ def item_to_dictionary(item):
 		"url" : "/items/view_item?item_id=" + str(item.key().id())
 	}
 
+
 def seller_to_dictionary(seller):
 	return {
 		"id" : seller.user_id,
 		"username" : seller.get_display_name()
 	}
 
+  
+class AddItemRatingHandler(database.webapp2.RequestHandler):
+  def post(self):
+    #fill out the item feedback
+    feedback = database.ItemFeedback()
+    feedback.created_by_id = cgi.escape(self.request.get('user_id'))
+    feedback.item_id = cgi.escape(self.request.get('target_item_id'))
+    feedback.rating = int(cgi.escape(self.request.get('rating')))
+    feedback.feedback = cgi.escape(self.request.get('feedback'))
+    success = False
+    err_mess = ""
+    try:
+      feedback.put()
+      success = True
+      err_mess = "Saved to datastore successfully."
+    except TransactionFailedError:
+      success = False
+      err_mess = "Could not save to datastore."
+    j = json.dumps({"success": success, "message": err_mess, "feedback_id": feedback.key().id()})
+    self.response.out.write(j)
+    
+def AddUserRatingHandler(database.webapp2.RequestHandler):
+  def post(self):
+    #fill out the user feedback
+    feedback = database.UserFeedback()
+    feedback.created_by_id = cgi.escape(self.request.get('user_id'))
+    feedback.for_user_id = cgi.escape(self.request.get('target_user_id'))
+    feedback.rating = int(cgi.escape(self.request.get('rating')))
+    success = False
+    err_mess = ""
+    try:
+      feedback.put()
+      success = True
+      err_mess = "Saved to datastore successfully."
+    except TransactionFailedError:
+      success = False
+      err_mess = "Could not save to datastore."
+    j = json.dumps({"success": success, "message": err_mess, "feedback_id": feedback.key().id()})
+    self.response.out.write(j)
+  
 class WebservicesSearchHandler(database.webapp2.RequestHandler):
 	def get(self):
 		search_by_params = ["title", "description", "price"]
+		sort_types = ["title", "description", "price", "time_create", "location"]
 		query = cgi.escape(self.request.get("query"))
 		limit = cgi.escape(self.request.get("limit"))
 		offset = cgi.escape(self.request.get("offset"))
 		search_by = cgi.escape(self.request.get("search_by"))
-		sort_options = self.request.get("sort_options")
+		sort_options = json.loads(self.request.get("sort_options"))
 
 		if len(str(limit)) == 0:
 			limit = "10"
@@ -58,8 +97,37 @@ class WebservicesSearchHandler(database.webapp2.RequestHandler):
 		except ValueError, e:
 			offset = 0
 
-		items = db.GqlQuery("SELECT * FROM Item ORDER BY created_at DESC")
+		directionA = ""
+		directionB = ""
+
+		print [l.description for l in list(db.GqlQuery("SELECT description FROM Item").run(limit=5))]
+
+		if sort_options[0]["ordering"] == "desc":
+			directionA = "DESC"
+		else:
+			directionA = "ASC"
+
+		if sort_options[1]["ordering"] == "desc":
+			directionB = "DESC"
+		else:
+			directionB = "ASC"
+
+		if not(sort_options[0]["type"] in sort_types):
+			sort_options[0]["type"] = "title"
+		elif sort_options[0]["type"] == "time_create":
+			sort_options[0]["type"] = "created_at"
+
+		if not(sort_options[1]["type"] in sort_types):
+			sort_options[1]["type"] = "title"
+		elif sort_options[1]["type"] == "time_create":
+			sort_options[1]["type"] = "created_at"
+
+		orderA = directionA + sort_options[0]["type"]
+		orderB = directionB + sort_options[1]["type"]		
+
+		items = db.GqlQuery("SELECT * FROM Item ORDER BY " + sort_options[0]["type"] + " " + directionA)
 		#now tokenize the input by spaces
+
 		query_tokens = database.string.split(query)
 		tmp_results = []
 		for item in items:
@@ -92,8 +160,9 @@ class WebservicesSearchHandler(database.webapp2.RequestHandler):
 				count = count + 1
 				results.append(res)
 
-		b = json.dumps({ "search_by" : search_by, "items" : results, "sort_options" : sort_options, "results_left" : len(list(tmp_results)) - counter, "total" : len(list(tmp_results)) })
+		b = json.dumps({ "items" : results, "results_left" : len(list(tmp_results)) - counter, "total" : len(list(tmp_results)) })
 		self.response.out.write(b)
+
 
 class WebservicesItemHandler(database.webapp2.RequestHandler):
 	def get(self):
@@ -106,6 +175,6 @@ class WebservicesItemHandler(database.webapp2.RequestHandler):
 			failure = json.dumps({ "success" : False, "message" : "item_id does not exist"})
 
 
-app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/item', WebservicesItemHandler)], debug=True)
-
+app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), 
+('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler)], debug=True)
 
