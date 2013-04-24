@@ -8,15 +8,14 @@ View Item
 
 {% if item_contents %}
 
-
 <div class="well">
 	<p>
-		Posted by: {{ item_contents["seller"]["username"] }}
+		Posted by: {{ escape(item_contents["seller"]["username"]) }}
 	</p>
 	<p>Title: {{ item_contents["title"] }}</p>
 	<p>Description: <textarea class="readonlyRichText">{{ item_contents["description"] }}</textarea></p>
 	<p>Price: ${{ item_contents["price"]}}</p>
-	<p><img src="{{ item.display_image() }}" /></p>
+	<p>{{ sanitizeHTML('<img src="' + item_contents["image"] + '" />') }}</p>
 </div>
 <p>
 	{% if current_li %}<a href="/threads/new_thread?about={{ item_contents["id"] }}" class="btn">Contact Seller</a>{% endif %}
