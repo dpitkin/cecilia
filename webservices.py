@@ -384,7 +384,7 @@ class UserImportHandler(database.webapp2.RequestHandler):
           item.put()
         except TransactionFailedError:
           render_error("Could not save item to the datastore.")
-           return
+          return
       
       #we've now created the user and imported all of their items, so now lets write a success response
       render_success(self, "User successfully imported.")
