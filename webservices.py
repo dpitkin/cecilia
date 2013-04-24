@@ -376,7 +376,9 @@ class ExportUserHandler(database.webapp2.RequestHandler):
 				"user_id" : current_li.key().id(),
 				"google_user_id" : current_li.user_id,
 				"username" : current_li.nickname,
-				"mail" : current_li.email,
+				"mail" : user.email(),
+				"first_name" : current_li.first_name,
+				"last_name" : current_li.last_name,
 				"items" : [item_to_dictionary(i, self) for i in items]
 			}
 			self.response.out.write(json.dumps(user_hash))

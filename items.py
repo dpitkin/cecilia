@@ -211,15 +211,8 @@ class FeedbackHandler(database.webapp2.RequestHandler):
       
 class ForeignFeedbackHandler(database.webapp2.RequestHandler):
   def post(self):
+    stub = "hey"
     
-#target_item_id: STRING
-#user_name: STRING
-#user_id: STRING
-#rating: FLOAT (1-5)
-#feedback: STRING
-#feedback_id: STRING
-
-      
 class DeleteFeedbackHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
@@ -323,7 +316,8 @@ class RemoteItemHandler(database.webapp2.RequestHandler):
   def get(self):
     current_li = database.get_current_li()
     item_id = self.request.get("item_id")
-    partner = database.db.get(db.Key.from_path('TrustedPartner', int(cgi.escape(self.request.get('partner_id')))))
+    partner_id = cgi.escape(self.request.get('partner_id'))
+    partner = database.db.get(db.Key.from_path('TrustedPartner', int(partner_id)))
     item_contents = None
     if partner:
       base_url = partner.base_url
@@ -335,7 +329,17 @@ class RemoteItemHandler(database.webapp2.RequestHandler):
         item_contents = json.loads(result.content)
       except Exception, e:
         item_contents = None
-    database.render_template(self, '/items/view_remote_item.html', {'item_contents': item_contents})
+    
+    seller_id = ""
+    if item_contents:
+      seller_id = str(item_contents["seller"]["id"])
+
+    seller_name = ""
+    if item_contents:
+      seller_name = str(item_contents["seller"]["username"])
+
+    database.logging.info("item contents: " + json.dumps(item_contents))
+    database.render_template(self, '/items/view_remote_item.html', {'item_contents': item_contents, 'partner_id' : partner_id, 'item_id' : str(item_id), 'seller_id' : seller_id, 'seller_name' : seller_name })
 
 
 app = database.webapp2.WSGIApplication([('/items/', MainHandler), ('/items/new_item', NewHandler), 

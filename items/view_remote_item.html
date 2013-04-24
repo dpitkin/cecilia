@@ -18,7 +18,11 @@ View Item
 	<p>{{ sanitizeHTML('<img src="' + item_contents["image"] + '" />') }}</p>
 </div>
 <p>
-	{% if current_li %}<a href="/threads/new_thread?about={{ item_contents["id"] }}" class="btn">Contact Seller</a>{% endif %}
+	{% if current_li %} {{ sanitizeHTML('<a id="this_is_dumb" href="/threads/new_remote_thread?about=' + item_id + '&item_title=' + item_contents["title"] + '&partner_id=' + partner_id + '&remote_user_id=' + seller_id + '&remote_username=' + seller_name + '">Contact Seller</a>') }}
+	<script type="text/javascript">
+		$(document).ready(function(){ $("a#this_is_dumb").addClass("btn"); });
+	</script>
+	{% endif %}
 	<a href="/items/" class="btn">Back</a>
 </p>
 {% if user %}
