@@ -333,8 +333,8 @@ transform:scale(.3)}
   </div>
 </form>
 
-<div class="remote_search_table_wrapper" data-results-left="0" data-page="0" data-loading="" data-api-url="localhost:8081" id="local_search_results">
   <h3>Local Results</h3>
+<div class="well remote_search_table_wrapper" data-results-left="0" data-page="0" data-loading="" data-api-url="localhost:8081" id="local_search_results">
 <table class="table table-striped remote_search_table">
   <thead>
     <th width="10%">Posted</th><th>Title</th><th>Description</th><th>Price</th>
@@ -353,8 +353,9 @@ transform:scale(.3)}
 <a href="#" class="search_prev" onclick="return false;">&lt;Prev</a>
 <a href="#" class="search_next" style="padding-left:20px;" onclick="return false;">Next&gt;</a>
 </div>
-
+<hr />
 <h3>Trusted Partner Results</h3>
+<div class="well">
 {% for partner in partners %}
   <h4> {{ partner.name }} </h4>
   <div class="remote_search_table_wrapper" data-results-left="0" data-page="0" data-loading="" data-partner-id="{{ partner.key().id() }}">
@@ -370,7 +371,9 @@ transform:scale(.3)}
   <a href="#" class="search_prev" onclick="return false;">&lt;Prev</a>
   <a href="#" class="search_next" style="padding-left:20px;" onclick="return false;">Next&gt;</a>
 </div>
+<hr />
 {% endfor %}
+</div>
 <br/><br/>
 <a href="/">
   <button class="btn btn-primary" value="back">Go Back</button> 
