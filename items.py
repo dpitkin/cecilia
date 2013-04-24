@@ -13,7 +13,8 @@ class MainHandler(database.webapp2.RequestHandler):
       items = database.db.GqlQuery("SELECT * FROM Item")
     else:
       items = database.db.GqlQuery("SELECT * FROM Item WHERE expiration_date >= :1 AND is_active = :2 AND deactivated = :3", database.datetime.date.today(), True, False)
-    database.render_template(self, 'items/index.html', {'items': items, 'xsrf_token' : token })
+    trusted_partners = database.TrustedPartner.all()
+    database.render_template(self, 'items/index.html', {'items': items, 'xsrf_token' : token, "partners" : trusted_partners })
 
 class NewHandler(database.webapp2.RequestHandler):
   def get(self):
@@ -139,6 +140,19 @@ class ShopHandler(database.webapp2.RequestHandler):
 class SearchHandler(database.webapp2.RequestHandler):
   def get(self):
     query = cgi.escape(self.request.get('query'))
+    limit = cgi.escape(self.request.get('query_limit'))
+    search_by = cgi.escape(self.request.get('query_search_by'))    
+    sort_by = {
+      "a" : {
+        "sort_field" : cgi.escape(self.request.get('query_sortA')),
+        "order" : cgi.escape(self.request.get('query_orderA'))
+      },
+      "b" : {
+        "sort_field" : cgi.escape(self.request.get('query_sortB')),
+        "order" : cgi.escape(self.request.get('query_orderB'))
+      }
+    }
+
     items = db.GqlQuery("SELECT * FROM Item ORDER BY created_at DESC") #grab all the items first
     #now tokenize the input by spaces
     query_tokens = database.string.split(query)
@@ -158,8 +172,8 @@ class SearchHandler(database.webapp2.RequestHandler):
         search.created_by_id = user.user_id()
         search.search = query
         search.put()
-      
-    database.render_template(self, 'items/search.html', { 'items': results, 'query': query})
+    trusted_partners = database.TrustedPartner.all()
+    database.render_template(self, 'items/search.html', { 'items': results, 'query': query, "partners" : trusted_partners, 'limit' : limit, 'search_by' : search_by, 'sort_by' : sort_by })
     
 class OldSearches(database.webapp2.RequestHandler):
   def get(self):
