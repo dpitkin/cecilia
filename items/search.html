@@ -4,52 +4,367 @@ Search Results
 {% endblock %}
 {% block content %}
 <h3>You searched for: {{query}}</h3>
-<h4>Results:</h4>
 
-<table class="datatable table table-striped">
-	<thead>
-		<tr>
-      <th width="10%">Posted</th><th>Title</th><th>Description</th><th>Price</th>
-			{% if is_admin %}
-			<th>Delete</th><th width="15%">Expiration Date</th>
-			{% endif %}
+<script type="text/javascript">
+  function load_item(item){
+    var $parent = $(item).parent();
+    console.log($(parent));
+    var $is_local = $parent.attr("id") == "local_search_results"
+    console.log(parent);
+    var $limit = parseInt($("#query_limit").val());
+    var $page = parseInt($parent.attr("data-page"));
+    var $partner_id = $parent.attr("data-partner-id")
+    var $offset = $page * $limit;
+    var $search_by = $("#query_search_by").val();
+    var $query = $("#query_field").val();
+    $(item).append("<h4>" + generate_spinner() + "</h4>");
+    console.log($(item));
+    $(item).find("tbody").html("");
+    $parent.attr("data-loading", "loading");
+    var $sort_order = JSON.stringify([
+      {"type" : $("#query_sortA").val(), "ordering" : $("#query_orderA").val()},
+      {"type" : $("#query_sortB").val(), "ordering" : $("#query_orderB").val()}      
+    ]);
+    console.log($sort_order);
+    var url = $is_local ? "/webservices/local_search" : "/webservices/partner_search"
+    $.get(url, { "limit" : $limit, "offset" : $offset, "search_by" : $search_by, "query" : $query, "sort_options" : $sort_order, "partner_id" : $partner_id }, function(resp){
+
+      if (!$is_local) {
+        console.log(url);
+        console.log(resp);
+      };
+      $parent.attr("data-loading", "");
+      resp = JSON.parse(resp);
+      $(item).find("h4").remove();
+      if (!resp.success) {
+        console.log("Error: " + resp.message);
+        return;
+      };
+      $tbody = $(item).find("tbody");
+      for(var i = 0; i < resp.items.length; i++){
+        var it = resp.items[i];
+        if ($is_local) {
+          //Ugh, this is pretty ugly... sorry!
+          string = "<tr><td>" + it.created_at + "</td><td>" 
+          + "<a href=\"/items/view_item?item_id=" + it.id + "\"><div>" + it.title + "</div></a></td><td>" 
+          + it.description + "</td>"
+          + "<td> $" + it.price + "</td>" + 
+          {% if is_admin %} "<td><a href=\"/items/delete_item?item_id=" + it.id +  "&xsrf_token={{xsrf_token}}\"><button class=\"btn btn-primary\"  \value=\"Delete\">Delete Item</button></a></td>" + "<td>" + it.expiration_date + "</td>" +
+          {% endif %} 
+          {% if user %}
+          "<td><a href=\"/threads/new_thread?about=" + it.id + "\"><button class=\"btn btn-primary\" value=\"Contact Seller\">Contact Seller</button></a></td>" +
+          {% endif %}
+          "</tr>"
+          $tbody.append(string);  
+        }else {
+          $tbody.append("<tr><td>" + it.title + "</td><td>" + it.description + "</td><td>" + it.price + "</td></tr>");
+        }
+        
+      }
+      $parent.attr('data-results-left', resp.results_left);
+      var start = $offset + 1;
+      var end = $offset + resp.items.length;
+      var showing_string = "Showing " + start + " - " + end + " out of " + resp.total;
+      if (resp.items.length == 0) {showing_string = "Showing 0 of " + resp.total};
+      $(item).parent().find("span.showing_indicator").html(showing_string);
+    });
+  }
+
+  function generate_spinner()
+  {
+    return '<div id="circular3dG"><div id="circular3d_1G" class="circular3dG"></div><div id="circular3d_2G" class="circular3dG"></div><div id="circular3d_3G" class="circular3dG"></div><div id="circular3d_4G" class="circular3dG"></div><div id="circular3d_5G" class="circular3dG"></div><div id="circular3d_6G" class="circular3dG"></div><div id="circular3d_7G" class="circular3dG"></div><div id="circular3d_8G" class="circular3dG"></div></div>'
+  }
+
+  $(document).ready(function() {
+    var items = [];{% for item in items %} items = items.concat("{{item.title}}"); {% endfor %}
+    $('#advanced_search').autocomplete({
+      source: items
+    });
+
+    $("#query_submit").click(function(){
+      $(".remote_search_table").each(function(index, item){
+        $(item).parent().attr("data-page", 0);
+        load_item(item);
+      });
+    });
+
+    $(".search_prev").click(function(){
+      $parent = $(this).parent();
+      $page = parseInt($parent.attr("data-page"));
+      if ($page > 0 && $parent.attr("data-loading").length == 0) {
+        $page = $page - 1;
+        $parent.attr("data-page", $page);
+        load_item($parent.find(".remote_search_table"));
+      };
+    });
+
+    $(".search_next").click(function(){
+      $parent = $(this).parent();
+      $page = parseInt($parent.attr("data-page"));
+      if ($parent.attr("data-loading").length == 0 && parseInt($parent.attr("data-results-left")) > 0) {
+        $page = $page + 1;
+        $parent.attr("data-page", $page);
+        load_item($parent.find(".remote_search_table"));
+      };
+    });
+
+  });
+</script>
+<!-- Kill me now... This should go in a .css file but i'm lazy -->
+<style>
+#circular3dG{
+position:relative;
+width:60px;
+height:60px;
+}
+
+.circular3dG{
+position:absolute;
+background-color:#850A85;
+width:17px;
+height:17px;
+-moz-border-radius:18px;
+-moz-animation-name:bounce_circular3dG;
+-moz-animation-duration:0.64s;
+-moz-animation-iteration-count:infinite;
+-moz-animation-direction:linear;
+-webkit-border-radius:18px;
+-webkit-animation-name:bounce_circular3dG;
+-webkit-animation-duration:0.64s;
+-webkit-animation-iteration-count:infinite;
+-webkit-animation-direction:linear;
+-ms-border-radius:18px;
+-ms-animation-name:bounce_circular3dG;
+-ms-animation-duration:0.64s;
+-ms-animation-iteration-count:infinite;
+-ms-animation-direction:linear;
+-o-border-radius:18px;
+-o-animation-name:bounce_circular3dG;
+-o-animation-duration:0.64s;
+-o-animation-iteration-count:infinite;
+-o-animation-direction:linear;
+border-radius:18px;
+animation-name:bounce_circular3dG;
+animation-duration:0.64s;
+animation-iteration-count:infinite;
+animation-direction:linear;
+}
+
+#circular3d_1G{
+left:24px;
+top:4px;
+-moz-animation-delay:0.24000000000000005s;
+-webkit-animation-delay:0.24000000000000005s;
+-ms-animation-delay:0.24000000000000005s;
+-o-animation-delay:0.24000000000000005s;
+animation-delay:0.24000000000000005s;
+}
+
+#circular3d_2G{
+left:37px;
+top:14px;
+-moz-animation-delay:0.32s;
+-webkit-animation-delay:0.32s;
+-ms-animation-delay:0.32s;
+-o-animation-delay:0.32s;
+animation-delay:0.32s;
+}
+
+#circular3d_3G{
+left:44px;
+top:27px;
+-moz-animation-delay:0.4s;
+-webkit-animation-delay:0.4s;
+-ms-animation-delay:0.4s;
+-o-animation-delay:0.4s;
+animation-delay:0.4s;
+}
+
+#circular3d_4G{
+left:41px;
+top:40px;
+-moz-animation-delay:0.4800000000000001s;
+-webkit-animation-delay:0.4800000000000001s;
+-ms-animation-delay:0.4800000000000001s;
+-o-animation-delay:0.4800000000000001s;
+animation-delay:0.4800000000000001s;
+}
+
+#circular3d_5G{
+left:25px;
+top:44px;
+-moz-animation-delay:0.56s;
+-webkit-animation-delay:0.56s;
+-ms-animation-delay:0.56s;
+-o-animation-delay:0.56s;
+animation-delay:0.56s;
+}
+
+#circular3d_6G{
+left:5px;
+top:29px;
+-moz-animation-delay:0.64s;
+-webkit-animation-delay:0.64s;
+-ms-animation-delay:0.64s;
+-o-animation-delay:0.64s;
+animation-delay:0.64s;
+}
+
+#circular3d_7G{
+left:0px;
+top:8px;
+-moz-animation-delay:0.72s;
+-webkit-animation-delay:0.72s;
+-ms-animation-delay:0.72s;
+-o-animation-delay:0.72s;
+animation-delay:0.72s;
+}
+
+#circular3d_8G{
+left:10px;
+top:0px;
+-moz-animation-delay:0.8s;
+-webkit-animation-delay:0.8s;
+-ms-animation-delay:0.8s;
+-o-animation-delay:0.8s;
+animation-delay:0.8s;
+}
+
+@-moz-keyframes bounce_circular3dG{
+0%{
+-moz-transform:scale(1)}
+
+100%{
+-moz-transform:scale(.3)}
+
+}
+
+@-webkit-keyframes bounce_circular3dG{
+0%{
+-webkit-transform:scale(1)}
+
+100%{
+-webkit-transform:scale(.3)}
+
+}
+
+@-ms-keyframes bounce_circular3dG{
+0%{
+-ms-transform:scale(1)}
+
+100%{
+-ms-transform:scale(.3)}
+
+}
+
+@-o-keyframes bounce_circular3dG{
+0%{
+-o-transform:scale(1)}
+
+100%{
+-o-transform:scale(.3)}
+
+}
+
+@keyframes bounce_circular3dG{
+0%{
+transform:scale(1)}
+
+100%{
+transform:scale(.3)}
+
+}
+
+</style>
+
+<form action="/items/search" method="get">
+  <div class="well ui-widget">Advanced Search: 
+    <input type="text" id="advanced_search" name="query"/><br/>
+    <div id="search_forms">
+      Limit: <select name="query_limit" id="query_limit" value="10">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>                              
+        </select>
+      Search By: <select name="query_search_by" id="query_search_by" value="title">
+          <option value="title">Title</option>
+          <option value="description">Description</option>
+          <option value="price">Price</option>
+        </select>
+      <br />
+      Sort By: <select name="query_sortA" id="query_sortA" value="title">
+          <option value="title">Title</option>
+          <option value="description">Description</option>
+          <option value="price">Price</option>
+          <option value="time_create">Time Created</option>
+          <option value="location">Location</option>
+      </select>
+      <select name="query_orderA" id="query_orderA" value="desc">
+        <option value="desc">DESC</option>
+        <option value="asc">ASC</option>    
+      </select>
+      And: <select name="query_sortB" id="query_sortB" value="title">
+          <option value="title">Title</option>
+          <option value="description">Description</option>
+          <option value="price">Price</option>
+          <option value="time_create">Time Created</option>
+          <option value="location">Location</option>
+      </select>
+      <select name="query_orderB" id="query_orderB" value="desc">
+        <option value="desc">DESC</option>
+        <option value="asc">ASC</option>    
+      </select>
+      <br />
+      <input type="submit" id="query_submit" class="btn" value="Search" \>
+    </div>
+    {% if user %}
+      <p><br/><a href="/items/old_searches">View Old Searches</a></p>
+    {% endif %}
+  </div>
+</form>
+
+<div class="remote_search_table_wrapper" data-results-left="0" data-page="0" data-loading="" data-api-url="localhost:8081" id="local_search_results">
+  <h3>Local Results</h3>
+<table class="table table-striped remote_search_table">
+  <thead>
+    <th width="10%">Posted</th><th>Title</th><th>Description</th><th>Price</th>
+      {% if is_admin %}
+      <th>Delete</th><th width="15%">Expiration Date</th>
+      {% endif %}
       {% if user %}
         <th>Contact</th>
       {% endif %}
-		</tr>
-	</thead>
-	<tbody>
-		{% for item in items %}
-		<tr>
-      <td>
-        <div>{{item.created_at.strftime("%m/%d/%Y")}}</div>
-      </td>
-			<td>
-				<a href="/items/view_item?item_id={{ item.key().id() }}">
-					<div>{{ item.title }}</div>
-				</a>
-			</td>
-			<td>{{ item.summary }}</td>
-			<td>${{ item.price }}</td>
-			{% if is_admin %}
-			<td>
-				<a href="/items/delete_item?item_id={{ item.key().id() }}&xsrf_token={{xsrf_token}}">
-					<button class="btn btn-primary"  value="Delete">Delete Item</button> 
-				</a>
-			</td>
-      <td>{{item.expiration_date.strftime("%m/%d/%Y")}}</td>
-			{% endif %}
-      {% if user %}
-        <td>
-          <a href="/threads/new_thread?about={{ item.key().id() }}">
-            <button class="btn btn-primary" value="Contact Seller">Contact Seller</button> 
-          </a>
-        </td>
-      {% endif %}
-		</tr>
-		{% endfor %}
-	</tbody>
+  </thead>
+  <tbody>
+
+  </tbody>
 </table>
+<span class="showing_indicator">Showing 0 of 0</span><br />
+<a href="#" class="search_prev" onclick="return false;">&lt;Prev</a>
+<a href="#" class="search_next" style="padding-left:20px;" onclick="return false;">Next&gt;</a>
+</div>
+
+<h3>Trusted Partner Results</h3>
+{% for partner in partners %}
+  <h4> {{ partner.name }} </h4>
+  <div class="remote_search_table_wrapper" data-results-left="0" data-page="0" data-loading="" data-partner-id="{{ partner.key().id() }}">
+  <table class="table table-striped remote_search_table">
+    <thead>
+      <th>Title</th><th>Description</th><th>Price</th>
+      {% if user %}
+        <th>Contact</th>
+      {% endif %}
+    </thead>
+    <tbody>
+
+    </tbody>
+  </table>
+  <span class="showing_indicator">Showing 0 of 0</span><br />
+  <a href="#" class="search_prev" onclick="return false;">&lt;Prev</a>
+  <a href="#" class="search_next" style="padding-left:20px;" onclick="return false;">Next&gt;</a>
+</div>
+{% endfor %}
 <br/><br/>
 <a href="/">
   <button class="btn btn-primary" value="back">Go Back</button> 

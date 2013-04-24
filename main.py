@@ -28,7 +28,10 @@ class MainHandler(database.webapp2.RequestHandler):
       items = database.db.GqlQuery("SELECT * FROM Item")
     else:
       items = database.db.GqlQuery("SELECT * FROM Item WHERE expiration_date >= :1 AND is_active = :2 AND deactivated = :3", database.datetime.date.today(), True, False)
-    database.render_template(self, 'items/index.html', {'items': items, 'xsrf_token' : token })    
+
+    trusted_partners = database.TrustedPartner.all()
+    database.render_template(self, 'items/index.html', {'items': items, 'xsrf_token' : token, "partners" : trusted_partners })    
+    
 class ImageHandler(database.webapp2.RequestHandler):
   def get(self):
     image_id = cgi.escape(self.request.get('avatar_id'))
