@@ -145,17 +145,17 @@ class ShopHandler(database.webapp2.RequestHandler):
     
 class SearchHandler(database.webapp2.RequestHandler):
   def get(self):
-    query = cgi.escape(self.request.get('query'))
-    limit = cgi.escape(self.request.get('query_limit'))
-    search_by = cgi.escape(self.request.get('query_search_by'))    
+    query = cgi.escape(database.quick_sanitize(self.request.get('query')))
+    limit = cgi.escape(database.quick_sanitize(self.request.get('query_limit')))
+    search_by = cgi.escape(database.quick_sanitize(self.request.get('query_search_by')))    
     sort_by = {
       "a" : {
-        "sort_field" : cgi.escape(self.request.get('query_sortA')),
-        "order" : cgi.escape(self.request.get('query_orderA'))
+        "sort_field" : cgi.escape(database.quick_sanitize(self.request.get('query_sortA'))),
+        "order" : cgi.escape(database.quick_sanitize(self.request.get('query_orderA')))
       },
       "b" : {
-        "sort_field" : cgi.escape(self.request.get('query_sortB')),
-        "order" : cgi.escape(self.request.get('query_orderB'))
+        "sort_field" : cgi.escape(database.quick_sanitize(self.request.get('query_sortB'))),
+        "order" : cgi.escape(database.quick_sanitize(self.request.get('query_orderB')))
       }
     }
 
