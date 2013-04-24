@@ -47,10 +47,12 @@ def seller_to_dictionary(seller):
 	}
 
 def render_error(self, message):
-	self.response.out.write(json.dumps({"success" : False, "message" : message}))
+  resp = json.dumps({"success" : False, "message" : message})
+  self.response.out.write(resp)
   
 def render_success(self, message):
-	self.response.out.write(json.dumps({"success" : True, "message" : message}))
+  resp = json.dumps({"success" : True, "message" : message})
+  self.response.out.write(resp)
 
 def handle_search(self, is_local):
 	search_by_params = ["title", "description", "price"]
@@ -166,10 +168,6 @@ def handle_search(self, is_local):
 
 	b = json.dumps({ "items" : results, "results_left" : len(list(tmp_results)) - counter, "total" : len(list(tmp_results)), "success" : True })
 	self.response.out.write(b)
-
-
-def render_success(self, message):
-	self.response.out.write({"success" : True, "message" : message})
 
 def send_new_item_notification(self, item):
 	partners = database.db.GqlQuery("SELECT * FROM TrustedPartner")
@@ -296,12 +294,13 @@ class WebservicesItemHandler(database.webapp2.RequestHandler):
 			render_error(self, "authentication failure")
 
 class WebservicesNewItemRequestHandler(database.webapp2.RequestHandler):
-	def get(self):
-		auth_token = cgi.escape(self.request.get('auth_token'))
-		if authenticate(auth_token):
-			render_success(self, "new item received")
-		else:
-			render_error(self, "authentication failure")
+  def get(self):
+    auth_token = cgi.escape(self.request.get('auth_token'))
+    if authenticate(auth_token):
+      render_success(self, "new item received")
+      return
+    else:
+      render_error(self, "authentication failure")
 
 class WebservicesTestHandler(database.webapp2.RequestHandler):
 	def get(self):
