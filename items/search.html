@@ -61,10 +61,17 @@ Search Results
         }
         
       }
-      $parent.attr('data-results-left', resp.results_left);
+
       var start = $offset + 1;
       var end = $offset + resp.items.length;
       var showing_string = "Showing " + start + " - " + end + " out of " + resp.total;
+      results_left = 0;
+      if (resp.results_left) {
+      	results_left = resp.results_left;
+      }else {
+      	results_left = resp.total - end;
+      };
+      $parent.attr('data-results-left', results_left);
       if (resp.items.length == 0) {showing_string = "Showing 0 of " + resp.total};
       $(item).parent().find("span.showing_indicator").html(showing_string);
     });
@@ -81,16 +88,9 @@ Search Results
       source: items
     });
 
-    $("#query_submit").click(function(){
-      $(".remote_search_table").each(function(index, item){
-        $(item).parent().attr("data-page", 0);
-        load_item(item);
-      });
-    });
-
     $(".search_prev").click(function(){
-      $parent = $(this).parent();
-      $page = parseInt($parent.attr("data-page"));
+      var $parent = $(this).parent();
+      var $page = parseInt($parent.attr("data-page"));
       if ($page > 0 && $parent.attr("data-loading").length == 0) {
         $page = $page - 1;
         $parent.attr("data-page", $page);
@@ -99,8 +99,8 @@ Search Results
     });
 
     $(".search_next").click(function(){
-      $parent = $(this).parent();
-      $page = parseInt($parent.attr("data-page"));
+      var $parent = $(this).parent();
+      var $page = parseInt($parent.attr("data-page"));
       if ($parent.attr("data-loading").length == 0 && parseInt($parent.attr("data-results-left")) > 0) {
         $page = $page + 1;
         $parent.attr("data-page", $page);
@@ -108,6 +108,10 @@ Search Results
       };
     });
 
+    $(".remote_search_table").each(function(index, item){
+        $(item).parent().attr("data-page", 0);
+        load_item(item);
+      });
   });
 </script>
 <!-- Kill me now... This should go in a .css file but i'm lazy -->
@@ -277,43 +281,53 @@ transform:scale(.3)}
 
 </style>
 
+<div id="hidden_fields">
+	<input type="hidden" id="query_field" value="{{ query }}" />
+	<input type="hidden" id="query_limit" value="{{ limit }}" />
+	<input type="hidden" id="query_search_by" value="{{ search_by }}" />
+	<input type="hidden" id="query_sortA" value="{{ sort_by['a']['sort_field'] }}" />
+	<input type="hidden" id="query_sortB" value="{{ sort_by['b']['sort_field'] }}" />	
+	<input type="hidden" id="query_orderA" value="{{ sort_by['a']['order'] }}" />
+	<input type="hidden" id="query_orderB" value="{{ sort_by['b']['order'] }}" />	
+</div>
+
 <form action="/items/search" method="get">
   <div class="well ui-widget">Advanced Search: 
-    <input type="text" id="advanced_search" name="query"/><br/>
+    <input type="text" name="query" value="{{ query }}"/><br/>
     <div id="search_forms">
-      Limit: <select name="query_limit" id="query_limit" value="10">
-          <option value="10">10</option>
-          <option value="25">25</option>
-          <option value="50">50</option>
-          <option value="100">100</option>                              
+      Limit: <select name="query_limit" value="{{ limit }}">
+          <option {% if limit == '10' %} selected=selected {% endif %} value="10">10</option>
+          <option {% if limit == '25' %} selected=selected {% endif %} value="25">25</option>
+          <option {% if limit == '50' %} selected=selected {% endif %} value="50">50</option>
+          <option {% if limit == '100' %} selected=selected {% endif %} value="100">100</option>                              
         </select>
-      Search By: <select name="query_search_by" id="query_search_by" value="title">
-          <option value="title">Title</option>
-          <option value="description">Description</option>
-          <option value="price">Price</option>
+      Search By: <select name="query_search_by" value="{{ search_by }}">
+          <option {% if search_by == 'title' %} selected=selected {% endif %} value="title">Title</option>
+          <option {% if search_by == 'description' %} selected=selected {% endif %} value="description">Description</option>
+          <option {% if search_by == 'price' %} selected=selected {% endif %} value="price">Price</option>
         </select>
       <br />
-      Sort By: <select name="query_sortA" id="query_sortA" value="title">
-          <option value="title">Title</option>
-          <option value="description">Description</option>
-          <option value="price">Price</option>
-          <option value="time_create">Time Created</option>
-          <option value="location">Location</option>
+      Sort By: <select name="query_sortA">
+          <option {% if sort_by['a']['sort_field'] == 'title' %} selected=selected {% endif %} value="title">Title</option>
+          <option {% if sort_by['a']['sort_field'] == 'description' %} selected=selected {% endif %} value="description">Description</option>
+          <option {% if sort_by['a']['sort_field'] == 'price' %} selected=selected {% endif %} value="price">Price</option>
+          <option {% if sort_by['a']['sort_field'] == 'time_create' %} selected=selected {% endif %} value="time_create">Time Created</option>
+          <option {% if sort_by['a']['sort_field'] == 'location' %} selected=selected {% endif %} value="location">Location</option>
       </select>
-      <select name="query_orderA" id="query_orderA" value="desc">
-        <option value="desc">DESC</option>
-        <option value="asc">ASC</option>    
+      <select name="query_orderA" value="desc">
+        <option {% if sort_by['a']['order'] == 'desc' %} selected=selected {% endif %} value="desc">DESC</option>
+        <option {% if sort_by['a']['order'] == 'asc' %} selected=selected {% endif %} value="asc">ASC</option>    
       </select>
-      And: <select name="query_sortB" id="query_sortB" value="title">
-          <option value="title">Title</option>
-          <option value="description">Description</option>
-          <option value="price">Price</option>
-          <option value="time_create">Time Created</option>
-          <option value="location">Location</option>
+      And: <select name="query_sortB" value="title">
+          <option {% if sort_by['b']['sort_field'] == 'title' %} selected=selected {% endif %} value="title">Title</option>
+          <option {% if sort_by['b']['sort_field'] == 'description' %} selected=selected {% endif %} value="description">Description</option>
+          <option {% if sort_by['b']['sort_field'] == 'price' %} selected=selected {% endif %} value="price">Price</option>
+          <option {% if sort_by['b']['sort_field'] == 'time_create' %} selected=selected {% endif %} value="time_create">Time Created</option>
+          <option {% if sort_by['b']['sort_field'] == 'location' %} selected=selected {% endif %} value="location">Location</option>
       </select>
-      <select name="query_orderB" id="query_orderB" value="desc">
-        <option value="desc">DESC</option>
-        <option value="asc">ASC</option>    
+      <select name="query_orderB" value="desc">
+        <option {% if sort_by['b']['order'] == 'desc' %} selected=selected {% endif %} value="desc">DESC</option>
+        <option {% if sort_by['b']['order'] == 'asc' %} selected=selected {% endif %} value="asc">ASC</option>    
       </select>
       <br />
       <input type="submit" id="query_submit" class="btn" value="Search" \>

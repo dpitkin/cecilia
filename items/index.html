@@ -9,37 +9,37 @@ Items
 
 <form action="/items/search" method="get">
   <div class="well ui-widget">Advanced Search: 
-    <input type="text" id="advanced_search" name="query" value="{{ query }}"/><br/>
+    <input type="text" id="advanced_search" name="query"/><br/>
     <div id="search_forms">
-      Limit: <select name="query_limit" id="query_limit" value="{{ limit }}">
+      Limit: <select name="query_limit" id="query_limit" value="10">
           <option value="10">10</option>
           <option value="25">25</option>
           <option value="50">50</option>
           <option value="100">100</option>                              
         </select>
-      Search By: <select name="query_search_by" id="query_search_by" value="{{ search_by }}">
+      Search By: <select name="query_search_by" id="query_search_by" value="title">
           <option value="title">Title</option>
           <option value="description">Description</option>
           <option value="price">Price</option>
         </select>
       <br />
-      Sort By: <select name="query_sortA" id="query_sortA">
-          <option {% if sort_by['a']['sort_field'] == 'title' %} selected=selected {% endif %} value="title">Title</option>
-          <option {% if sort_by['a']['sort_field'] == 'description' %} selected=selected {% endif %} value="description">Description</option>
-          <option {% if sort_by['a']['sort_field'] == 'price' %} selected=selected {% endif %} value="price">Price</option>
-          <option {% if sort_by['a']['sort_field'] == 'time_create' %} selected=selected {% endif %} value="time_create">Time Created</option>
-          <option {% if sort_by['a']['sort_field'] == 'location' %} selected=selected {% endif %} value="location">Location</option>
+      Sort By: <select name="query_sortA" id="query_sortA" value="title">
+          <option value="title">Title</option>
+          <option value="description">Description</option>
+          <option value="price">Price</option>
+          <option value="time_create">Time Created</option>
+          <option value="location">Location</option>
       </select>
       <select name="query_orderA" id="query_orderA" value="desc">
-        <option {% if sort_by['a']['order'] == 'desc' %} selected=selected {% endif %} value="desc">DESC</option>
+        <option value="desc">DESC</option>
         <option value="asc">ASC</option>    
       </select>
       And: <select name="query_sortB" id="query_sortB" value="title">
-          <option {% if sort_by['b']['sort_field'] == 'title' %} selected=selected {% endif %} value="title">Title</option>
-          <option {% if sort_by['b']['sort_field'] == 'description' %} selected=selected {% endif %} value="description">Description</option>
-          <option {% if sort_by['b']['sort_field'] == 'price' %} selected=selected {% endif %} value="price">Price</option>
-          <option {% if sort_by['b']['sort_field'] == 'time_create' %} selected=selected {% endif %} value="time_create">Time Created</option>
-          <option {% if sort_by['b']['sort_field'] == 'location' %} selected=selected {% endif %} value="location">Location</option>
+          <option value="title">Title</option>
+          <option value="description">Description</option>
+          <option value="price">Price</option>
+          <option value="time_create">Time Created</option>
+          <option value="location">Location</option>
       </select>
       <select name="query_orderB" id="query_orderB" value="desc">
         <option value="desc">DESC</option>
