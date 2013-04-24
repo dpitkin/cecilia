@@ -15,7 +15,6 @@ Search Results
     var $page = parseInt($parent.attr("data-page"));
     var $partner_id = $parent.attr("data-partner-id")
     var $offset = $page * $limit;
-    var $search_by = $("#query_search_by").val();
     var $query = $("#query_field").val();
     $(item).append("<h4>" + generate_spinner() + "</h4>");
     console.log($(item));
@@ -27,7 +26,7 @@ Search Results
     ]);
     console.log($sort_order);
     var url = $is_local ? "/webservices/local_search" : "/webservices/partner_search"
-    $.get(url, { "limit" : $limit, "offset" : $offset, "search_by" : $search_by, "query" : $query, "sort_options" : $sort_order, "partner_id" : $partner_id }, function(resp){
+    $.get(url, { "limit" : $limit, "offset" : $offset, "query" : $query, "sort_options" : $sort_order, "partner_id" : $partner_id }, function(resp){
 
       if (!$is_local) {
         console.log(url);
@@ -300,11 +299,6 @@ transform:scale(.3)}
           <option {% if limit == '25' %} selected=selected {% endif %} value="25">25</option>
           <option {% if limit == '50' %} selected=selected {% endif %} value="50">50</option>
           <option {% if limit == '100' %} selected=selected {% endif %} value="100">100</option>                              
-        </select>
-      Search By: <select name="query_search_by" value="{{ search_by }}">
-          <option {% if search_by == 'title' %} selected=selected {% endif %} value="title">Title</option>
-          <option {% if search_by == 'description' %} selected=selected {% endif %} value="description">Description</option>
-          <option {% if search_by == 'price' %} selected=selected {% endif %} value="price">Price</option>
         </select>
       <br />
       Sort By: <select name="query_sortA">

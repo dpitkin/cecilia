@@ -68,10 +68,7 @@ def handle_search(self, is_local):
 	if len(str(offset)) == 0:
 		render_error(self, "No offset provided")
 		return
-	
-	if not(search_by in search_by_params):
-		render_error(self, "Invalid search by parameter" )
-		return
+
 
 	#Type cast params... they need to be in try catches ugh >.<
 	try:
@@ -117,23 +114,31 @@ def handle_search(self, is_local):
 	items = database.Item.all().order(orderB)
 	#now tokenize the input by spaces
 
-	query_tokens = database.string.split(query)
+	tmp_tokens = database.string.split(query)
+	query_tokens = []
+
+	for tok in tmp_tokens:
+		split_val = tok.split(":")
+		if len(split_val) == 1:
+			query_tokens.append( ("title", split_val[0]) )
+		else:
+			column = split_val[0]
+			if not(column in search_by_params):
+				column = "title"
+			query_tokens.append( (column, split_val[1]) )
+
 	tmp_results = []
 
 	for item in items:
 		add = False
-		if search_by == "title":
-			for tok in query_tokens:
-				if database.string.find(item.title, tok) != -1:
-					add = True
-		elif search_by == "description":
-			for tok in query_tokens:
-				if database.string.find(item.description, tok) != -1:
-					add = True
-		elif search_by == "price":
-			for tok in query_tokens:
-				if database.string.find(str(item.price), tok) != -1:
-					add = True
+		for tok in query_tokens:
+			param = item.title
+			if tok[0] == "description":
+				param = item.description
+			if tok[0] == "price":
+				param = str(item.price)
+			if database.string.find(param, tok[1]) != -1:
+				add = True
 		if add:
 			if is_local:
 				tmp_results.append(local_item_to_dictionary(item, self))
@@ -169,7 +174,7 @@ def send_new_item_notification(self, item):
 	partners = database.db.GqlQuery("SELECT * FROM TrustedPartner")
 	for partner in partners:
 		if partner:
-		data = json.dumps({ "data" : [item_to_dictionary(item)] })
+        data = json.dumps({ "data" : [item_to_dictionary(item)] })
 		base_url = partner.base_url
 		foreign_auth_token = partner.foreign_auth_token
 		url = base_url + "/webservices/new_item?auth_token=" + foreign_auth_token + "&data=" + data
