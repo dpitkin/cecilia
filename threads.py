@@ -100,6 +100,7 @@ class SaveHandler(database.webapp2.RequestHandler):
           if item:
             thread.item_details = 'This is about your item: "' + item.title + '" that you posted for $' + str(item.price)
           thread.title = cgi.escape(self.request.get('title'))
+          thread.external_conversation = False
           thread.recipient_id = recipient.user_id
           thread.put()
           database.logging.info("Created a new thread. Info:\nThreadID: %s\nCreatedBy: %s\nTitle: %s\nSentTo: %s\nCreatedAt: %s", 
