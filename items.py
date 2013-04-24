@@ -211,14 +211,32 @@ class FeedbackHandler(database.webapp2.RequestHandler):
       
 class ForeignFeedbackHandler(database.webapp2.RequestHandler):
   def post(self):
-    
-#target_item_id: STRING
-#user_name: STRING
-#user_id: STRING
-#rating: FLOAT (1-5)
-#feedback: STRING
-#feedback_id: STRING
-
+    user = database.users.get_current_user()
+    li = database.get_current_li()
+    if user and li:
+      target_item_id = cgi.escape(self.request.get('item_id'))
+      user_name = li.nickname
+      user_id = li.user_id
+      rating = int(cgi.escape(self.request.get('rating')))
+      feedback = cgi.escape(self.request.get('feedback'))
+      partner = database.db.get(db.Key.from_path('TrustedPartner', int(cgi.escape(self.request.get('partner_id')))))
+      if partner:
+        base_url = partner.base_url
+        foreign_auth_token = partner.foreign_auth_token
+        url = base_url + "/webservices/add_item_rating"
+        form_fields = {'target_item_id': str(target_item_id), 'user_name': user_name, 'user_id': user_id, 'rating': rating, 'feedback': feedback}
+        post_params = urllib.urlencode(form_fields)
+        try:
+          result = urlfetch.fetch(url=url, method=urlfetch.POST, payload=post_params, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+          database.logging.info(result + "\n")
+          self.redirect(self.request.referer)
+          return
+        except Exception, e:
+          self.redirect('/')
+          return
+      else:
+        self.redirect('/')
+        return
       
 class DeleteFeedbackHandler(database.webapp2.RequestHandler):
   def get(self):
@@ -335,7 +353,7 @@ class RemoteItemHandler(database.webapp2.RequestHandler):
         item_contents = json.loads(result.content)
       except Exception, e:
         item_contents = None
-    database.render_template(self, '/items/view_remote_item.html', {'item_contents': item_contents})
+    database.render_template(self, '/items/view_remote_item.html', {'item_contents': item_contents, 'partner_id': partner.key().id()})
 
 
 app = database.webapp2.WSGIApplication([('/items/', MainHandler), ('/items/new_item', NewHandler), 
@@ -343,4 +361,5 @@ app = database.webapp2.WSGIApplication([('/items/', MainHandler), ('/items/new_i
 ('/items/my_items', ShopHandler), ('/items/delete_item', DeleteHandler), ('/items/edit_item', EditHandler),
 ('/items/update_item', UpdateHandler), ('/items/submit_feedback', FeedbackHandler), ('/items/delete_item_feedback', DeleteFeedbackHandler),
 ('/items/old_searches', OldSearches), ('/items/submit_bid', BidHandler), ('/items/item_sold', SoldHandler), ('/items/new_collection', NewCollectionHandler),
-('/items/save_collection', SaveCollectionHandler), ('/items/view_collection', ViewCollectionHandler), ('/items/delete_collection', DeleteCollectionHandler), ('/items/view_remote_item', RemoteItemHandler)], debug=True)
+('/items/save_collection', SaveCollectionHandler), ('/items/view_collection', ViewCollectionHandler), ('/items/delete_collection', DeleteCollectionHandler), 
+('/items/view_remote_item', RemoteItemHandler), ('/items/submit_foreign_feedback', ForeignFeedbackHandler)], debug=True)

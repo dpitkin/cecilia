@@ -325,7 +325,8 @@ class SendMessageHandler(database.webapp2.RequestHandler):
 class UserImportHandler(database.webapp2.RequestHandler):
   def post(self):
     #parse json
-    j = json.loads(self.request.get('data'))
+    database.logging.info(self.request.get('user_data'))
+    j = json.loads(self.request.get('user_data'))
     user_id = str(cgi.escape(j['google_user_id']))
     #check if this user already exists in our application
     li = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", user_id).get()
@@ -335,9 +336,9 @@ class UserImportHandler(database.webapp2.RequestHandler):
       return
     else:
       #they don't exist in our application, so now let's create them
-      li = database.LoginInformation(first_name=cgi.escape(j['username']), last_name=" ", user_id=user_id, is_active=True, is_admin=False, private=False)
-      li.email = cgi.escape(j['mail'])
-      li.nickname = cgi.escape(j['username'])
+      li = database.LoginInformation(first_name=cgi.escape(j['name']), last_name=" ", user_id=user_id, is_active=True, is_admin=False, private=False)
+      li.email = cgi.escape(j['email'])
+      li.nickname = cgi.escape(j['name'])
       li.external_user = False
       try:
         li.put()
@@ -345,11 +346,11 @@ class UserImportHandler(database.webapp2.RequestHandler):
         render_error(self, "Could not save LoginInformation to the datastore.")
         return
       #now import all their items
-      for item in j['items']:
+      for i in j['items']:
         item = database.Item(is_active=True, deactivated=False, bidding_enabled=False, sold=False, sponsored=False)
-        item.title = cgi.escape(item['title'])
-        item.description = cgi.escape(item['description'])
-        item.price = float(cgi.escape(item['price']))
+        item.title = cgi.escape(i['title'])
+        item.description = cgi.escape(i['description'])
+        item.price = float(i['price'])
         item.expiration_date = database.datetime.date.today() + database.datetime.timedelta(weeks=4)
         item.created_by_id = li.user_id
         if (len(item.description) > 40):
