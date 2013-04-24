@@ -237,6 +237,13 @@ class ForeignFeedbackHandler(database.webapp2.RequestHandler):
       else:
         self.redirect('/')
         return
+# WTF, someone implement this
+#target_item_id: STRING
+#user_name: STRING
+#user_id: STRING
+#rating: FLOAT (1-5)
+#feedback: STRING
+#feedback_id: STRING
       
 class DeleteFeedbackHandler(database.webapp2.RequestHandler):
   def get(self):

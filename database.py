@@ -294,3 +294,6 @@ class TrustedPartner(db.Model):
   base_url = db.StringProperty()
   local_auth_token = db.StringProperty()
   foreign_auth_token = db.StringProperty()
+
+class Suggestion(db.Model):
+  query = db.StringProperty()
