@@ -245,7 +245,6 @@ class ForeignFeedbackHandler(database.webapp2.RequestHandler):
 #feedback: STRING
 #feedback_id: STRING
       
->>>>>>> 45b172e092c7ab68109b1727b23bfa3cac398d01
 class DeleteFeedbackHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
