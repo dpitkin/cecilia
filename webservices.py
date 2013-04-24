@@ -22,17 +22,6 @@ def item_to_dictionary(item, self):
 		"image" : self.request.host + item.display_image_url(),
 		"seller" : seller_to_dictionary(item.get_creator()),
 		"price" : str(item.price),
-		"url" : self.request.host + "/items/view_item?item_id=" + str(item.key().id())
-	}
-
-def local_item_to_dictionary(item, self):
-	return {
-		"id" : item.key().id(),
-		"title" : item.title,
-		"description" : item.description,
-		"image" : self.request.host + item.display_image_url(),
-		"seller" : seller_to_dictionary(item.get_creator()),
-		"price" : str(item.price),
 		"url" : self.request.host + "/items/view_item?item_id=" + str(item.key().id()),
 		"created_at" : item.created_at.strftime("%m/%d/%Y"),
 		"expiration_date" : item.expiration_date.strftime("%m/%d/%Y")
@@ -140,10 +129,8 @@ def handle_search(self, is_local):
 			if database.string.find(param, tok[1]) != -1:
 				add = True
 		if add:
-			if is_local:
-				tmp_results.append(local_item_to_dictionary(item, self))
-			else:
-				tmp_results.append(item_to_dictionary(item, self))
+			tmp_results.append(item_to_dictionary(item, self))
+				
 
 	tmp_results = sorted(tmp_results, key=lambda x:x[sort_typeA])
 
@@ -282,7 +269,7 @@ class WebservicesItemHandler(database.webapp2.RequestHandler):
 			item_id = cgi.escape(self.request.get('item_id'))
 			try:
 				item = db.get(db.Key.from_path('Item', int(item_id)))
-				self.response.out.write(item_to_dictionary(item, self))
+				self.response.out.write(json.dumps(item_to_dictionary(item, self)))
 			except ValueError:
 				render_error(self, "item_id does not exist")
 			except AttributeError:
@@ -297,10 +284,6 @@ class WebservicesNewItemRequestHandler(database.webapp2.RequestHandler):
 			render_success(self, "new item received")
 		else:
 			render_error(self, "authentication failure")
-
-class WebservicesTestHandler(database.webapp2.RequestHandler):
-	def get(self):
-		self.response.out.write(json.dumps([item_to_dictionary(i) for i in database.Item.all()]))
     
 class SendMessageHandler(database.webapp2.RequestHandler):
   def post(self):
@@ -343,6 +326,6 @@ class SendMessageHandler(database.webapp2.RequestHandler):
 
 app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/local_search', WebservicesLocalSearchHandler), 
 ('/webservices/partner_search', WebservicesPartnerSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), 
-('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), ('/webservices/test', WebservicesTestHandler), 
+('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler),
 ('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler)], debug=True)
 

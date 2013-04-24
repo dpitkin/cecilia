@@ -5,6 +5,9 @@ import re
 from database import cgi
 from database import db
 import webservices
+import urllib
+import json
+from google.appengine.api import urlfetch
 
 class MainHandler(database.webapp2.RequestHandler):
   def get(self):
@@ -304,9 +307,28 @@ class DeleteCollectionHandler(database.webapp2.RequestHandler):
     else:
       self.redirect('/')
 
+class RemoteItemHandler(database.webapp2.RequestHandler):
+  def get(self):
+    current_li = database.get_current_li()
+    item_id = self.request.get("item_id")
+    partner = database.db.get(db.Key.from_path('TrustedPartner', int(cgi.escape(self.request.get('partner_id')))))
+    item_contents = None
+    if partner:
+      base_url = partner.base_url
+      foreign_auth_token = partner.foreign_auth_token
+      url = base_url + "/webservices/item?auth_token=" + foreign_auth_token + "&item_id=" + item_id
+      try:
+        result = urlfetch.fetch(url=url, method=urlfetch.GET, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+        database.logging.info(result.content);
+        item_contents = json.loads(result.content)
+      except Exception, e:
+        item_contents = None
+    database.render_template(self, '/items/view_remote_item.html', {'item_contents': item_contents})
+
+
 app = database.webapp2.WSGIApplication([('/items/', MainHandler), ('/items/new_item', NewHandler), 
 ('/items/save_item', SaveHandler), ('/items/view_item', ViewHandler), ('/items/search', SearchHandler),
 ('/items/my_items', ShopHandler), ('/items/delete_item', DeleteHandler), ('/items/edit_item', EditHandler),
 ('/items/update_item', UpdateHandler), ('/items/submit_feedback', FeedbackHandler), ('/items/delete_item_feedback', DeleteFeedbackHandler),
 ('/items/old_searches', OldSearches), ('/items/submit_bid', BidHandler), ('/items/item_sold', SoldHandler), ('/items/new_collection', NewCollectionHandler),
-('/items/save_collection', SaveCollectionHandler), ('/items/view_collection', ViewCollectionHandler), ('/items/delete_collection', DeleteCollectionHandler)], debug=True)
+('/items/save_collection', SaveCollectionHandler), ('/items/view_collection', ViewCollectionHandler), ('/items/delete_collection', DeleteCollectionHandler), ('/items/view_remote_item', RemoteItemHandler)], debug=True)
