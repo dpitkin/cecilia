@@ -117,6 +117,7 @@ class LoginInformation(db.Model):
   private = db.BooleanProperty()
   xsrf_token = db.StringProperty()
   desc = db.TextProperty()
+  external_user = db.BooleanProperty()
   
   def display_avatar(this):
     if this.avatar:
@@ -169,6 +170,14 @@ class LoginInformation(db.Model):
       return '%.2f' % float(float(total)/float(ratings.count()))
     else:
       return None
+
+def create_external_user(user_id)
+  li = LoginInformation(first_name="Anonymous", last_name="User", email="anon@anon.com", user_id=user_id, is_active=True, is_admin=False, nickname="Anon", private=False, external_user=True)
+  try:
+    li.put()
+  except TransactionFailedError:
+    return None
+  return li
   
 class Thread(db.Model):
   title = db.StringProperty()
