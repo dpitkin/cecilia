@@ -145,17 +145,17 @@ class ShopHandler(database.webapp2.RequestHandler):
     
 class SearchHandler(database.webapp2.RequestHandler):
   def get(self):
-    query = cgi.escape(self.request.get('query'))
-    limit = cgi.escape(self.request.get('query_limit'))
-    search_by = cgi.escape(self.request.get('query_search_by'))    
+    query = cgi.escape(database.quick_sanitize(self.request.get('query')))
+    limit = cgi.escape(database.quick_sanitize(self.request.get('query_limit')))
+    search_by = cgi.escape(database.quick_sanitize(self.request.get('query_search_by')))    
     sort_by = {
       "a" : {
-        "sort_field" : cgi.escape(self.request.get('query_sortA')),
-        "order" : cgi.escape(self.request.get('query_orderA'))
+        "sort_field" : cgi.escape(database.quick_sanitize(self.request.get('query_sortA'))),
+        "order" : cgi.escape(database.quick_sanitize(self.request.get('query_orderA')))
       },
       "b" : {
-        "sort_field" : cgi.escape(self.request.get('query_sortB')),
-        "order" : cgi.escape(self.request.get('query_orderB'))
+        "sort_field" : cgi.escape(database.quick_sanitize(self.request.get('query_sortB'))),
+        "order" : cgi.escape(database.quick_sanitize(self.request.get('query_orderB')))
       }
     }
 
@@ -208,6 +208,17 @@ class FeedbackHandler(database.webapp2.RequestHandler):
       self.redirect(self.request.referer)
     else:
       self.redirect('/')
+      
+class ForeignFeedbackHandler(database.webapp2.RequestHandler):
+  def post(self):
+    stub = True # WTF, someone implement this
+#target_item_id: STRING
+#user_name: STRING
+#user_id: STRING
+#rating: FLOAT (1-5)
+#feedback: STRING
+#feedback_id: STRING
+
       
 class DeleteFeedbackHandler(database.webapp2.RequestHandler):
   def get(self):

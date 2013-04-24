@@ -113,7 +113,7 @@ def handle_search(self, is_local):
 	query_tokens = []
 
 	database.logging.info("before")
-	if database.db.GqlQuery("SELECT * FROM Suggestion WHERE query = :1 LIMIT 10", query).get() == None:
+	if database.db.GqlQuery("SELECT * FROM Suggestion WHERE query = :1", query).get() == None:
 		suggestion = database.Suggestion()
 		suggestion.query = query
 		suggestion.put()
@@ -244,11 +244,11 @@ class WebservicesLocalSearchHandler(database.webapp2.RequestHandler):
 
 class WebservicesPartnerSearchHandler(database.webapp2.RequestHandler):
 	def get(self):
-		query = self.request.get("query")
-		limit = self.request.get("limit")
-		offset = self.request.get("offset")
-		search_by = self.request.get("search_by")
-		sort_options = self.request.get("sort_options")
+		query = cgi.escape(self.request.get("query"))
+		limit = cgi.escape(self.request.get("limit"))
+		offset = cgi.escape(self.request.get("offset"))
+		search_by = cgi.escape(self.request.get("search_by"))
+		sort_options = cgi.escape(self.request.get("sort_options"))
 
 		partner_id = self.request.get("partner_id")
 
@@ -376,19 +376,19 @@ class UserImportHandler(database.webapp2.RequestHandler):
       return
 
 class ExportUserHandler(database.webapp2.RequestHandler):
-	def post(self):
+	def get(self):
 		user = database.users.get_current_user()
 		current_li = database.get_current_li()
 		if user and current_li:
-			items = db.GqlQuery("SELECT * FROM Item WHERE created_by_id = :1 ORDER BY created_at DESC", li.user_id)
+			items = db.GqlQuery("SELECT * FROM Item WHERE created_by_id = :1 ORDER BY created_at DESC", current_li.user_id)
 			user_hash = {
 				"user_id" : current_li.key().id(),
 				"google_user_id" : current_li.user_id,
 				"username" : current_li.nickname,
 				"mail" : current_li.email,
-				"items" : [item_to_dictionary(i) for i in items]
+				"items" : [item_to_dictionary(i, self) for i in items]
 			}
-			self.response.out.write("lol")
+			self.response.out.write(json.dumps(user_hash))
 		else:
 			database.render_error(self, "Must be logged in")
 
@@ -397,7 +397,7 @@ class WebservicesSearchSuggestionsHandler(database.webapp2.RequestHandler):
 		auth_token = cgi.escape(self.request.get('auth_token'))
 		query = cgi.escape(self.request.get('query'))
 		if authenticate(auth_token):
-			suggestions = database.db.GqlQuery("SELECT * FROM Suggestion WHERE query >= :1", query)
+			suggestions = database.db.GqlQuery("SELECT * FROM Suggestion WHERE query >= :1 LIMIT 10", query)
 			j = json.dumps({ "success" : True, "message" : "Here are the search suggestions", "items" : [s.query for s in suggestions] })
 			self.response.out.write(j)	
 			for s in suggestions:
@@ -410,4 +410,5 @@ class WebservicesSearchSuggestionsHandler(database.webapp2.RequestHandler):
 app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/local_search', WebservicesLocalSearchHandler), 
 ('/webservices/partner_search', WebservicesPartnerSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), ('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), 
 ('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler), ('/webservices/user_import', UserImportHandler), ('/webservices/export_user', ExportUserHandler), ('/webservices/search_suggestions', WebservicesSearchSuggestionsHandler)], debug=True)
+
 
