@@ -21,7 +21,7 @@ class RegisterHandler(database.webapp2.RequestHandler):
       li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id = :1", user.user_id())
       if li.count() > 0:
         li = li.get()
-        if li.first_name == "" or li.last_name == "" or li.nickname == "": #if not valid user, don't create a new li but allow them to visit the page
+        if li.first_name == "" or li.last_name == "" or li.nickname == "" or li.external_user: #if not valid user or they're external, don't create a new li but allow them to visit the page
           token = li.create_xsrf_token()
           database.render_template(self, '/users/register_user.html', {'new_li': li, 'xsrf_token' : token})
         else: #if they're a valid user, they can't re-register
@@ -46,6 +46,7 @@ class SaveLIHandler(database.webapp2.RequestHandler):
         li.last_name = cgi.escape(database.quick_sanitize(self.request.get('last_name')))
         li.nickname = cgi.escape(database.quick_sanitize(self.request.get("nickname")))
         li.private = bool(self.request.get("private"))
+        li.external_user = False
         li.is_active = True
         if user.email() == 'hardcodetest1@gmail.com' or user.email() == 'hardcodetest2@gmail.com':
           li.is_admin = True
@@ -70,6 +71,7 @@ class UpdateLIHandler(database.webapp2.RequestHandler):
       li.nickname = cgi.escape(database.quick_sanitize(self.request.get('nickname')))
       li.private = bool(self.request.get('private'))
       li.desc = cgi.escape(database.sanitizeHTML(self.request.get('desc')))
+      li.external_user = False
       if(self.request.get('avatar')):
         li.avatar = database.db.Blob(database.images.resize(self.request.get('avatar'), 128, 128))
       li.put()
