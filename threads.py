@@ -167,13 +167,12 @@ class CreateRemoteThreadHandler(database.webapp2.RequestHandler):
           "message" : message,
           "source_conversation_id" : thread.key().id()
         }
-                
+
         base_url = partner.base_url
-        url = base_url + "/webservices/new_item"
-        j = json.dumps(params)
+        url = base_url + "/webservices/send_message"
 
         try:
-          result = urlfetch.fetch(url=url, payload=j, method=urlfetch.POST, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+          result = urlfetch.fetch(url=url, payload=urllib.urlencode(params), method=urlfetch.POST, headers={'Content-Type': 'application/x-www-form-urlencoded'})
           database.logging.info("Result : " + result.content)
           j_resp = json.loads(result.content)
           database.logging.info("result[success]=" + str(j_resp["success"]))
