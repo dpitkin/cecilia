@@ -38,6 +38,12 @@ from bs4 import BeautifulSoup, Comment
 
 jinja_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
 
+def authenticate(auth_token):
+	if db.GqlQuery("SELECT * FROM TrustedPartner WHERE local_auth_token = :1", auth_token) != None:
+		return True
+	else:
+		return False
+
 def sanitizeHTML(value, base_url=None):
     rjs = r'[\s]*(&#x.{1,7})?'.join(list('javascript:'))
     rvb = r'[\s]*(&#x.{1,7})?'.join(list('vbscript:'))

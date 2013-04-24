@@ -209,7 +209,7 @@ class FeedbackHandler(database.webapp2.RequestHandler):
     else:
       self.redirect('/')
       
-class ForeignFeedbackHandler(database.webapp2.RequestHandler):
+class ForeignItemFeedbackHandler(database.webapp2.RequestHandler):
   def post(self):
     user = database.users.get_current_user()
     li = database.get_current_li()
@@ -224,7 +224,7 @@ class ForeignFeedbackHandler(database.webapp2.RequestHandler):
         base_url = partner.base_url
         foreign_auth_token = partner.foreign_auth_token
         url = base_url + "/webservices/add_item_rating"
-        form_fields = {'target_item_id': str(target_item_id), 'user_name': user_name, 'user_id': user_id, 'rating': rating, 'feedback': feedback}
+        form_fields = {'target_item_id': str(target_item_id), 'user_name': user_name, 'user_id': user_id, 'rating': rating, 'feedback': feedback, 'auth_token': foreign_auth_token}
         post_params = urllib.urlencode(form_fields)
         try:
           result = urlfetch.fetch(url=url, method=urlfetch.POST, payload=post_params, headers={'Content-Type': 'application/x-www-form-urlencoded'})
@@ -379,4 +379,4 @@ app = database.webapp2.WSGIApplication([('/items/', MainHandler), ('/items/new_i
 ('/items/update_item', UpdateHandler), ('/items/submit_feedback', FeedbackHandler), ('/items/delete_item_feedback', DeleteFeedbackHandler),
 ('/items/old_searches', OldSearches), ('/items/submit_bid', BidHandler), ('/items/item_sold', SoldHandler), ('/items/new_collection', NewCollectionHandler),
 ('/items/save_collection', SaveCollectionHandler), ('/items/view_collection', ViewCollectionHandler), ('/items/delete_collection', DeleteCollectionHandler), 
-('/items/view_remote_item', RemoteItemHandler), ('/items/submit_foreign_feedback', ForeignFeedbackHandler)], debug=True)
+('/items/view_remote_item', RemoteItemHandler), ('/items/submit_foreign_feedback', ForeignItemFeedbackHandler)], debug=True)

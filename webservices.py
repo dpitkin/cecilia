@@ -183,6 +183,9 @@ def send_new_item_notification(self, item):
 class AddItemRatingHandler(database.webapp2.RequestHandler):
   def post(self):
     #fill out the item feedback
+    if not(authenticate(self.request.get('auth_token'))):
+      render_error("Invalid auth token.")
+      return
     external_li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", cgi.escape(self.request.get('user_id'))).get()
     if not(external_li):
       external_li = database.create_external_user(cgi.escape(self.request.get('user_id')))
@@ -210,6 +213,9 @@ class AddItemRatingHandler(database.webapp2.RequestHandler):
     
 class AddUserRatingHandler(database.webapp2.RequestHandler):
   def post(self):
+    if not(authenticate(self.request.get('auth_token'))):
+      render_error("Invalid auth token.")
+      return
     #fill out the user feedback
     feedback = database.UserFeedback()
     feedback.created_by_id = cgi.escape(self.request.get('user_id'))
