@@ -1,0 +1,31 @@
+{% extends "layouts/layout.html" %}
+{% block title %}
+View Item
+{% endblock %}
+{% block content %}
+<script type="text/javascript" src="/js/items/items.js"></script>
+<h3>View Item</h3>
+
+{% if item_contents %}
+
+
+<div class="well">
+	<p>
+		Posted by: {{ item_contents["seller"]["username"] }}
+	</p>
+	<p>Title: {{ item_contents["title"] }}</p>
+	<p>Description: <textarea class="readonlyRichText">{{ item_contents["description"] }}</textarea></p>
+	<p>Price: ${{ item_contents["price"]}}</p>
+	<p><img src="{{ item.display_image() }}" /></p>
+</div>
+<p>
+	{% if current_li %}<a href="/threads/new_thread?about={{ item_contents["id"] }}" class="btn">Contact Seller</a>{% endif %}
+	<a href="/items/" class="btn">Back</a>
+</p>
+
+{% else %}
+<div class="alert">
+  <strong>Uh oh!</strong> This trusted application does not properly support /webservices/item
+</div>
+{% endif %}
+{% endblock %}

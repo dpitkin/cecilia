@@ -23,17 +23,6 @@ def item_to_dictionary(item, self):
 		"image" : self.request.host + item.display_image_url(),
 		"seller" : seller_to_dictionary(item.get_creator()),
 		"price" : str(item.price),
-		"url" : self.request.host + "/items/view_item?item_id=" + str(item.key().id())
-	}
-
-def local_item_to_dictionary(item, self):
-	return {
-		"id" : item.key().id(),
-		"title" : item.title,
-		"description" : item.description,
-		"image" : self.request.host + item.display_image_url(),
-		"seller" : seller_to_dictionary(item.get_creator()),
-		"price" : str(item.price),
 		"url" : self.request.host + "/items/view_item?item_id=" + str(item.key().id()),
 		"created_at" : item.created_at.strftime("%m/%d/%Y"),
 		"expiration_date" : item.expiration_date.strftime("%m/%d/%Y")
@@ -146,10 +135,8 @@ def handle_search(self, is_local):
 			if database.string.find(param, tok[1]) != -1:
 				add = True
 		if add:
-			if is_local:
-				tmp_results.append(local_item_to_dictionary(item, self))
-			else:
-				tmp_results.append(item_to_dictionary(item, self))
+			tmp_results.append(item_to_dictionary(item, self))
+				
 
 	tmp_results = sorted(tmp_results, key=lambda x:x[sort_typeA])
 
@@ -172,22 +159,17 @@ def handle_search(self, is_local):
 def send_new_item_notification(self, item):
 	partners = database.db.GqlQuery("SELECT * FROM TrustedPartner")
 	for partner in partners:
-		if partner:
-			data = json.dumps({ "data" : [item_to_dictionary(item, self)] })
-			base_url = partner.base_url
-			foreign_auth_token = partner.foreign_auth_token
-			url = base_url + "/webservices/new_item?auth_token=" + foreign_auth_token + "&data=" + data
-			try:
-				result = urlfetch.fetch(url=url, method=urlfetch.POST, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-				database.logging.info("Result : " + result.content)
-				self.response.out.write(result.content)
-				return
-			except Exception, e:
-				render_error(self, "Something went wrong accessing url, " + e.message)
-				return
-		else:
-			render_error(self, "Invalid partner id")
-			return
+		base_url = partner.base_url
+		foreign_auth_token = partner.foreign_auth_token
+		url = base_url + "/webservices/new_item"
+		j = json.dumps({ "auth_token" : partner.foreign_auth_token, "data" : [item_to_dictionary(item, self)] })
+		try:
+			result = urlfetch.fetch(url=url, payload=j, method=urlfetch.POST, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+			database.logging.info("Result : " + result.content)
+			self.response.out.write(result.content)
+		except Exception, e:
+			render_error(self, "Something went wrong accessing url, " + e.message)
+			database.logging.info("Error : %s", str(e))
 
 class AddItemRatingHandler(database.webapp2.RequestHandler):
   def post(self):
@@ -285,7 +267,7 @@ class WebservicesItemHandler(database.webapp2.RequestHandler):
 			item_id = cgi.escape(self.request.get('item_id'))
 			try:
 				item = db.get(db.Key.from_path('Item', int(item_id)))
-				self.response.out.write(item_to_dictionary(item, self))
+				self.response.out.write(json.dumps(item_to_dictionary(item, self)))
 			except ValueError:
 				render_error(self, "item_id does not exist")
 			except AttributeError:
@@ -294,17 +276,12 @@ class WebservicesItemHandler(database.webapp2.RequestHandler):
 			render_error(self, "authentication failure")
 
 class WebservicesNewItemRequestHandler(database.webapp2.RequestHandler):
-  def get(self):
-    auth_token = cgi.escape(self.request.get('auth_token'))
-    if authenticate(auth_token):
-      render_success(self, "new item received")
-      return
-    else:
-      render_error(self, "authentication failure")
-
-class WebservicesTestHandler(database.webapp2.RequestHandler):
-	def get(self):
-		self.response.out.write(json.dumps([item_to_dictionary(i) for i in database.Item.all()]))
+	def post(self):
+		auth_token = cgi.escape(self.request.get('auth_token'))
+		if authenticate(auth_token):
+			render_success(self, "new item received")
+		else:
+			render_error(self, "authentication failure")
     
 class SendMessageHandler(database.webapp2.RequestHandler):
   def post(self):
@@ -390,7 +367,6 @@ class UserImportHandler(database.webapp2.RequestHandler):
       return
 
 app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/local_search', WebservicesLocalSearchHandler), 
-('/webservices/partner_search', WebservicesPartnerSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), 
-('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), ('/webservices/test', WebservicesTestHandler), 
+('/webservices/partner_search', WebservicesPartnerSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), ('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), 
 ('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler), ('/webservices/user_import', UserImportHandler)], debug=True)
 
