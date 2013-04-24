@@ -171,7 +171,7 @@ class LoginInformation(db.Model):
     else:
       return None
 
-def create_external_user(user_id)
+def create_external_user(user_id):
   li = LoginInformation(first_name="Anonymous", last_name="User", email="anon@anon.com", user_id=user_id, is_active=True, is_admin=False, nickname="Anon", private=False, external_user=True)
   try:
     li.put()
