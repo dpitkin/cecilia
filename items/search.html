@@ -27,14 +27,13 @@ Search Results
     console.log($sort_order);
     var url = $is_local ? "/webservices/local_search" : "/webservices/partner_search"
     $.get(url, { "limit" : $limit, "offset" : $offset, "query" : $query, "sort_options" : $sort_order, "partner_id" : $partner_id }, function(resp){
-
+    	$(item).find("h4").remove();
       if (!$is_local) {
         console.log(url);
         console.log(resp);
       };
       $parent.attr("data-loading", "");
       resp = JSON.parse(resp);
-      $(item).find("h4").remove();
       if (!resp.success) {
         console.log("Error: " + resp.message);
         return;

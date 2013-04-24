@@ -145,10 +145,7 @@ def handle_search(self, is_local):
 			else:
 				tmp_results.append(item_to_dictionary(item, self))
 
-	database.logging.info("SortA : " + sort_typeA + ", orderB : " + orderB)
-
 	tmp_results = sorted(tmp_results, key=lambda x:x[sort_typeA])
-	database.logging.info(json.dumps(tmp_results))
 
 	results = []
 	tmp_offset = offset
@@ -178,10 +175,8 @@ def send_new_item_notification(self, item):
 			base_url = partner.base_url
 			foreign_auth_token = partner.foreign_auth_token
 			url = base_url + "/webservices/new_item?auth_token=" + foreign_auth_token + "&data=" + data
-			database.logging.info("URL : " + url)
 			try:
 				result = urlfetch.fetch(url=url, method=urlfetch.GET, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-				database.logging.info("Result : " + result.content)
 				self.response.out.write(result.content)
 				return
 			except Exception, e:
@@ -268,10 +263,8 @@ class WebservicesPartnerSearchHandler(database.webapp2.RequestHandler):
 			base_url = partner.base_url
 			foreign_auth_token = partner.foreign_auth_token
 			url = base_url + "/webservices/search?auth_token=" + foreign_auth_token + "&query=" + query + "&limit=" + limit + "&offset=" + offset + "&search_by=" + search_by + "&sort_options=" + sort_options
-			database.logging.info("URL : " + url)
 			try:
 				result = urlfetch.fetch(url=url, method=urlfetch.GET, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-				database.logging.info("Result : " + result.content)
 				self.response.out.write(result.content)
 				return
 			except Exception, e:
