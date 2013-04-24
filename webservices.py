@@ -169,13 +169,13 @@ def send_new_item_notification(self, item):
 	partners = database.db.GqlQuery("SELECT * FROM TrustedPartner")
 	for partner in partners:
 		if partner:
-			data = json.dumps({ "data" : [item_to_dictionary(item)] })
+			data = json.dumps({ "data" : [item_to_dictionary(item, self)] })
 			base_url = partner.base_url
 			foreign_auth_token = partner.foreign_auth_token
 			url = base_url + "/webservices/new_item?auth_token=" + foreign_auth_token + "&data=" + data
 			database.logging.info("URL : " + url)
 			try:
-				result = urlfetch.fetch(url=url, method=urlfetch.GET, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+				result = urlfetch.fetch(url=url, method=urlfetch.POST, headers={'Content-Type': 'application/x-www-form-urlencoded'})
 				database.logging.info("Result : " + result.content)
 				self.response.out.write(result.content)
 				return
