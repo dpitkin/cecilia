@@ -3,116 +3,6 @@
 Search Results
 {% endblock %}
 {% block content %}
-<h3>You searched for: {{query}}</h3>
-
-<script type="text/javascript">
-  function load_item(item){
-    var $parent = $(item).parent();
-    console.log($(parent));
-    var $is_local = $parent.attr("id") == "local_search_results"
-    console.log(parent);
-    var $limit = parseInt($("#query_limit").val());
-    var $page = parseInt($parent.attr("data-page"));
-    var $partner_id = $parent.attr("data-partner-id")
-    var $offset = $page * $limit;
-    var $query = $("#query_field").val();
-    $(item).append("<h4>" + generate_spinner() + "</h4>");
-    console.log($(item));
-    $(item).find("tbody").html("");
-    $parent.attr("data-loading", "loading");
-    var $sort_order = JSON.stringify([
-      {"type" : $("#query_sortA").val(), "ordering" : $("#query_orderA").val()},
-      {"type" : $("#query_sortB").val(), "ordering" : $("#query_orderB").val()}      
-    ]);
-    console.log($sort_order);
-    var url = $is_local ? "/webservices/local_search" : "/webservices/partner_search"
-    $.get(url, { "limit" : $limit, "offset" : $offset, "query" : $query, "sort_options" : $sort_order, "partner_id" : $partner_id }, function(resp){
-    	$(item).find("h4").remove();
-      if (!$is_local) {
-        console.log(url);
-        console.log(resp);
-      };
-      $parent.attr("data-loading", "");
-      resp = JSON.parse(resp);
-      if (!resp.success) {
-        console.log("Error: " + resp.message);
-        return;
-      };
-      $tbody = $(item).find("tbody");
-      for(var i = 0; i < resp.items.length; i++){
-        var it = resp.items[i];
-        if ($is_local) {
-          //Ugh, this is pretty ugly... sorry!
-          string = "<tr><td>" + it.created_at + "</td><td>" 
-          + "<a href=\"/items/view_item?item_id=" + it.id + "\"><div>" + it.title + "</div></a></td><td>" 
-          + it.description + "</td>"
-          + "<td> $" + it.price + "</td>" + 
-          {% if is_admin %} "<td><a href=\"/items/delete_item?item_id=" + it.id +  "&xsrf_token={{xsrf_token}}\"><button class=\"btn btn-primary\"  \value=\"Delete\">Delete Item</button></a></td>" + "<td>" + it.expiration_date + "</td>" +
-          {% endif %} 
-          {% if user %}
-          "<td><a href=\"/threads/new_thread?about=" + it.id + "\"><button class=\"btn btn-primary\" value=\"Contact Seller\">Contact Seller</button></a></td>" +
-          {% endif %}
-          "</tr>"
-          $tbody.append(string);  
-        }else {
-          $tbody.append("<tr><td>" + it.title + "</td><td>" + it.description + "</td><td>" + it.price + "</td></tr>");
-        }
-        
-      }
-
-      var start = $offset + 1;
-      var end = $offset + resp.items.length;
-      var showing_string = "Showing " + start + " - " + end + " out of " + resp.total;
-      results_left = 0;
-      if (resp.results_left) {
-      	results_left = resp.results_left;
-      }else {
-      	results_left = resp.total - end;
-      };
-      $parent.attr('data-results-left', results_left);
-      if (resp.items.length == 0) {showing_string = "Showing 0 of " + resp.total};
-      $(item).parent().find("span.showing_indicator").html(showing_string);
-    });
-  }
-
-  function generate_spinner()
-  {
-    return '<div id="circular3dG"><div id="circular3d_1G" class="circular3dG"></div><div id="circular3d_2G" class="circular3dG"></div><div id="circular3d_3G" class="circular3dG"></div><div id="circular3d_4G" class="circular3dG"></div><div id="circular3d_5G" class="circular3dG"></div><div id="circular3d_6G" class="circular3dG"></div><div id="circular3d_7G" class="circular3dG"></div><div id="circular3d_8G" class="circular3dG"></div></div>'
-  }
-
-  $(document).ready(function() {
-    var items = [];{% for item in items %} items = items.concat("{{item.title}}"); {% endfor %}
-    $('#advanced_search').autocomplete({
-      source: items
-    });
-
-    $(".search_prev").click(function(){
-      var $parent = $(this).parent();
-      var $page = parseInt($parent.attr("data-page"));
-      if ($page > 0 && $parent.attr("data-loading").length == 0) {
-        $page = $page - 1;
-        $parent.attr("data-page", $page);
-        load_item($parent.find(".remote_search_table"));
-      };
-    });
-
-    $(".search_next").click(function(){
-      var $parent = $(this).parent();
-      var $page = parseInt($parent.attr("data-page"));
-      if ($parent.attr("data-loading").length == 0 && parseInt($parent.attr("data-results-left")) > 0) {
-        $page = $page + 1;
-        $parent.attr("data-page", $page);
-        load_item($parent.find(".remote_search_table"));
-      };
-    });
-
-    $(".remote_search_table").each(function(index, item){
-        $(item).parent().attr("data-page", 0);
-        load_item(item);
-      });
-  });
-</script>
-<!-- Kill me now... This should go in a .css file but i'm lazy -->
 <style>
 #circular3dG{
 position:relative;
@@ -279,6 +169,118 @@ transform:scale(.3)}
 
 </style>
 
+<h3>You searched for: {{query}}</h3>
+
+<script type="text/javascript">
+  function load_item(item){
+    var $parent = $(item).parent();
+    console.log($(parent));
+    var $is_local = $parent.attr("id") == "local_search_results"
+    console.log(parent);
+    var $limit = parseInt($("#query_limit").val());
+    var $page = parseInt($parent.attr("data-page"));
+    var $partner_id = $parent.attr("data-partner-id")
+    var $offset = $page * $limit;
+    var $query = $("#query_field").val();
+    $(item).append("<h4>" + generate_spinner() + "</h4>");
+    console.log($(item));
+    $(item).find("tbody").html("");
+    $parent.attr("data-loading", "loading");
+    var $sort_order = JSON.stringify([
+      {"type" : $("#query_sortA").val(), "ordering" : $("#query_orderA").val()},
+      {"type" : $("#query_sortB").val(), "ordering" : $("#query_orderB").val()}      
+    ]);
+    console.log($sort_order);
+    var url = $is_local ? "/webservices/local_search" : "/webservices/partner_search"
+    $.get(url, { "limit" : $limit, "offset" : $offset, "query" : $query, "sort_options" : $sort_order, "partner_id" : $partner_id }, function(resp){
+    	$(item).find("h4").remove();
+      if (!$is_local) {
+        console.log(url);
+        console.log(resp);
+      };
+      $parent.attr("data-loading", "");
+      resp = JSON.parse(resp);
+      if (!resp.success) {
+        console.log("Error: " + resp.message);
+        return;
+      };
+      $tbody = $(item).find("tbody");
+      for(var i = 0; i < resp.items.length; i++){
+        var it = resp.items[i];
+        if ($is_local) {
+          //Ugh, this is pretty ugly... sorry!
+          string = "<tr><td>" + it.created_at + "</td><td>" 
+          + "<a href=\"/items/view_item?item_id=" + it.id + "\"><div>" + it.title + "</div></a></td><td>" 
+          + it.description + "</td>"
+          + "<td> $" + it.price + "</td>" + 
+          {% if is_admin %} "<td><a href=\"/items/delete_item?item_id=" + it.id +  "&xsrf_token={{xsrf_token}}\"><button class=\"btn btn-primary\"  \value=\"Delete\">Delete Item</button></a></td>" + "<td>" + it.expiration_date + "</td>" +
+          {% endif %} 
+          {% if user %}
+          "<td><a href=\"/threads/new_thread?about=" + it.id + "\"><button class=\"btn btn-primary\" value=\"Contact Seller\">Contact Seller</button></a></td>" +
+          {% endif %}
+          "</tr>"
+          $tbody.append(string);  
+        }else {
+       		var string = "<tr><td><a href=\"/items/view_remote_item?item_id=" + it.id + "&partner_id=" + $partner_id + "\">" + it.title + "</a></td><td>" + it.description + "</td><td>" + it.price + "</td></tr>"
+          $tbody.append(string);
+        }
+        
+      }
+
+      var start = $offset + 1;
+      var end = $offset + resp.items.length;
+      var showing_string = "Showing " + start + " - " + end + " out of " + resp.total;
+      results_left = 0;
+      if (resp.results_left) {
+      	results_left = resp.results_left;
+      }else {
+      	results_left = resp.total - end;
+      };
+      $parent.attr('data-results-left', results_left);
+      if (resp.items.length == 0) {showing_string = "Showing 0 of " + resp.total};
+      $(item).parent().find("span.showing_indicator").html(showing_string);
+    });
+  }
+
+  function generate_spinner()
+  {
+    return '<div id="circular3dG"><div id="circular3d_1G" class="circular3dG"></div><div id="circular3d_2G" class="circular3dG"></div><div id="circular3d_3G" class="circular3dG"></div><div id="circular3d_4G" class="circular3dG"></div><div id="circular3d_5G" class="circular3dG"></div><div id="circular3d_6G" class="circular3dG"></div><div id="circular3d_7G" class="circular3dG"></div><div id="circular3d_8G" class="circular3dG"></div></div>'
+  }
+
+  $(document).ready(function() {
+    var items = [];{% for item in items %} items = items.concat("{{item.title}}"); {% endfor %}
+    $('#advanced_search').autocomplete({
+      source: items
+    });
+
+    $(".search_prev").click(function(){
+      var $parent = $(this).parent();
+      var $page = parseInt($parent.attr("data-page"));
+      if ($page > 0 && $parent.attr("data-loading").length == 0) {
+        $page = $page - 1;
+        $parent.attr("data-page", $page);
+        load_item($parent.find(".remote_search_table"));
+      };
+    });
+
+    $(".search_next").click(function(){
+      var $parent = $(this).parent();
+      var $page = parseInt($parent.attr("data-page"));
+      if ($parent.attr("data-loading").length == 0 && parseInt($parent.attr("data-results-left")) > 0) {
+        $page = $page + 1;
+        $parent.attr("data-page", $page);
+        load_item($parent.find(".remote_search_table"));
+      };
+    });
+
+    $(".remote_search_table").each(function(index, item){
+        $(item).parent().attr("data-page", 0);
+        load_item(item);
+      });
+  });
+</script>
+<!-- Kill me now... This should go in a .css file but i'm lazy -->
+
 <div id="hidden_fields">
 	<input type="hidden" id="query_field" value="{{ query }}" />
 	<input type="hidden" id="query_limit" value="{{ limit }}" />
@@ -359,9 +361,6 @@ transform:scale(.3)}
   <table class="table table-striped remote_search_table">
     <thead>
       <th>Title</th><th>Description</th><th>Price</th>
-      {% if user %}
-        <th>Contact</th>
-      {% endif %}
     </thead>
     <tbody>
 
