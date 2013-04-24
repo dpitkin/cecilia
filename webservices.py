@@ -235,11 +235,11 @@ class WebservicesLocalSearchHandler(database.webapp2.RequestHandler):
 
 class WebservicesPartnerSearchHandler(database.webapp2.RequestHandler):
 	def get(self):
-		query = self.request.get("query")
-		limit = self.request.get("limit")
-		offset = self.request.get("offset")
-		search_by = self.request.get("search_by")
-		sort_options = self.request.get("sort_options")
+		query = cgi.escape(self.request.get("query"))
+		limit = cgi.escape(self.request.get("limit"))
+		offset = cgi.escape(self.request.get("offset"))
+		search_by = cgi.escape(self.request.get("search_by"))
+		sort_options = cgi.escape(self.request.get("sort_options"))
 
 		partner_id = self.request.get("partner_id")
 
