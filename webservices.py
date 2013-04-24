@@ -9,6 +9,7 @@ cgi = database.cgi
 
 
 def authenticate(auth_token):
+	return True # DELETE THIS LINE WHEN FOREIGN AUTH TOKENS ARE BEING USED PROPERLY
 	if database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE local_auth_token = :1", auth_token) != None:
 		return True
 	else:
@@ -36,6 +37,9 @@ def seller_to_dictionary(seller):
 
 def render_error(self, message):
 	self.response.out.write(json.dumps({"success" : False, "message" : message}))
+  
+def render_success(self, message):
+	self.response.out.write(json.dumps({"success" : True, "message" : message}))
 
 def handle_search(self, is_local):
 	search_by_params = ["title", "description", "price"]
@@ -158,12 +162,13 @@ def send_new_item_notification(self, item):
 	partners = database.db.GqlQuery("SELECT * FROM TrustedPartner")
 	for partner in partners:
 		if partner:
-			data = json.dumps({ "data" : [item_to_dictionary(item)] })
+			data = json.dumps({ "data" : [item_to_dictionary(item, self)] })
 			base_url = partner.base_url
 			foreign_auth_token = partner.foreign_auth_token
 			url = base_url + "/webservices/new_item?auth_token=" + foreign_auth_token + "&data=" + data
 			try:
-				result = urlfetch.fetch(url=url, method=urlfetch.GET, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+				result = urlfetch.fetch(url=url, method=urlfetch.POST, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+				database.logging.info("Result : " + result.content)
 				self.response.out.write(result.content)
 				return
 			except Exception, e:
@@ -323,9 +328,52 @@ class SendMessageHandler(database.webapp2.RequestHandler):
     
     j = json.dumps({"success": success, "message": err_mess, "conversation_id": str(thread.key().id())})
     self.response.out.write(j)
+    
+class UserImportHandler(database.webapp2.RequestHandler):
+  def post(self):
+    #parse json
+    j = json.loads(self.request.get('data'))
+    user_id = str(cgi.escape(j['google_user_id']))
+    #check if this user already exists in our application
+    li = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", user_id).get()
+    if li:
+      resp = json.dumps({"success": False, "message": "User already exists in our application."})
+      self.response.out.write(resp)
+      return
+    else:
+      #they don't exist in our application, so now let's create them
+      li = database.LoginInformation(first_name=cgi.escape(j['username']), last_name=" ", user_id=user_id, is_active=True, is_admin=False, private=False)
+      li.email = cgi.escape(j['mail'])
+      li.nickname = cgi.escape(j['username'])
+      li.external_user = False
+      try:
+        li.put()
+      except TransactionFailedError:
+        render_error(self, "Could not save LoginInformation to the datastore.")
+        return
+      #now import all their items
+      for item in j['items']:
+        item = database.Item(is_active=True, deactivated=False, bidding_enabled=False, sold=False, sponsored=False)
+        item.title = cgi.escape(item['title'])
+        item.description = cgi.escape(item['description'])
+        item.price = float(cgi.escape(item['price']))
+        item.expiration_date = database.datetime.date.today() + database.datetime.timedelta(weeks=4)
+        item.created_by_id = li.user_id
+        if (len(item.description) > 40):
+          item.summary = item.description[:40].rstrip() + "..."
+        else:
+          item.summary = item.description
+        try:
+          item.put()
+        except TransactionFailedError:
+          render_error("Could not save item to the datastore.")
+          return
+      
+      #we've now created the user and imported all of their items, so now lets write a success response
+      render_success(self, "User successfully imported.")
+      return
 
 app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/local_search', WebservicesLocalSearchHandler), 
-('/webservices/partner_search', WebservicesPartnerSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), 
-('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler),
-('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler)], debug=True)
+('/webservices/partner_search', WebservicesPartnerSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), ('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), ('/webservices/test', WebservicesTestHandler), 
+('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler), ('/webservices/user_import', UserImportHandler)], debug=True)
 
