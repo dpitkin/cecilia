@@ -2,6 +2,8 @@
 
 import database
 import re
+import urllib
+from google.appengine.api import urlfetch
 
 cgi = database.cgi
 db = database.db
@@ -123,15 +125,22 @@ class SaveMessageHandler(database.webapp2.RequestHandler):
     thread_key = db.Key.from_path('Thread', int(self.request.get('thread_id')))
     thread = db.get(thread_key)
     if user and database.get_current_li().verify_xsrf_token(self) and (thread.recipient_id == user.user_id() or thread.created_by_id == user.user_id()):
-      message = database.Message(parent=thread)
-      message.body = cgi.escape(self.request.get('message'))
-      message.created_by_id = user.user_id()
-      message.recipient_id = thread.recipient_id if user.user_id() == thread.created_by_id else thread.created_by_id
-      message.read = False
-      message.put()
-      database.logging.info("Created a new message under thread #%s\nSentBy: %s\nSentTo: %s\nCreatedAt: %s",
-      message.parent().key().id(), message.created_by_id, message.recipient_id, message.created_at)
-      self.redirect('/threads/view_thread?thread_id='+self.request.get('thread_id'))    
+      if thread.external_conversation:
+        #its an external conversation, so we should send the message out to the other users API
+        
+        #result = urlfetch.fetch(url=url, method=urlfetch.GET, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+				#self.response.out.write(result.content)
+      else:
+        message = database.Message(parent=thread)
+        message.body = cgi.escape(self.request.get('message'))
+        message.created_by_id = user.user_id()
+        message.recipient_id = thread.recipient_id if user.user_id() == thread.created_by_id else thread.created_by_id
+        message.read = False
+        message.put()
+        database.logging.info("Created a new message under thread #%s\nSentBy: %s\nSentTo: %s\nCreatedAt: %s",
+        message.parent().key().id(), message.created_by_id, message.recipient_id, message.created_at)
+      self.redirect('/threads/view_thread?thread_id='+self.request.get('thread_id'))
+      return
     else:
       self.redirect('/')
     

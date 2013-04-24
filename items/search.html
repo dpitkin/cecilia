@@ -282,13 +282,13 @@ transform:scale(.3)}
 <!-- Kill me now... This should go in a .css file but i'm lazy -->
 
 <div id="hidden_fields">
-	<input type="hidden" id="query_field" value="{{ query }}" />
-	<input type="hidden" id="query_limit" value="{{ limit }}" />
-	<input type="hidden" id="query_search_by" value="{{ search_by }}" />
-	<input type="hidden" id="query_sortA" value="{{ sort_by['a']['sort_field'] }}" />
-	<input type="hidden" id="query_sortB" value="{{ sort_by['b']['sort_field'] }}" />	
-	<input type="hidden" id="query_orderA" value="{{ sort_by['a']['order'] }}" />
-	<input type="hidden" id="query_orderB" value="{{ sort_by['b']['order'] }}" />	
+	{{ sanitizeHTML('<input type="hidden" id="query_field" value="' + query + '" />
+	<input type="hidden" id="query_limit" value="' +  limit + '" />
+	<input type="hidden" id="query_search_by" value="' +  search_by + '" />
+	<input type="hidden" id="query_sortA" value="' +  sort_by['a']['sort_field'] + '" />
+	<input type="hidden" id="query_sortB" value="' +  sort_by['b']['sort_field'] + '" />	
+	<input type="hidden" id="query_orderA" value="' +  sort_by['a']['order'] + '" />
+	<input type="hidden" id="query_orderB" value="' +  sort_by['b']['order'] + '" />') }}
 </div>
 
 <form action="/items/search" method="get">
