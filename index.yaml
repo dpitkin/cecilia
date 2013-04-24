@@ -33,6 +33,16 @@ indexes:
   - name: created_at
     direction: desc
 
+- kind: Item
+  properties:
+  - name: title=
+  - name: price
+
+- kind: Item
+  properties:
+  - name: title=:1
+  - name: price
+
 - kind: ItemCollection
   properties:
   - name: created_by_id

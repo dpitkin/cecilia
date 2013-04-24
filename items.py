@@ -7,11 +7,13 @@ from database import db
 
 class MainHandler(database.webapp2.RequestHandler):
   def get(self):
+    token = ""
     if database.get_current_li() and database.get_current_li().is_admin:
+      token = database.get_current_li().create_xsrf_token()
       items = database.db.GqlQuery("SELECT * FROM Item")
     else:
       items = database.db.GqlQuery("SELECT * FROM Item WHERE expiration_date >= :1 AND is_active = :2 AND deactivated = :3", database.datetime.date.today(), True, False)
-    database.render_template(self, 'items/index.html', {'items': items})
+    database.render_template(self, 'items/index.html', {'items': items, 'xsrf_token' : token })
 
 class NewHandler(database.webapp2.RequestHandler):
   def get(self):
@@ -50,7 +52,7 @@ class SaveHandler(database.webapp2.RequestHandler):
         item.summary = item.description[:40].rstrip() + "..."
       else:
         item.summary = item.description
-      item.price = '%.2f' % float(cgi.escape(self.request.get('price')))
+      item.price = float('%.2f' % float(cgi.escape(self.request.get('price'))))
       item.created_by_id = user.user_id()
       item.is_active = True
       item.deactivated = False
@@ -110,11 +112,11 @@ class UpdateHandler(database.webapp2.RequestHandler):
           item.summary = item.description[:40] + "..."
         else:
           item.summary = item.description
-        item.price = '%.2f' % float(cgi.escape(self.request.get('price')))
+        item.price = float('%.2f' % float(cgi.escape(self.request.get('price'))))
         item.is_active = bool(self.request.get('show_item'))
         if self.request.get('photo'):
           item.image = database.db.Blob(database.images.resize(self.request.get('photo'), 512, 512))
-        database.logging.info("Item #%s changed to:\nTitle: %s\nDescription: %s\nPrice: %s", item.key().id(), item.title, item.description, item.price)
+        database.logging.info("Item #%s changed to:\nTitle: %s\nDescription: %s\nPrice: %f", item.key().id(), item.title, item.description, item.price)
         item.put()
         self.redirect('/items/my_items')
     else:

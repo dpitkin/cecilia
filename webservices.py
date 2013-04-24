@@ -5,16 +5,29 @@ import json
 from database import db
 cgi = database.cgi
 
-def item_to_dictionary(item):
+def item_to_dictionary(item, self):
 	return {
 		"id" : item.key().id(),
 		"title" : item.title,
 		"description" : item.description,
-		"seller" : item.get_creator().get_display_name(),
-		"image" : item.display_image_url(),
-		"price" : item.price,
-		"url" : "/items/view_item?item_id=" + str(item.key().id())
+		"image" : self.request.host + item.display_image_url(),
+		"seller" : seller_to_dictionary(item.get_creator()),
+		"price" : str(item.price),
+		"url" : self.request.host + "/items/view_item?item_id=" + str(item.key().id()),
+		"created_at" : item.created_at.strftime("%m/%d/%Y"),
+		"expiration_date" : item.expiration_date.strftime("%m/%d/%Y")
 	}
+
+
+def seller_to_dictionary(seller):
+	return {
+		"id" : seller.user_id,
+		"username" : seller.get_display_name()
+	}
+
+def render_error(self, message):
+	self.response.out.write({"success" : False, "message" : message})
+
   
 class AddItemRatingHandler(database.webapp2.RequestHandler):
   def post(self):
@@ -63,61 +76,66 @@ class WebservicesSearchHandler(database.webapp2.RequestHandler):
 		limit = cgi.escape(self.request.get("limit"))
 		offset = cgi.escape(self.request.get("offset"))
 		search_by = cgi.escape(self.request.get("search_by"))
-		sort_options = json.loads(self.request.get("sort_options"))
+		
+		try:
+			sort_options = json.loads(self.request.get("sort_options"))
+		except Exception, e:
+			sort_options = [{"type" : "time_create", "ordering" : "desc"}, {"type" : "time_create", "ordering" : "desc"}]
 
 		if len(str(limit)) == 0:
-			limit = "10"
+			render_error(self, "No limit provided")
+			return
 
 		if len(str(offset)) == 0:
-			offset = "0"
+			render_error(self, "No offset provided")
+			return
 		
 		if not(search_by in search_by_params):
-			search_by = "title"
+			render_error(self, "Invalid search by parameter" )
+			return
 
 		#Type cast params... they need to be in try catches ugh >.<
 		try:
 			limit = int(limit)
 			if limit <= 0:
-				limit = 10
+				render_error(self, "Invalid limit parameter: Less than 0")
+				return
 		except ValueError, e:
-			limit = 10
+			render_error(self, "Invalid limit parameter: Not a number")
+			return
 
 		try:
 			offset = int(offset)
 			if offset < 0:
-				offset = 0
+				render_error(self, "Invalid offset parameter: Less than 0")
+				return
 		except ValueError, e:
-			offset = 0
+			render_error(self, "Invalid offset parameter: Not a number")
 
-		directionA = ""
+		directionA = False
 		directionB = ""
-
-		print [l.description for l in list(db.GqlQuery("SELECT description FROM Item").run(limit=5))]
+		sort_typeA = sort_options[0]["type"]
+		sort_typeB = sort_options[1]["type"]
 
 		if sort_options[0]["ordering"] == "desc":
-			directionA = "DESC"
-		else:
-			directionA = "ASC"
+			directionA = True
 
 		if sort_options[1]["ordering"] == "desc":
-			directionB = "DESC"
-		else:
-			directionB = "ASC"
+			directionB = "-"
 
-		if not(sort_options[0]["type"] in sort_types):
-			sort_options[0]["type"] = "title"
-		elif sort_options[0]["type"] == "time_create":
-			sort_options[0]["type"] = "created_at"
+		if not(sort_typeA in sort_types):
+			sort_typeA = "title"
+		elif sort_typeA == "time_create":
+			sort_typeA = "created_at"
 
-		if not(sort_options[1]["type"] in sort_types):
-			sort_options[1]["type"] = "title"
-		elif sort_options[1]["type"] == "time_create":
-			sort_options[1]["type"] = "created_at"
+		if not(sort_typeB in sort_types):
+			sort_typeB = "title"
+		elif sort_typeB == "time_create":
+			sort_typeB = "created_at"
 
-		orderA = directionA + sort_options[0]["type"]
-		orderB = directionB + sort_options[1]["type"]		
+		orderB = directionB + sort_typeB
 
-		items = db.GqlQuery("SELECT * FROM Item ORDER BY " + sort_options[0]["type"] + " " + directionA)
+		items = database.Item.all().order(orderB)
 		#now tokenize the input by spaces
 
 		query_tokens = database.string.split(query)
@@ -134,10 +152,15 @@ class WebservicesSearchHandler(database.webapp2.RequestHandler):
 						add = True
 			elif search_by == "price":
 				for tok in query_tokens:
-					if database.string.find(item.price, tok) != -1:
+					if database.string.find(str(item.price), tok) != -1:
 						add = True
 			if add:
-				tmp_results.append(item_to_dictionary(item))
+				tmp_results.append(item_to_dictionary(item, self))
+
+		database.logging.info("SortA : " + sort_typeA + ", orderB : " + orderB)
+
+		tmp_results = sorted(tmp_results, key=lambda x:x[sort_typeA])
+		database.logging.info(json.dumps(tmp_results))
 
 		results = []
 		tmp_offset = offset
@@ -152,8 +175,31 @@ class WebservicesSearchHandler(database.webapp2.RequestHandler):
 				count = count + 1
 				results.append(res)
 
-		b = json.dumps({ "search_by" : search_by, "items" : results, "sort_options" : sort_options, "results_left" : len(list(tmp_results)) - counter, "total" : len(list(tmp_results)) })
+		b = json.dumps({ "items" : results, "results_left" : len(list(tmp_results)) - counter, "total" : len(list(tmp_results)) })
+
+		database.logging.info("B should be : " + b)
+
 		self.response.out.write(b)
 
+
+class WebservicesItemHandler(database.webapp2.RequestHandler):
+	def get(self):
+		auth_token = cgi.escape(self.request.get('auth_token'))
+		item_id = cgi.escape(self.request.get('item_id'))
+		try:
+			item = db.get(db.Key.from_path('Item', int(item_id)))
+			self.response.out.write(item_to_dictionary(item))
+		except ValueError:
+			failure = json.dumps({ "success" : False, "message" : "item_id does not exist"})
+			self.response.out.write(failure)
+		except AttributeError:
+			failure = json.dumps({ "success" : False, "message" : "item_id does not exist"})
+			self.response.out.write(failure)
+
+class WebservicesTestHandler(database.webapp2.RequestHandler):
+	def get(self):
+		self.response.out.write(json.dumps([item_to_dictionary(i) for i in database.Item.all()]))
+
 app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), 
-('/webservices/add_item_rating', AddItemRatingHandler)], debug=True)
+('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), ('/webservices/test', WebservicesTestHandler)], debug=True)
+
