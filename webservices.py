@@ -22,7 +22,7 @@ def item_to_dictionary(item, self):
 		"image" : self.request.host + item.display_image_url(),
 		"seller" : seller_to_dictionary(item.get_creator()),
 		"price" : str(item.price),
-		"url" : self.request.host + "/items/view_item?item_id=" + str(item.key().id()),
+		"url" : self.request.host + "/items/view_item?item_id=" + str(item.key().id())
 	}
 
 def local_item_to_dictionary(item, self):
@@ -189,10 +189,18 @@ def send_new_item_notification(self, item):
 class AddItemRatingHandler(database.webapp2.RequestHandler):
   def post(self):
     #fill out the item feedback
-    feedback = database.ItemFeedback()
+    external_li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", cgi.escape(self.request.get('user_id'))).get()
+    if not(external_li):
+      external_li = database.create_external_user(cgi.escape(self.request.get('user_id')))
+    feedback = database.ItemFeedback(parent=external_li)
     feedback.created_by_id = cgi.escape(self.request.get('user_id'))
     feedback.item_id = cgi.escape(self.request.get('target_item_id'))
+    feedback.parent = external_li
     feedback.rating = int(cgi.escape(self.request.get('rating')))
+    if feedback.rating > 5:
+      feedback.rating = 5
+    elif feedback.rating < 1:
+      feedback.rating = 1
     feedback.feedback = cgi.escape(self.request.get('feedback'))
     success = False
     err_mess = ""
@@ -203,7 +211,7 @@ class AddItemRatingHandler(database.webapp2.RequestHandler):
     except TransactionFailedError:
       success = False
       err_mess = "Could not save to datastore."
-    j = json.dumps({"success": success, "message": err_mess, "feedback_id": feedback.key().id()})
+    j = json.dumps({"success": success, "message": err_mess, "feedback_id": str(feedback.key().id())})
     self.response.out.write(j)
     
 class AddUserRatingHandler(database.webapp2.RequestHandler):
@@ -211,8 +219,15 @@ class AddUserRatingHandler(database.webapp2.RequestHandler):
     #fill out the user feedback
     feedback = database.UserFeedback()
     feedback.created_by_id = cgi.escape(self.request.get('user_id'))
+    external_li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", feedback.created_by_id).get()
+    if not(external_li):
+      database.create_external_user(feedback.created_by_id)
     feedback.for_user_id = cgi.escape(self.request.get('target_user_id'))
     feedback.rating = int(cgi.escape(self.request.get('rating')))
+    if feedback.rating > 5:
+      feedback.rating = 5
+    elif feedback.rating < 1:
+      feedback.rating = 1
     success = False
     err_mess = ""
     try:
@@ -222,7 +237,7 @@ class AddUserRatingHandler(database.webapp2.RequestHandler):
     except TransactionFailedError:
       success = False
       err_mess = "Could not save to datastore."
-    j = json.dumps({"success": success, "message": err_mess, "feedback_id": feedback.key().id()})
+    j = json.dumps({"success": success, "message": err_mess, "feedback_id": str(feedback.key().id())})
     self.response.out.write(j)
   
 class WebservicesSearchHandler(database.webapp2.RequestHandler):
@@ -288,9 +303,48 @@ class WebservicesNewItemRequestHandler(database.webapp2.RequestHandler):
 class WebservicesTestHandler(database.webapp2.RequestHandler):
 	def get(self):
 		self.response.out.write(json.dumps([item_to_dictionary(i) for i in database.Item.all()]))
+    
+class SendMessageHandler(database.webapp2.RequestHandler):
+  def post(self):
+    #fill out the thread first
+    thread = db.get(db.Key.from_path('Thread', cgi.escape(self.request.get('destination_conversation_id'))))
+    err_mess = ""
+    success = False
+    external_li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", cgi.escape(self.request.get('source_user_id'))).get()
+    if not(external_li):
+      external_li = database.create_external_user(cgi.escape(self.request.get('source_user_id')))
+    if thread:
+      if thread.created_by_id != external_li.user_id and thread.recipient_id != external_li.user_id:
+        j = json.dumps({"success": False, "message": "Don't try and mess with other people's messages!", "conversation_id": "-1"})
+        self.response.out.write(j)
+        return
+    else:
+      thread = database.Thread(external_conversation=True)
+      thread.title = cgi.escape(self.request.get('subject'))
+      thread.recipient_id = cgi.escape(self.request.get('destination_user_id'))
+      thread.created_by_id = external_li.user_id
+      #need to fill out item details next!!
+      
+      thread.put()
+    
+    #now create a new message
+    message = database.Message(parent=thread, read=False)
+    message.body = cgi.escape(self.request.get('message'))
+    message.created_by_id = external_li.user_id
+    message.recipient_id = cgi.escape(self.request.get('destination_user_id'))
+    try:
+      message.put()
+      err_mess = "Saved message successfully."
+      success = True
+    except TransactionFailedError:
+      err_mess = "Could not save message."
+      success = False
+    
+    j = json.dumps({"success": success, "message": err_mess, "conversation_id": str(thread.key().id())})
+    self.response.out.write(j)
 
-
-app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/local_search', WebservicesLocalSearchHandler), ('/webservices/partner_search', WebservicesPartnerSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), 
-('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), ('/webservices/test', WebservicesTestHandler), ('/webservices/new_item', WebservicesNewItemRequestHandler)], debug=True)
-
+app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/local_search', WebservicesLocalSearchHandler), 
+('/webservices/partner_search', WebservicesPartnerSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), 
+('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), ('/webservices/test', WebservicesTestHandler), 
+('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler)], debug=True)
 
