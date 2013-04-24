@@ -209,6 +209,17 @@ class FeedbackHandler(database.webapp2.RequestHandler):
     else:
       self.redirect('/')
       
+class ForeignFeedbackHandler(database.webapp2.RequestHandler):
+  def post(self):
+    
+#target_item_id: STRING
+#user_name: STRING
+#user_id: STRING
+#rating: FLOAT (1-5)
+#feedback: STRING
+#feedback_id: STRING
+
+      
 class DeleteFeedbackHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()

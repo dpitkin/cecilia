@@ -127,7 +127,18 @@ class SaveMessageHandler(database.webapp2.RequestHandler):
     if user and database.get_current_li().verify_xsrf_token(self) and (thread.recipient_id == user.user_id() or thread.created_by_id == user.user_id()):
       if thread.external_conversation:
         #its an external conversation, so we should send the message out to the other users API
-        
+        None
+        #Request:
+        #auth_token: STRING
+        #item_id: STRING
+        #source_user_id: STRING
+        #source_user_name: STRING
+        #destination_user_id: STRING
+        #subject: STRING
+        #message: STRING
+        #source_conversation_id: STRING
+        #destination_conversation_id: STRING
+
         #result = urlfetch.fetch(url=url, method=urlfetch.GET, headers={'Content-Type': 'application/x-www-form-urlencoded'})
 				#self.response.out.write(result.content)
       else:

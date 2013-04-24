@@ -23,8 +23,8 @@ View Item
 </p>
 {% if user %}
 <p>
-	<form action="/items/submit_feedback" method="post">
-		<input type="hidden" name="item_id" value="{{item.key().id()}}"/>
+	<form action="/items/submit_foreign_feedback" method="post">
+		<input type="hidden" name="item_id" value="{{item_contents['id']}}"/>
 		<input type="hidden" name="xsrf_token" value="{{xsrf_token}}"/>
     <input type="hidden" name="rating" id="rating" value="3" />
 		<div class="well">
