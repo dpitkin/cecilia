@@ -5,6 +5,13 @@ import json
 from database import db
 cgi = database.cgi
 
+
+def authenticate(auth_token):
+	if database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE local_auth_token = :1", auth_token) != None:
+		return True
+	else:
+		return False
+
 def item_to_dictionary(item, self):
 	return {
 		"id" : item.key().id(),
@@ -185,16 +192,17 @@ class WebservicesSearchHandler(database.webapp2.RequestHandler):
 class WebservicesItemHandler(database.webapp2.RequestHandler):
 	def get(self):
 		auth_token = cgi.escape(self.request.get('auth_token'))
-		item_id = cgi.escape(self.request.get('item_id'))
-		try:
-			item = db.get(db.Key.from_path('Item', int(item_id)))
-			self.response.out.write(item_to_dictionary(item))
-		except ValueError:
-			failure = json.dumps({ "success" : False, "message" : "item_id does not exist"})
-			self.response.out.write(failure)
-		except AttributeError:
-			failure = json.dumps({ "success" : False, "message" : "item_id does not exist"})
-			self.response.out.write(failure)
+		if authenticate(auth_token):
+			item_id = cgi.escape(self.request.get('item_id'))
+			try:
+				item = db.get(db.Key.from_path('Item', int(item_id)))
+				self.response.out.write(item_to_dictionary(item, self))
+			except ValueError:
+				render_error(self, "item_id does not exist")
+			except AttributeError:
+				render_error(self, "item_id does not exist")
+		else:
+			render_error(self, "authentication failure")
 
 class WebservicesTestHandler(database.webapp2.RequestHandler):
 	def get(self):
