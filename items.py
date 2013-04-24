@@ -57,6 +57,8 @@ class SaveHandler(database.webapp2.RequestHandler):
       item.is_active = True
       item.deactivated = False
       item.bidding_enabled = bool(self.request.get('bidding_enabled'))
+      item.sponsored = bool(self.request.get('sponsored'))
+      item.is_active = not bool(self.request.get('show_item'))
       if self.request.get('photo'):
         image = database.images.resize(self.request.get('photo'), 512, 512)
         item.image = db.Blob(image)
@@ -113,7 +115,8 @@ class UpdateHandler(database.webapp2.RequestHandler):
         else:
           item.summary = item.description
         item.price = float('%.2f' % float(cgi.escape(self.request.get('price'))))
-        item.is_active = bool(self.request.get('show_item'))
+        item.is_active = not bool(self.request.get('show_item'))
+        item.sponsored = bool(self.request.get('sponsored'))
         if self.request.get('photo'):
           item.image = database.db.Blob(database.images.resize(self.request.get('photo'), 512, 512))
         database.logging.info("Item #%s changed to:\nTitle: %s\nDescription: %s\nPrice: %f", item.key().id(), item.title, item.description, item.price)

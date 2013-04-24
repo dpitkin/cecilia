@@ -43,12 +43,24 @@ Edit Item
 			</label>
 			<input type="checkbox" name="bidding_enabled" {% if item.bidding_enabled %} checked="true" {% endif %} />
     </p>
+    {% if current_li.is_admin %}
+    <p>
+        <label>
+            Sponsor this item? 
+            <i class="icon-info-sign info_button-right" title="Sponsor this item (Admin only)" data-content="If checked, then this item can be advertised by all apps."></i>
+        </label>
+        <input type="checkbox" name="sponsored" {% if item.sponsored %} checked="true" {% endif %} />
+    </p>
+    {% endif %}
     <p>
       {% if item.is_expired() %}
         This item is expired.
       {% elif not item.is_expired() %}
-        <input type="checkbox" name="show_item" {% if item.is_active %} checked="true" {% endif %}/>
-        Show item (If unchecked, item can only be viewed by you in your virtual shop)
+        <label>
+            Is this item private? 
+            <i class="icon-info-sign info_button-right" title="Make item private" data-content="If checked, item can only be viewed by you in your virtual shop."></i>
+        </label>
+        <input type="checkbox" name="show_item" {% if not item.is_active %} checked="true" {% endif %}/>
       {% endif %}
          
 

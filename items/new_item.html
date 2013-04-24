@@ -42,6 +42,22 @@ New Item
 			</label>
 			<input type="checkbox" name="bidding_enabled" />
     </p>
+    {% if current_li.is_admin %}
+        <p>
+      		<label>
+				Sponsor this item? 
+				<i class="icon-info-sign info_button-right" title="Sponsor this item (Admin only)" data-content="If checked, then this item can be advertised by all apps."></i>
+			</label>
+			<input type="checkbox" name="sponsored" />
+    	</p>
+    {% endif %}
+    <p>
+    	<label>
+            Is this item private? 
+            <i class="icon-info-sign info_button-right" title="Make item private" data-content="If unchecked, item can only be viewed by you in your virtual shop."></i>
+        </label>
+        <input type="checkbox" name="show_item"/>
+    </p>
 	</div>
 	<button class="btn btn-primary" type="submit" value="Save">Post Item</button>
 	<a class="btn" href="/items/">Cancel</a>
