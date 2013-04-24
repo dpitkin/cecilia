@@ -171,22 +171,17 @@ def render_success(self, message):
 def send_new_item_notification(self, item):
 	partners = database.db.GqlQuery("SELECT * FROM TrustedPartner")
 	for partner in partners:
-		if partner:
-			data = json.dumps({ "data" : [item_to_dictionary(item, self)] })
-			base_url = partner.base_url
-			foreign_auth_token = partner.foreign_auth_token
-			url = base_url + "/webservices/new_item?auth_token=" + foreign_auth_token + "&data=" + data
-			try:
-				result = urlfetch.fetch(url=url, method=urlfetch.POST, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-				database.logging.info("Result : " + result.content)
-				self.response.out.write(result.content)
-				return
-			except Exception, e:
-				render_error(self, "Something went wrong accessing url, " + e.message)
-				return
-		else:
-			render_error(self, "Invalid partner id")
-			return
+		base_url = partner.base_url
+		foreign_auth_token = partner.foreign_auth_token
+		url = base_url + "/webservices/new_item"
+		j = json.dumps({ "auth_token" : partner.foreign_auth_token, "data" : [item_to_dictionary(item, self)] })
+		try:
+			result = urlfetch.fetch(url=url, payload=j, method=urlfetch.POST, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+			database.logging.info("Result : " + result.content)
+			self.response.out.write(result.content)
+		except Exception, e:
+			render_error(self, "Something went wrong accessing url, " + e.message)
+			database.logging.info("Error : %s", str(e))
 
 class AddItemRatingHandler(database.webapp2.RequestHandler):
   def post(self):
@@ -293,7 +288,7 @@ class WebservicesItemHandler(database.webapp2.RequestHandler):
 			render_error(self, "authentication failure")
 
 class WebservicesNewItemRequestHandler(database.webapp2.RequestHandler):
-	def get(self):
+	def post(self):
 		auth_token = cgi.escape(self.request.get('auth_token'))
 		if authenticate(auth_token):
 			render_success(self, "new item received")
