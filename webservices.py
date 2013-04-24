@@ -295,7 +295,7 @@ class WebservicesNewItemRequestHandler(database.webapp2.RequestHandler):
 class SendMessageHandler(database.webapp2.RequestHandler):
   def post(self):
     #fill out the thread first
-    thread = db.get(db.Key.from_path('Thread', cgi.escape(self.request.get('destination_conversation_id'))))
+    thread = db.get(db.Key.from_path('Thread', int(cgi.escape(self.request.get('destination_conversation_id')))))
     err_mess = ""
     success = False
     external_li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", cgi.escape(self.request.get('source_user_id'))).get()
