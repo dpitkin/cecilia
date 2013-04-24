@@ -35,6 +35,13 @@ def seller_to_dictionary(seller):
 def render_error(self, message):
 	self.response.out.write({"success" : False, "message" : message})
 
+def render_success(self, message):
+	self.response.out.write({"success" : True, "message" : message})
+
+def send_new_item_notification(item):
+	partners = database.db.GqlQuery("SELECT * FROM TrustedPartner")
+	#for partner in partners:
+
   
 class AddItemRatingHandler(database.webapp2.RequestHandler):
   def post(self):
@@ -204,10 +211,18 @@ class WebservicesItemHandler(database.webapp2.RequestHandler):
 		else:
 			render_error(self, "authentication failure")
 
+class WebservicesNewItemRequestHandler(database.webapp2.RequestHandler):
+	def get(self):
+		auth_token = cgi.escape(self.request.get('auth_token'))
+		if authenticate(auth_token):
+			render_success(self, "new item received")
+		else:
+			render_error(self, "authentication failure")
+
 class WebservicesTestHandler(database.webapp2.RequestHandler):
 	def get(self):
 		self.response.out.write(json.dumps([item_to_dictionary(i) for i in database.Item.all()]))
 
 app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), 
-('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), ('/webservices/test', WebservicesTestHandler)], debug=True)
+('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), ('/webservices/test', WebservicesTestHandler), ('/webservices/new_item', WebservicesNewItemRequestHandler)], debug=True)
 
