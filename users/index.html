@@ -19,7 +19,9 @@ Your Profile
     </table>
     <p><a href="/users/delete_user?xsrf_token={{xsrf_token}}" onclick="return confirm('Are you sure? This will delete all your messages and items.');">Click here to delete account</a></p>
     <p><a href="/users/export_data" onclick="return confirm('Are you sure? This will generate a file with all your data.');">Export All Your User Data</a></p>
-    <p><a href="/webservices/user_export" onclick="">Transfer login to trusted partner</a></p>    
+    {% for partner in partners %}
+      <p><a href="/users/export_user_foreign?partner_id={{partner.key().id()}}&xsrf_token={{xsrf_token}}">Transfer login to trusted partner '{{partner.name}}'</a></p>
+    {% endfor %}
     <br/><br/>
     <h3>Edit Profile</h3>
     <div class="well">

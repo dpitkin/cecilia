@@ -13,7 +13,7 @@ class MainHandler(database.webapp2.RequestHandler):
     if user:
       li = database.get_current_li()
       token = li.create_xsrf_token()
-      database.render_template(self, '/users/index.html', {'li': li, 'xsrf_token' : token})
+      database.render_template(self, '/users/index.html', {'li': li, 'xsrf_token' : token, 'partners': database.TrustedPartner.all()})
     else:
       self.redirect('/')
 
@@ -197,8 +197,8 @@ class ExportUserToForeignApp(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
     li = database.get_current_li()
-    partner = db.get(db.Key.from_path(int(cgi.escape(self.request.get('partner_di')))))
-    if user and li:
+    partner = db.get(db.Key.from_path('TrustedPartner', int(cgi.escape(self.request.get('partner_id')))))
+    if user and li and partner and li.verify_xsrf_token(self):
       #grab all their items
       items = db.GqlQuery("SELECT * FROM Item WHERE created_by_id=:1", user.user_id())
       item_array = []
@@ -207,9 +207,9 @@ class ExportUserToForeignApp(database.webapp2.RequestHandler):
         item_array.append(item_hash)
       #now generate the JSON
       hash = {'email': li.email, 'google_user_id': li.user_id, 'name': li.nickname, 'bio': li.desc, 'items': item_array}
-      url = "https://gridlock-exchange.appspot.com/webservices/user_import"
+      url = partner.base_url + "/webservices/user_import"
       try:
-        final = {'user_data': json.dumps(hash), 'auth_token': 1}
+        final = {'user_data': json.dumps(hash), 'auth_token': partner.foreign_auth_token}
         database.logging.info(final)
         result = urlfetch.fetch(url=url, method=urlfetch.POST, payload=urllib.urlencode(final), headers={'Content-Type': 'application/x-www-form-urlencoded'})
         
@@ -217,6 +217,12 @@ class ExportUserToForeignApp(database.webapp2.RequestHandler):
         item_contents = json.loads(result.content)
       except Exception, e:
         item_contents = None
+      if item_contents['success']:
+        for i in items:
+          i.delete()
+        li.delete()
+      self.redirect('/')
+      return
     else:
       self.redirect('/')
     
