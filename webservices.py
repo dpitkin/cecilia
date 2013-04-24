@@ -25,6 +25,9 @@ def seller_to_dictionary(seller):
 		"username" : seller.get_display_name()
 	}
 
+def render_error(self, message):
+	self.response.out.write({"success" : False, "message" : message})
+
   
 class AddItemRatingHandler(database.webapp2.RequestHandler):
   def post(self):
@@ -73,31 +76,41 @@ class WebservicesSearchHandler(database.webapp2.RequestHandler):
 		limit = cgi.escape(self.request.get("limit"))
 		offset = cgi.escape(self.request.get("offset"))
 		search_by = cgi.escape(self.request.get("search_by"))
-		sort_options = json.loads(self.request.get("sort_options"))
+		
+		try:
+			sort_options = json.loads(self.request.get("sort_options"))
+		except Exception, e:
+			sort_options = [{"type" : "time_create", "ordering" : "desc"}, {"type" : "time_create", "ordering" : "desc"}]
 
 		if len(str(limit)) == 0:
-			limit = "10"
+			render_error(self, "No limit provided")
+			return
 
 		if len(str(offset)) == 0:
-			offset = "0"
+			render_error(self, "No offset provided")
+			return
 		
 		if not(search_by in search_by_params):
-			search_by = "title"
+			render_error(self, "Invalid search by parameter" )
+			return
 
 		#Type cast params... they need to be in try catches ugh >.<
 		try:
 			limit = int(limit)
 			if limit <= 0:
-				limit = 10
+				render_error(self, "Invalid limit parameter: Less than 0")
+				return
 		except ValueError, e:
-			limit = 10
+			render_error(self, "Invalid limit parameter: Not a number")
+			return
 
 		try:
 			offset = int(offset)
 			if offset < 0:
-				offset = 0
+				render_error(self, "Invalid offset parameter: Less than 0")
+				return
 		except ValueError, e:
-			offset = 0
+			render_error(self, "Invalid offset parameter: Not a number")
 
 		directionA = False
 		directionB = ""
