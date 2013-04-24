@@ -66,6 +66,7 @@ def sanitizeHTML(value, base_url=None):
     return ret
     
 jinja_environment.globals.update(sanitizeHTML=sanitizeHTML)
+jinja_environment.globals.update(escape=cgi.escape)
 
 def quick_sanitize(input):
   return re.sub(r"[^a-zA-Z0-9 \$\%\-_\!\.&=/:\?]", '', input)

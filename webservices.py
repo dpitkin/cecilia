@@ -373,7 +373,24 @@ class UserImportHandler(database.webapp2.RequestHandler):
       render_success(self, "User successfully imported.")
       return
 
+class ExportUserHandler(database.webapp2.RequestHandler):
+	def post(self):
+		user = database.users.get_current_user()
+		current_li = database.get_current_li()
+		if user and current_li:
+			items = db.GqlQuery("SELECT * FROM Item WHERE created_by_id = :1 ORDER BY created_at DESC", li.user_id)
+			user_hash = {
+				"user_id" : current_li.key().id(),
+				"google_user_id" : current_li.user_id,
+				"username" : current_li.nickname,
+				"mail" : current_li.email,
+				"items" : [item_to_dictionary(i) for i in items]
+			}
+			self.response.out.write()
+		else:
+			database.render_error(self, "Must be logged in")
+
 app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/local_search', WebservicesLocalSearchHandler), 
 ('/webservices/partner_search', WebservicesPartnerSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), ('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), 
-('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler), ('/webservices/user_import', UserImportHandler)], debug=True)
+('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler), ('/webservices/user_import', UserImportHandler), ('/webservices/export_user', ExportUserHandler)], debug=True)
 
