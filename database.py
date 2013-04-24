@@ -243,6 +243,7 @@ class Item(db.Model):
   highest_bid = db.StringProperty()
   highest_bid_id = db.StringProperty()
   sold = db.BooleanProperty()
+  sponsored = db.BooleanProperty()
 
   def is_expired(this):
     return (datetime.date.today() > this.expiration_date)

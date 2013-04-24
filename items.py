@@ -13,7 +13,8 @@ class MainHandler(database.webapp2.RequestHandler):
       items = database.db.GqlQuery("SELECT * FROM Item")
     else:
       items = database.db.GqlQuery("SELECT * FROM Item WHERE expiration_date >= :1 AND is_active = :2 AND deactivated = :3", database.datetime.date.today(), True, False)
-    database.render_template(self, 'items/index.html', {'items': items, 'xsrf_token' : token })
+    trusted_partners = database.TrustedPartner.all()
+    database.render_template(self, 'items/index.html', {'items': items, 'xsrf_token' : token, "partners" : trusted_partners })
 
 class NewHandler(database.webapp2.RequestHandler):
   def get(self):
@@ -57,6 +58,8 @@ class SaveHandler(database.webapp2.RequestHandler):
       item.is_active = True
       item.deactivated = False
       item.bidding_enabled = bool(self.request.get('bidding_enabled'))
+      item.sponsored = bool(self.request.get('sponsored'))
+      item.is_active = not bool(self.request.get('show_item'))
       if self.request.get('photo'):
         image = database.images.resize(self.request.get('photo'), 512, 512)
         item.image = db.Blob(image)
@@ -113,7 +116,8 @@ class UpdateHandler(database.webapp2.RequestHandler):
         else:
           item.summary = item.description
         item.price = float('%.2f' % float(cgi.escape(self.request.get('price'))))
-        item.is_active = bool(self.request.get('show_item'))
+        item.is_active = not bool(self.request.get('show_item'))
+        item.sponsored = bool(self.request.get('sponsored'))
         if self.request.get('photo'):
           item.image = database.db.Blob(database.images.resize(self.request.get('photo'), 512, 512))
         database.logging.info("Item #%s changed to:\nTitle: %s\nDescription: %s\nPrice: %f", item.key().id(), item.title, item.description, item.price)
@@ -136,6 +140,19 @@ class ShopHandler(database.webapp2.RequestHandler):
 class SearchHandler(database.webapp2.RequestHandler):
   def get(self):
     query = cgi.escape(self.request.get('query'))
+    limit = cgi.escape(self.request.get('query_limit'))
+    search_by = cgi.escape(self.request.get('query_search_by'))    
+    sort_by = {
+      "a" : {
+        "sort_field" : cgi.escape(self.request.get('query_sortA')),
+        "order" : cgi.escape(self.request.get('query_orderA'))
+      },
+      "b" : {
+        "sort_field" : cgi.escape(self.request.get('query_sortB')),
+        "order" : cgi.escape(self.request.get('query_orderB'))
+      }
+    }
+
     items = db.GqlQuery("SELECT * FROM Item ORDER BY created_at DESC") #grab all the items first
     #now tokenize the input by spaces
     query_tokens = database.string.split(query)
@@ -155,8 +172,8 @@ class SearchHandler(database.webapp2.RequestHandler):
         search.created_by_id = user.user_id()
         search.search = query
         search.put()
-      
-    database.render_template(self, 'items/search.html', { 'items': results, 'query': query})
+    trusted_partners = database.TrustedPartner.all()
+    database.render_template(self, 'items/search.html', { 'items': results, 'query': query, "partners" : trusted_partners, 'limit' : limit, 'search_by' : search_by, 'sort_by' : sort_by })
     
 class OldSearches(database.webapp2.RequestHandler):
   def get(self):

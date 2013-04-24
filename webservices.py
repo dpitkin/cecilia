@@ -2,10 +2,30 @@
 
 import database
 import json
+import urllib
+from google.appengine.api import urlfetch
 from database import db
 cgi = database.cgi
 
+
+def authenticate(auth_token):
+	if database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE local_auth_token = :1", auth_token) != None:
+		return True
+	else:
+		return False
+
 def item_to_dictionary(item, self):
+	return {
+		"id" : item.key().id(),
+		"title" : item.title,
+		"description" : item.description,
+		"image" : self.request.host + item.display_image_url(),
+		"seller" : seller_to_dictionary(item.get_creator()),
+		"price" : str(item.price),
+		"url" : self.request.host + "/items/view_item?item_id=" + str(item.key().id()),
+	}
+
+def local_item_to_dictionary(item, self):
 	return {
 		"id" : item.key().id(),
 		"title" : item.title,
@@ -26,9 +46,130 @@ def seller_to_dictionary(seller):
 	}
 
 def render_error(self, message):
-	self.response.out.write({"success" : False, "message" : message})
+	self.response.out.write(json.dumps({"success" : False, "message" : message}))
 
-  
+def handle_search(self, is_local):
+	search_by_params = ["title", "description", "price"]
+	sort_types = ["title", "description", "price", "time_create", "location"]
+	query = cgi.escape(self.request.get("query"))
+	limit = cgi.escape(self.request.get("limit"))
+	offset = cgi.escape(self.request.get("offset"))
+	search_by = cgi.escape(self.request.get("search_by"))
+	
+	try:
+		sort_options = json.loads(self.request.get("sort_options"))
+	except Exception, e:
+		sort_options = [{"type" : "time_create", "ordering" : "desc"}, {"type" : "time_create", "ordering" : "desc"}]
+
+	if len(str(limit)) == 0:
+		render_error(self, "No limit provided")
+		return
+
+	if len(str(offset)) == 0:
+		render_error(self, "No offset provided")
+		return
+	
+	if not(search_by in search_by_params):
+		render_error(self, "Invalid search by parameter" )
+		return
+
+	#Type cast params... they need to be in try catches ugh >.<
+	try:
+		limit = int(limit)
+		if limit <= 0:
+			render_error(self, "Invalid limit parameter: Less than 0")
+			return
+	except ValueError, e:
+		render_error(self, "Invalid limit parameter: Not a number")
+		return
+
+	try:
+		offset = int(offset)
+		if offset < 0:
+			render_error(self, "Invalid offset parameter: Less than 0")
+			return
+	except ValueError, e:
+		render_error(self, "Invalid offset parameter: Not a number")
+
+	directionA = False
+	directionB = ""
+	sort_typeA = sort_options[0]["type"]
+	sort_typeB = sort_options[1]["type"]
+
+	if sort_options[0]["ordering"] == "desc":
+		directionA = True
+
+	if sort_options[1]["ordering"] == "desc":
+		directionB = "-"
+
+	if not(sort_typeA in sort_types):
+		sort_typeA = "title"
+	elif sort_typeA == "time_create":
+		sort_typeA = "created_at"
+
+	if not(sort_typeB in sort_types):
+		sort_typeB = "title"
+	elif sort_typeB == "time_create":
+		sort_typeB = "created_at"
+
+	orderB = directionB + sort_typeB
+
+	items = database.Item.all().order(orderB)
+	#now tokenize the input by spaces
+
+	query_tokens = database.string.split(query)
+	tmp_results = []
+
+	for item in items:
+		add = False
+		if search_by == "title":
+			for tok in query_tokens:
+				if database.string.find(item.title, tok) != -1:
+					add = True
+		elif search_by == "description":
+			for tok in query_tokens:
+				if database.string.find(item.description, tok) != -1:
+					add = True
+		elif search_by == "price":
+			for tok in query_tokens:
+				if database.string.find(str(item.price), tok) != -1:
+					add = True
+		if add:
+			if is_local:
+				tmp_results.append(local_item_to_dictionary(item, self))
+			else:
+				tmp_results.append(item_to_dictionary(item, self))
+
+	database.logging.info("SortA : " + sort_typeA + ", orderB : " + orderB)
+
+	tmp_results = sorted(tmp_results, key=lambda x:x[sort_typeA])
+	database.logging.info(json.dumps(tmp_results))
+
+	results = []
+	tmp_offset = offset
+	counter = 0
+	count = 0
+	for res in tmp_results:
+		if count >= limit:
+			break
+		tmp_offset -= 1
+		counter = counter + 1
+		if tmp_offset < 0:
+			count = count + 1
+			results.append(res)
+
+	b = json.dumps({ "items" : results, "results_left" : len(list(tmp_results)) - counter, "total" : len(list(tmp_results)), "success" : True })
+	self.response.out.write(b)
+
+
+def render_success(self, message):
+	self.response.out.write({"success" : True, "message" : message})
+
+def send_new_item_notification(item):
+	partners = database.db.GqlQuery("SELECT * FROM TrustedPartner")
+	#for partner in partners:
+
+
 class AddItemRatingHandler(database.webapp2.RequestHandler):
   def post(self):
     #fill out the item feedback
@@ -85,131 +226,65 @@ class AddUserRatingHandler(database.webapp2.RequestHandler):
   
 class WebservicesSearchHandler(database.webapp2.RequestHandler):
 	def get(self):
-		search_by_params = ["title", "description", "price"]
-		sort_types = ["title", "description", "price", "time_create", "location"]
-		query = cgi.escape(self.request.get("query"))
-		limit = cgi.escape(self.request.get("limit"))
-		offset = cgi.escape(self.request.get("offset"))
-		search_by = cgi.escape(self.request.get("search_by"))
-		
-		try:
-			sort_options = json.loads(self.request.get("sort_options"))
-		except Exception, e:
-			sort_options = [{"type" : "time_create", "ordering" : "desc"}, {"type" : "time_create", "ordering" : "desc"}]
+		handle_search(self, False)
 
-		if len(str(limit)) == 0:
-			render_error(self, "No limit provided")
-			return
+class WebservicesLocalSearchHandler(database.webapp2.RequestHandler):
+	def get(self):
+		handle_search(self, True)
 
-		if len(str(offset)) == 0:
-			render_error(self, "No offset provided")
-			return
-		
-		if not(search_by in search_by_params):
-			render_error(self, "Invalid search by parameter" )
-			return
+class WebservicesPartnerSearchHandler(database.webapp2.RequestHandler):
+	def get(self):
+		query = self.request.get("query")
+		limit = self.request.get("limit")
+		offset = self.request.get("offset")
+		search_by = self.request.get("search_by")
+		sort_options = self.request.get("sort_options")
 
-		#Type cast params... they need to be in try catches ugh >.<
-		try:
-			limit = int(limit)
-			if limit <= 0:
-				render_error(self, "Invalid limit parameter: Less than 0")
+		partner_id = self.request.get("partner_id")
+
+		partner = database.db.get(db.Key.from_path('TrustedPartner', int(cgi.escape(self.request.get('partner_id')))))
+		if partner:
+			base_url = partner.base_url
+			foreign_auth_token = partner.foreign_auth_token
+			url = base_url + "/webservices/search?auth_token=" + foreign_auth_token + "&query=" + query + "&limit=" + limit + "&offset=" + offset + "&search_by=" + search_by + "&sort_options=" + sort_options
+			database.logging.info("URL : " + url)
+			try:
+				result = urlfetch.fetch(url=url, method=urlfetch.GET, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+				database.logging.info("Result : " + result.content)
+				self.response.out.write(result.content)
 				return
-		except ValueError, e:
-			render_error(self, "Invalid limit parameter: Not a number")
+			except Exception, e:
+				render_error(self, "Something went wrong accessing url, " + e.message)
+				return
+		else:
+			render_error(self, "Invalid partner id")
 			return
 
-		try:
-			offset = int(offset)
-			if offset < 0:
-				render_error(self, "Invalid offset parameter: Less than 0")
-				return
-		except ValueError, e:
-			render_error(self, "Invalid offset parameter: Not a number")
 
-		directionA = False
-		directionB = ""
-		sort_typeA = sort_options[0]["type"]
-		sort_typeB = sort_options[1]["type"]
-
-		if sort_options[0]["ordering"] == "desc":
-			directionA = True
-
-		if sort_options[1]["ordering"] == "desc":
-			directionB = "-"
-
-		if not(sort_typeA in sort_types):
-			sort_typeA = "title"
-		elif sort_typeA == "time_create":
-			sort_typeA = "created_at"
-
-		if not(sort_typeB in sort_types):
-			sort_typeB = "title"
-		elif sort_typeB == "time_create":
-			sort_typeB = "created_at"
-
-		orderB = directionB + sort_typeB
-
-		items = database.Item.all().order(orderB)
-		#now tokenize the input by spaces
-
-		query_tokens = database.string.split(query)
-		tmp_results = []
-		for item in items:
-			add = False
-			if search_by == "title":
-				for tok in query_tokens:
-					if database.string.find(item.title, tok) != -1:
-						add = True
-			elif search_by == "description":
-				for tok in query_tokens:
-					if database.string.find(item.description, tok) != -1:
-						add = True
-			elif search_by == "price":
-				for tok in query_tokens:
-					if database.string.find(str(item.price), tok) != -1:
-						add = True
-			if add:
-				tmp_results.append(item_to_dictionary(item, self))
-
-		database.logging.info("SortA : " + sort_typeA + ", orderB : " + orderB)
-
-		tmp_results = sorted(tmp_results, key=lambda x:x[sort_typeA])
-		database.logging.info(json.dumps(tmp_results))
-
-		results = []
-		tmp_offset = offset
-		counter = 0
-		count = 0
-		for res in tmp_results:
-			if count >= limit:
-				break
-			tmp_offset -= 1
-			counter = counter + 1
-			if tmp_offset < 0:
-				count = count + 1
-				results.append(res)
-
-		b = json.dumps({ "items" : results, "results_left" : len(list(tmp_results)) - counter, "total" : len(list(tmp_results)) })
-
-		database.logging.info("B should be : " + b)
-
-		self.response.out.write(b)
 
 
 class WebservicesItemHandler(database.webapp2.RequestHandler):
 	def get(self):
 		auth_token = cgi.escape(self.request.get('auth_token'))
-		item_id = cgi.escape(self.request.get('item_id'))
-		try:
-			item = db.get(db.Key.from_path('Item', int(item_id)))
-			self.response.out.write(item_to_dictionary(item))
-		except ValueError:
-			failure = json.dumps({ "success" : False, "message" : "item_id does not exist"})
-			self.response.out.write(failure)
-		except AttributeError:
-			failure = json.dumps({ "success" : False, "message" : "item_id does not exist"})
-			self.response.out.write(failure)
+		if authenticate(auth_token):
+			item_id = cgi.escape(self.request.get('item_id'))
+			try:
+				item = db.get(db.Key.from_path('Item', int(item_id)))
+				self.response.out.write(item_to_dictionary(item, self))
+			except ValueError:
+				render_error(self, "item_id does not exist")
+			except AttributeError:
+				render_error(self, "item_id does not exist")
+		else:
+			render_error(self, "authentication failure")
+
+class WebservicesNewItemRequestHandler(database.webapp2.RequestHandler):
+	def get(self):
+		auth_token = cgi.escape(self.request.get('auth_token'))
+		if authenticate(auth_token):
+			render_success(self, "new item received")
+		else:
+			render_error(self, "authentication failure")
 
 class WebservicesTestHandler(database.webapp2.RequestHandler):
 	def get(self):
@@ -254,7 +329,8 @@ class SendMessageHandler(database.webapp2.RequestHandler):
     j = json.dumps({"success": success, "message": err_mess, "conversation_id": str(thread.key().id())})
     self.response.out.write(j)
 
-app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), 
-('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), ('/webservices/test', WebservicesTestHandler),
-('/webservices/send_message', SendMessageHandler)], debug=True)
+app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/local_search', WebservicesLocalSearchHandler), 
+('/webservices/partner_search', WebservicesPartnerSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), 
+('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), ('/webservices/test', WebservicesTestHandler), 
+('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler)], debug=True)
 
