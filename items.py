@@ -4,6 +4,7 @@ import database
 import re
 from database import cgi
 from database import db
+import webservices
 
 class MainHandler(database.webapp2.RequestHandler):
   def get(self):
@@ -64,7 +65,9 @@ class SaveHandler(database.webapp2.RequestHandler):
         image = database.images.resize(self.request.get('photo'), 512, 512)
         item.image = db.Blob(image)
       item.expiration_date = database.datetime.date.today() + database.datetime.timedelta(weeks=4) #get 4 weeks of posting
-      item.put()
+      key = item.put()
+      item = database.db.get(db.Key.from_path('Item', key.id()))
+      webservices.send_new_item_notification(self, item)
       database.logging.info("Created a new item.\nTitle: %s\nDescription: %s\nPrice: %s\nCreatedBy: %s", item.title, item.description, item.price, item.created_by_id)
       self.redirect('/items/')
     else:
