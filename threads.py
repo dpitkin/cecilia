@@ -98,7 +98,7 @@ class SaveHandler(database.webapp2.RequestHandler):
           database.logging.info("HERE");
           thread = database.Thread(created_by_id=user.user_id())
           if item:
-            thread.item_details = 'This is about your item: "' + item.title + '" that you posted for $' + item.price
+            thread.item_details = 'This is about your item: "' + item.title + '" that you posted for $' + str(item.price)
           thread.title = cgi.escape(self.request.get('title'))
           thread.recipient_id = recipient.user_id
           thread.put()

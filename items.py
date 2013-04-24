@@ -52,7 +52,7 @@ class SaveHandler(database.webapp2.RequestHandler):
         item.summary = item.description[:40].rstrip() + "..."
       else:
         item.summary = item.description
-      item.price = '%.2f' % float(cgi.escape(self.request.get('price')))
+      item.price = float('%.2f' % float(cgi.escape(self.request.get('price'))))
       item.created_by_id = user.user_id()
       item.is_active = True
       item.deactivated = False
@@ -112,11 +112,11 @@ class UpdateHandler(database.webapp2.RequestHandler):
           item.summary = item.description[:40] + "..."
         else:
           item.summary = item.description
-        item.price = '%.2f' % float(cgi.escape(self.request.get('price')))
+        item.price = float('%.2f' % float(cgi.escape(self.request.get('price'))))
         item.is_active = bool(self.request.get('show_item'))
         if self.request.get('photo'):
           item.image = database.db.Blob(database.images.resize(self.request.get('photo'), 512, 512))
-        database.logging.info("Item #%s changed to:\nTitle: %s\nDescription: %s\nPrice: %s", item.key().id(), item.title, item.description, item.price)
+        database.logging.info("Item #%s changed to:\nTitle: %s\nDescription: %s\nPrice: %f", item.key().id(), item.title, item.description, item.price)
         item.put()
         self.redirect('/items/my_items')
     else:

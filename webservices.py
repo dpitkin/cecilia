@@ -12,7 +12,7 @@ def item_to_dictionary(item, self):
 		"description" : item.description,
 		"image" : self.request.host + item.display_image_url(),
 		"seller" : seller_to_dictionary(item.get_creator()),
-		"price" : item.price,
+		"price" : str(item.price),
 		"url" : self.request.host + "/items/view_item?item_id=" + str(item.key().id()),
 		"created_at" : item.created_at.strftime("%m/%d/%Y"),
 		"expiration_date" : item.expiration_date.strftime("%m/%d/%Y")
@@ -99,35 +99,30 @@ class WebservicesSearchHandler(database.webapp2.RequestHandler):
 		except ValueError, e:
 			offset = 0
 
-		directionA = ""
+		directionA = False
 		directionB = ""
-
-		print [l.description for l in list(db.GqlQuery("SELECT description FROM Item").run(limit=5))]
+		sort_typeA = sort_options[0]["type"]
+		sort_typeB = sort_options[1]["type"]
 
 		if sort_options[0]["ordering"] == "desc":
-			directionA = "DESC"
-		else:
-			directionA = "ASC"
+			directionA = True
 
 		if sort_options[1]["ordering"] == "desc":
-			directionB = "DESC"
-		else:
-			directionB = "ASC"
+			directionB = "-"
 
-		if not(sort_options[0]["type"] in sort_types):
-			sort_options[0]["type"] = "title"
-		elif sort_options[0]["type"] == "time_create":
-			sort_options[0]["type"] = "created_at"
+		if not(sort_typeA in sort_types):
+			sort_typeA = "title"
+		elif sort_typeA == "time_create":
+			sort_typeA = "created_at"
 
-		if not(sort_options[1]["type"] in sort_types):
-			sort_options[1]["type"] = "title"
-		elif sort_options[1]["type"] == "time_create":
-			sort_options[1]["type"] = "created_at"
+		if not(sort_typeB in sort_types):
+			sort_typeB = "title"
+		elif sort_typeB == "time_create":
+			sort_typeB = "created_at"
 
-		orderA = directionA + sort_options[0]["type"]
-		orderB = directionB + sort_options[1]["type"]		
+		orderB = directionB + sort_typeB
 
-		items = db.GqlQuery("SELECT * FROM Item ORDER BY " + sort_options[0]["type"] + " " + directionA)
+		items = database.Item.all().order(orderB)
 		#now tokenize the input by spaces
 
 		query_tokens = database.string.split(query)
@@ -144,10 +139,15 @@ class WebservicesSearchHandler(database.webapp2.RequestHandler):
 						add = True
 			elif search_by == "price":
 				for tok in query_tokens:
-					if database.string.find(item.price, tok) != -1:
+					if database.string.find(str(item.price), tok) != -1:
 						add = True
 			if add:
 				tmp_results.append(item_to_dictionary(item, self))
+
+		database.logging.info("SortA : " + sort_typeA + ", orderB : " + orderB)
+
+		tmp_results = sorted(tmp_results, key=lambda x:x[sort_typeA])
+		database.logging.info(json.dumps(tmp_results))
 
 		results = []
 		tmp_offset = offset
@@ -163,6 +163,9 @@ class WebservicesSearchHandler(database.webapp2.RequestHandler):
 				results.append(res)
 
 		b = json.dumps({ "items" : results, "results_left" : len(list(tmp_results)) - counter, "total" : len(list(tmp_results)) })
+
+		database.logging.info("B should be : " + b)
+
 		self.response.out.write(b)
 
 
@@ -180,7 +183,10 @@ class WebservicesItemHandler(database.webapp2.RequestHandler):
 			failure = json.dumps({ "success" : False, "message" : "item_id does not exist"})
 			self.response.out.write(failure)
 
+class WebservicesTestHandler(database.webapp2.RequestHandler):
+	def get(self):
+		self.response.out.write(json.dumps([item_to_dictionary(i) for i in database.Item.all()]))
 
 app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), 
-('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler)], debug=True)
+('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), ('/webservices/test', WebservicesTestHandler)], debug=True)
 
