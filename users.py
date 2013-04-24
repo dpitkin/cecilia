@@ -2,6 +2,9 @@
 
 import database
 from database import db
+import urllib
+import json
+from google.appengine.api import urlfetch
 cgi = database.cgi
 
 class MainHandler(database.webapp2.RequestHandler):
@@ -190,7 +193,34 @@ class ShowUserShop(database.webapp2.RequestHandler):
     collections = db.GqlQuery("SELECT * FROM ItemCollection WHERE created_by_id = :1 ORDER BY created_at DESC", li.user_id)
     database.render_template(self, '/users/shop.html', { 'li' : li, 'can_show' : can_show, 'items' : items, 'collections': collections, 'xsrf_token' : token })
     
+class ExportUserToForeignApp(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    li = database.get_current_li()
+    if user and li:
+      #grab all their items
+      items = db.GqlQuery("SELECT * FROM Item WHERE created_by_id=:1", user.user_id())
+      item_array = []
+      for i in items:
+        item_hash = {'price': i.price, 'rating': i.rating, 'description': i.description, 'seller': {'username': li.nickname, 'id': li.user_id},'title': i.title}
+        item_array.append(item_hash)
+      #now generate the JSON
+      hash = {'auth_token': "1", 'email': li.email, 'google_user_id': li.user_id, 'name': li.nickname, 'items': item_array}
+      url = "https://gridlock-exchange.appspot.com/webservices/user_import"
+      try:
+        j = json.dumps(hash)
+        database.logging.info(j)
+        
+        result = urlfetch.fetch(url=url, method=urlfetch.POST, payload=j, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+        
+        database.logging.info(result.content);
+        item_contents = json.loads(result.content)
+      except Exception, e:
+        item_contents = None
+    else:
+      self.redirect('/')
+    
 app = database.webapp2.WSGIApplication([('/users/', MainHandler), ('/users/verify_user/', RegisterHandler), 
 ('/users/save_user', SaveLIHandler), ('/users/delete_user', DeleteHandler), ('/users/update_user', UpdateLIHandler),
 ('/users/submit_feedback', UserFeedbackHandler), ('/users/list_user_feedback',ListUserFeedback), ('/users/delete_user_feedback', DeleteUserFeedback),
-('/users/export_data', ExportDataHandler), ('/users/shop', ShowUserShop)], debug=True)
+('/users/export_data', ExportDataHandler), ('/users/shop', ShowUserShop), ('/users/export_user_foreign', ExportUserToForeignApp)], debug=True)
