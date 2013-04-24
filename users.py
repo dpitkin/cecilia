@@ -197,6 +197,7 @@ class ExportUserToForeignApp(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
     li = database.get_current_li()
+    partner = db.get(db.Key.from_path(int(cgi.escape(self.request.get('partner_di')))))
     if user and li:
       #grab all their items
       items = db.GqlQuery("SELECT * FROM Item WHERE created_by_id=:1", user.user_id())
@@ -205,13 +206,12 @@ class ExportUserToForeignApp(database.webapp2.RequestHandler):
         item_hash = {'price': i.price, 'rating': i.rating, 'description': i.description, 'seller': {'username': li.nickname, 'id': li.user_id},'title': i.title}
         item_array.append(item_hash)
       #now generate the JSON
-      hash = {'auth_token': "1", 'email': li.email, 'google_user_id': li.user_id, 'name': li.nickname, 'items': item_array}
+      hash = {'email': li.email, 'google_user_id': li.user_id, 'name': li.nickname, 'bio': li.desc, 'items': item_array}
       url = "https://gridlock-exchange.appspot.com/webservices/user_import"
       try:
-        j = json.dumps(hash)
-        database.logging.info(j)
-        
-        result = urlfetch.fetch(url=url, method=urlfetch.POST, payload=j, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+        final = {'user_data': json.dumps(hash), 'auth_token': 1}
+        database.logging.info(final)
+        result = urlfetch.fetch(url=url, method=urlfetch.POST, payload=urllib.urlencode(final), headers={'Content-Type': 'application/x-www-form-urlencoded'})
         
         database.logging.info(result.content);
         item_contents = json.loads(result.content)

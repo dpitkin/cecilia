@@ -15,7 +15,9 @@ View Item
 	<p>Title: {{ item_contents["title"] }}</p>
 	<p>Description: <textarea class="readonlyRichText">{{ item_contents["description"] }}</textarea></p>
 	<p>Price: ${{ item_contents["price"]}}</p>
-	<p>{{ sanitizeHTML('<img src="' + item_contents["image"] + '" />') }}</p>
+  {% if item_contents['image'] %}
+    <p>{{ sanitizeHTML('<img src="' + item_contents["image"] + '" />') }}</p>
+  {% endif %}
 </div>
 <p>
 	{% if current_li %}<a href="/threads/new_thread?about={{ item_contents["id"] }}" class="btn">Contact Seller</a>{% endif %}
