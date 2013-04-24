@@ -112,6 +112,14 @@ def handle_search(self, is_local):
 	tmp_tokens = database.string.split(query)
 	query_tokens = []
 
+	database.logging.info("before")
+	if database.db.GqlQuery("SELECT * FROM Suggestion WHERE query = :1 LIMIT 10", query).get() == None:
+		suggestion = database.Suggestion()
+		suggestion.query = query
+		suggestion.put()
+		database.logging.info("suggestion.put() executed")
+	database.logging.info("after")
+
 	for tok in tmp_tokens:
 		split_val = tok.split(":")
 		if len(split_val) == 1:
@@ -162,10 +170,11 @@ def send_new_item_notification(self, item):
 		base_url = partner.base_url
 		foreign_auth_token = partner.foreign_auth_token
 		url = base_url + "/webservices/new_item"
+
 		j = json.dumps({ "auth_token" : partner.foreign_auth_token, "data" : [item_to_dictionary(item, self)] })
 		try:
 			result = urlfetch.fetch(url=url, payload=j, method=urlfetch.POST, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-			database.logging.info("Result : " + result.content)
+			database.logging.info("Partner: " + str(partner.name) + ", Result : " + result.content)
 			self.response.out.write(result.content)
 		except Exception, e:
 			render_error(self, "Something went wrong accessing url, " + e.message)
@@ -379,11 +388,26 @@ class ExportUserHandler(database.webapp2.RequestHandler):
 				"mail" : current_li.email,
 				"items" : [item_to_dictionary(i) for i in items]
 			}
-			self.response.out.write()
+			self.response.out.write("lol")
 		else:
 			database.render_error(self, "Must be logged in")
 
+class WebservicesSearchSuggestionsHandler(database.webapp2.RequestHandler):
+	def get(self):
+		auth_token = cgi.escape(self.request.get('auth_token'))
+		query = cgi.escape(self.request.get('query'))
+		if authenticate(auth_token):
+			suggestions = database.db.GqlQuery("SELECT * FROM Suggestion WHERE query >= :1", query)
+			j = json.dumps({ "success" : True, "message" : "Here are the search suggestions", "items" : [s.query for s in suggestions] })
+			self.response.out.write(j)	
+			for s in suggestions:
+				database.logging.info("suggestion = %s", str(s.query))
+			database.logging.info("done")	
+		else:
+			render_error(self, "authentication failure")
+
+
 app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/local_search', WebservicesLocalSearchHandler), 
 ('/webservices/partner_search', WebservicesPartnerSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), ('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), 
-('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler), ('/webservices/user_import', UserImportHandler), ('/webservices/export_user', ExportUserHandler)], debug=True)
+('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler), ('/webservices/user_import', UserImportHandler), ('/webservices/export_user', ExportUserHandler), ('/webservices/search_suggestions', WebservicesSearchSuggestionsHandler)], debug=True)
 
