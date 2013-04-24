@@ -22,7 +22,7 @@ def item_to_dictionary(item, self):
 		"image" : self.request.host + item.display_image_url(),
 		"seller" : seller_to_dictionary(item.get_creator()),
 		"price" : str(item.price),
-		"url" : self.request.host + "/items/view_item?item_id=" + str(item.key().id()),
+		"url" : self.request.host + "/items/view_item?item_id=" + str(item.key().id())
 	}
 
 def local_item_to_dictionary(item, self):
