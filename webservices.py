@@ -199,7 +199,7 @@ class AddItemRatingHandler(database.webapp2.RequestHandler):
     feedback.created_by_id = cgi.escape(self.request.get('user_id'))
     feedback.item_id = cgi.escape(self.request.get('target_item_id'))
     feedback.parent = external_li
-    feedback.rating = int(cgi.escape(self.request.get('rating')))
+    feedback.rating = int(float(cgi.escape(self.request.get('rating'))))
     if feedback.rating > 5:
       feedback.rating = 5
     elif feedback.rating < 1:
@@ -229,7 +229,7 @@ class AddUserRatingHandler(database.webapp2.RequestHandler):
     if not(external_li):
       database.create_external_user(feedback.created_by_id)
     feedback.for_user_id = cgi.escape(self.request.get('target_user_id'))
-    feedback.rating = int(cgi.escape(self.request.get('rating')))
+    feedback.rating = int(float(cgi.escape(self.request.get('rating'))))
     if feedback.rating > 5:
       feedback.rating = 5
     elif feedback.rating < 1:
