@@ -44,9 +44,9 @@ def render_success(self, message):
   self.response.out.write(resp)
 
 def handle_search(self, is_local):
-  if not(authenticate(self.request.get('auth_token'))):
-    render_error("Invalid auth token.")
-    return
+	if not(authenticate(self.request.get('auth_token'))):
+		render_error("Invalid auth token.")
+		return
 	search_by_params = ["title", "description", "price"]
 	sort_types = ["title", "description", "price", "time_create", "location"]
 	query = cgi.escape(self.request.get("query"))
@@ -406,7 +406,8 @@ class WebservicesSearchSuggestionsHandler(database.webapp2.RequestHandler):
 			render_error(self, "authentication failure")
 
 app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/local_search', WebservicesLocalSearchHandler), 
-('/webservices/partner_search', WebservicesPartnerSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), ('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), 
-('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler), ('/webservices/user_import', UserImportHandler), ('/webservices/export_user', ExportUserHandler), ('/webservices/search_suggestions', WebservicesSearchSuggestionsHandler)], debug=True)
+('/webservices/partner_search', WebservicesPartnerSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), ('/webservices/add_item_rating', AddItemRatingHandler), 
+('/webservices/item', WebservicesItemHandler), ('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler),
+ ('/webservices/user_import', UserImportHandler), ('/webservices/search_suggestions', WebservicesSearchSuggestionsHandler)], debug=True)
 
 
