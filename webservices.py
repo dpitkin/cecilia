@@ -398,18 +398,42 @@ class WebservicesSearchSuggestionsHandler(database.webapp2.RequestHandler):
 		auth_token = cgi.escape(self.request.get('auth_token'))
 		query = cgi.escape(self.request.get('query'))
 		if authenticate(auth_token):
-			suggestions = database.db.GqlQuery("SELECT * FROM Suggestion WHERE query >= :1 LIMIT 10", query)
-			j = json.dumps({ "success" : True, "message" : "Here are the search suggestions", "items" : [s.query for s in suggestions] })
-			self.response.out.write(j)	
-			for s in suggestions:
-				database.logging.info("suggestion = %s", str(s.query))
-			database.logging.info("done")	
+			suggestions = database.db.GqlQuery("SELECT * FROM Suggestion WHERE query >= :1 AND query < :2 LIMIT 10", query, unicode(query) + u"\ufffd")
+			j = json.dumps({ "success" : True, "message" : "Here are the search suggestions", "items" : [{"fullString" : s.query} for s in suggestions] })
+			self.response.out.write(j)		
 		else:
 			render_error(self, "authentication failure")
+
+class WebservicesLocalSearchSuggestionsHandler(database.webapp2.RequestHandler):
+	def get(self):
+		query = cgi.escape(self.request.get('query'))
+		suggestions = database.db.GqlQuery("SELECT * FROM Suggestion WHERE query >= :1 LIMIT 5", query)
+		partners = database.db.GqlQuery("SELECT * FROM TrustedPartner")
+		results = [{"name" : "Local Results", "items" : [{"fullString" : s.query} for s in suggestions]}]
+		for partner in partners:
+			base_url = partner.base_url
+			foreign_auth_token = partner.foreign_auth_token
+			url = base_url + "/webservices/search_suggestions?auth_token=" + foreign_auth_token + "&query=" + str(query)
+			try:
+				database.logging.info("A")
+				result = urlfetch.fetch(url=url, method=urlfetch.GET, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+				result_json = json.loads(result.content)
+
+				database.logging.info("C, " + result.content)				
+				results.append({"name" : partner.name, "items" : result_json["items"]})
+				database.logging.info("D")				
+			except Exception, e:
+				database.logging.info("Error : %s", str(e))
+
+		j = json.dumps({ "success" : True, "message" : "Here are the search suggestions", "items" : results })
+		self.response.out.write(j)	
+		for s in suggestions:
+			database.logging.info("suggestion = %s", str(s.query))
+		database.logging.info("done")
 
 
 app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/local_search', WebservicesLocalSearchHandler), 
 ('/webservices/partner_search', WebservicesPartnerSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), ('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), 
-('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler), ('/webservices/user_import', UserImportHandler), ('/webservices/export_user', ExportUserHandler), ('/webservices/search_suggestions', WebservicesSearchSuggestionsHandler)], debug=True)
+('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler), ('/webservices/user_import', UserImportHandler), ('/webservices/export_user', ExportUserHandler), ('/webservices/search_suggestions', WebservicesSearchSuggestionsHandler), ('/webservices/local_search_suggestions', WebservicesLocalSearchSuggestionsHandler)], debug=True)
 
 

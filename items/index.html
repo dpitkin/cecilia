@@ -9,7 +9,42 @@ Items
 
 <form action="/items/search" method="get">
   <div class="well ui-widget">Advanced Search: 
-    <input type="text" id="advanced_search" name="query"/><br/>
+    <input type="text" data-provide="typeahead" id="advanced_search" name="query"/><br/>
+    <ul id="search_results">
+    </ul>
+    <script>
+    function suggestion_clicked(val){
+      $("#advanced_search").val(val);
+      $("#advanced_search").focus();
+      $("#search_results").html("");
+    }
+
+    $('#advanced_search').typeahead({
+        source: function (query, typeahead) {
+          console.log(typeahead);
+          console.log(query)
+          $("#search_results").html("Loading...");
+            $.get("/webservices/local_search_suggestions", { 'query' : query }, function(resp){
+              console.log(resp);
+              j = JSON.parse(resp);
+              //for (object in j) {
+              //  var name = j.name
+             // }
+             $("#search_results").html("");
+              var ret = j["items"];
+              $.each(ret, function(index, r){
+                console.log(r);
+                $("#search_results").append("<li><b>" + r.name + "</b></li>");
+                for (var i = 0; i < r.items.length; i++) {
+                  r_2 = r.items[i];
+                  $("#search_results").append("<li><a href=\"#\" onclick=\"suggestion_clicked('" + r_2["fullString"] + "')\">" + r_2["fullString"] + "</a></li>");
+                };
+              });
+            });
+        },
+        property: "item"
+    });
+    </script>
     <div id="search_forms">
       Limit: <select name="query_limit" id="query_limit" value="10">
           <option value="10">10</option>

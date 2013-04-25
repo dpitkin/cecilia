@@ -18,7 +18,11 @@ class MainHandler(database.webapp2.RequestHandler):
     else:
       items = database.db.GqlQuery("SELECT * FROM Item WHERE expiration_date >= :1 AND is_active = :2 AND deactivated = :3", database.datetime.date.today(), True, False)
     trusted_partners = database.TrustedPartner.all()
-    database.render_template(self, 'items/index.html', {'items': items, 'xsrf_token' : token, "partners" : trusted_partners })
+    suggestions = database.db.GqlQuery("SELECT * FROM Suggestion")
+    queries = []
+    for s in suggestions:
+      queries.append(s.query)
+    database.render_template(self, 'items/index.html', {'items': items, 'xsrf_token' : token, "partners" : trusted_partners, 'queries' : queries })
 
 class NewHandler(database.webapp2.RequestHandler):
   def get(self):
@@ -237,7 +241,7 @@ class ForeignFeedbackHandler(database.webapp2.RequestHandler):
       else:
         self.redirect('/')
         return
-# WTF, someone implement this
+
 #target_item_id: STRING
 #user_name: STRING
 #user_id: STRING
