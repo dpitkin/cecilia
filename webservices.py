@@ -9,7 +9,7 @@ cgi = database.cgi
 
 
 def authenticate(auth_token):
-	if database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE local_auth_token = :1", auth_token) != None:
+	if database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE local_auth_token = :1", auth_token).count() > 0:
 		return True
 	else:
 		return False
@@ -312,8 +312,12 @@ class SendMessageHandler(database.webapp2.RequestHandler):
 		#fill out the thread first
 		thread = None
 		database.logging.info("Destination : " + self.request.get('destination_conversation_id'))
-		if self.request.get('destination_conversation_id'):
-			thread = db.get(db.Key.from_path('Thread', int(cgi.escape(self.request.get('destination_conversation_id')))))
+		try:
+			if self.request.get('destination_conversation_id'):
+				thread = db.get(db.Key.from_path('Thread', int(cgi.escape(self.request.get('destination_conversation_id')))))
+		except Exception, e:
+			database.logging.info("invalid destination conversation id: " + self.request.get("destination_conversation_id"))
+
 		err_mess = ""
 		success = False
 		external_li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", cgi.escape(self.request.get('source_user_id'))).get()

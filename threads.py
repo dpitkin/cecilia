@@ -145,6 +145,7 @@ class CreateRemoteThreadHandler(database.webapp2.RequestHandler):
     user = database.users.get_current_user()
     current_li = database.get_current_li()
     if user and current_li.verify_xsrf_token(self):
+      database.logging.info("XSRF verified")
       item_title = cgi.escape(self.request.get('item_title'))
       item_id = cgi.escape(self.request.get('item_id'))
       message = cgi.escape(self.request.get('message'))
@@ -167,13 +168,17 @@ class CreateRemoteThreadHandler(database.webapp2.RequestHandler):
           "destination_user_id" : thread.recipient_id,
           "subject" : thread.title,
           "message" : message,
-          "source_conversation_id" : thread.key().id()
+          "source_conversation_id" : thread.key().id(),
+          "destination_conversation_id" : "-1"
         }
+
+        database.logging.info("HERE! " + str(params))
 
         base_url = partner.base_url
         url = base_url + "/webservices/send_message"
 
         try:
+          database.logging.info("Making request to " + url)
           result = urlfetch.fetch(url=url, payload=urllib.urlencode(params), method=urlfetch.POST, headers={'Content-Type': 'application/x-www-form-urlencoded'})
           database.logging.info("Result : " + result.content)
           j_resp = json.loads(result.content)
