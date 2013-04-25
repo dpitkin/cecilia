@@ -358,7 +358,7 @@ class UserImportHandler(database.webapp2.RequestHandler):
     database.logging.info(self.request.get('user_data'))
     j = json.loads(self.request.get('user_data'))
     user_id = str(cgi.escape(j['google_user_id']))
-    if not(authenticate(j['auth_token'])):
+    if not(self.request.get('auth_token')):
       render_error(self, "Invalid auth token.")
       return
     #check if this user already exists in our application
