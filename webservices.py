@@ -19,7 +19,7 @@ def item_to_dictionary(item, self):
 		"id" : item.key().id(),
 		"title" : item.title,
 		"description" : item.description,
-		"image" : self.request.host + item.display_image_url(),
+		"image" : "https://" + self.request.host + item.display_image_url(),
 		"seller" : seller_to_dictionary(item.get_creator()),
 		"price" : str(item.price),
 		"url" : "https://" + self.request.host + "/items/view_item?item_id=" + str(item.key().id()),
