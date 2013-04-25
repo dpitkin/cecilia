@@ -1,0 +1,28 @@
+{% extends "layouts/layout.html" %}
+{% block title %}
+New Thread
+{% endblock %}
+{% block content %}
+<script type="text/javascript" src="/js/threads.js"></script>
+<h3>New Thread</h3>
+<form action="/threads/create_remote_thread" method="post">
+	<div class="well">
+		<input type="hidden" name="xsrf_token" value="{{xsrf_token}}" />
+		{{ sanitizeHTML('<input type="hidden" name="item_id" value="' + about + '" />') }}
+		{{ sanitizeHTML('<input type="hidden" name="remote_user_id" value="' + remote_user_id + '" />') }}
+		{{ sanitizeHTML('<input type="hidden" name="partner_id" value="' + partner_id + '" />') }}
+		{{ sanitizeHTML('<input type="hidden" name="item_title" value="' + item_title + '" />') }}
+
+		<p>
+			<label>Recipient:</label>
+			<b>{{ remote_username }} &lt;{{ remote_user_id }}&gt; </b>
+			<p><label>Title:*</label>{{ sanitizeHTML('<input type="text" id="title" name="title" value="RE: ' + item_title + '" />') }}</p>
+			<p><label>Message:</label><textarea name="message" rows="4" cols="50"></textarea> </p>
+	</div>
+		<p>
+			<button type="submit" value="submit" class="btn btn-primary">Post Thread</button>
+			<a href="/" class="btn">Cancel</a>
+		</p>
+	</form>
+{% endblock %}
+

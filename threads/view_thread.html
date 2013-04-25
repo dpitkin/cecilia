@@ -5,11 +5,13 @@
 {% block content %}
 
 <h3>{{ thread.title }}
+	{% if not(thread.external_conversation) %}
 {% if thread.created_by_id == current_li.user_id %}
 ( <a href="/users/shop?user_id={{thread.recipient_id}}">{{ thread.get_recipient().get_display_name() }}</a> )
 {% else %}
 ( <a href="/users/shop?user_id={{thread.created_by_id}}">{{ thread.get_creator().get_display_name() }}</a> )
 {% endif %}
+	{% endif %}
 </h3>
 {% if thread.item_details %}
   <p>{{ thread.item_details }} </p>
@@ -38,7 +40,11 @@
 				{% endif %}
 				
 			</td>
+			{% if sender %}
 			<td><strong><a href="/users/shop?user_id={{sender.user_id}}">{{ sender.get_display_name()}}</a> (ID: {{child.get_sender().user_id}})</strong></td>
+			{% else %}
+			<td><strong>{{ child.created_by_id }}</strong></td>
+			{% endif %}
 		</tr>
 		<tr>
 			<td></td>

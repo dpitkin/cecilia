@@ -13,7 +13,7 @@ class MainHandler(database.webapp2.RequestHandler):
     if user:
       li = database.get_current_li()
       token = li.create_xsrf_token()
-      database.render_template(self, '/users/index.html', {'li': li, 'xsrf_token' : token})
+      database.render_template(self, '/users/index.html', {'li': li, 'xsrf_token' : token, 'partners': database.TrustedPartner.all()})
     else:
       self.redirect('/')
 
@@ -120,6 +120,34 @@ class DeleteHandler(database.webapp2.RequestHandler):
     else:
       self.redirect('/')
       
+class SubmitForeignUserFeedback(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    li = database.get_current_li()
+    partner = db.get(db.Key.from_path('TrustedPartner', int(cgi.escape(self.request.get('partner_id')))))
+    if user and li and partner and li.verify_xsrf_token(self):
+      #grab all their items
+      url = partner.base_url + "/webservices/add_user_rating" 
+      try:
+        final = {'target_user_id': self.request.get('target_user_id'), 'user_name': li.nickname, 'user_id': li.user_id, 
+        'rating': int(self.request.get('rating')), 'feedback': 'Rating', 'auth_token': partner.foreign_auth_token}
+        database.logging.info(final)
+        result = urlfetch.fetch(url=url, method=urlfetch.POST, payload=urllib.urlencode(final), headers={'Content-Type': 'application/x-www-form-urlencoded'})
+        
+        database.logging.info(result.content);
+        item_contents = json.loads(result.content)
+      except Exception, e:
+        item_contents = None
+    self.redirect('/')
+      
+#target_user_id: STRING
+#user_name: STRING
+#user_id: STRING
+#rating: FLOAT (1-5)
+#feedback: STRING
+#feedback_id: STRING
+
+      
 class UserFeedbackHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
@@ -197,7 +225,8 @@ class ExportUserToForeignApp(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
     li = database.get_current_li()
-    if user and li:
+    partner = db.get(db.Key.from_path('TrustedPartner', int(cgi.escape(self.request.get('partner_id')))))
+    if user and li and partner and li.verify_xsrf_token(self):
       #grab all their items
       items = db.GqlQuery("SELECT * FROM Item WHERE created_by_id=:1", user.user_id())
       item_array = []
@@ -205,22 +234,28 @@ class ExportUserToForeignApp(database.webapp2.RequestHandler):
         item_hash = {'price': i.price, 'rating': i.rating, 'description': i.description, 'seller': {'username': li.nickname, 'id': li.user_id},'title': i.title}
         item_array.append(item_hash)
       #now generate the JSON
-      hash = {'auth_token': "1", 'email': li.email, 'google_user_id': li.user_id, 'name': li.nickname, 'items': item_array}
-      url = "https://gridlock-exchange.appspot.com/webservices/user_import"
+      hash = {'email': li.email, 'google_user_id': li.user_id, 'name': li.nickname, 'bio': li.desc, 'items': item_array}
+      url = partner.base_url + "/webservices/user_import"
       try:
-        j = json.dumps(hash)
-        database.logging.info(j)
-        
-        result = urlfetch.fetch(url=url, method=urlfetch.POST, payload=j, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+        final = {'user_data': json.dumps(hash), 'auth_token': partner.foreign_auth_token}
+        database.logging.info(final)
+        result = urlfetch.fetch(url=url, method=urlfetch.POST, payload=urllib.urlencode(final), headers={'Content-Type': 'application/x-www-form-urlencoded'})
         
         database.logging.info(result.content);
         item_contents = json.loads(result.content)
       except Exception, e:
         item_contents = None
+      if item_contents['success']:
+        for i in items:
+          i.delete()
+        li.delete()
+      self.redirect('/')
+      return
     else:
       self.redirect('/')
     
 app = database.webapp2.WSGIApplication([('/users/', MainHandler), ('/users/verify_user/', RegisterHandler), 
 ('/users/save_user', SaveLIHandler), ('/users/delete_user', DeleteHandler), ('/users/update_user', UpdateLIHandler),
 ('/users/submit_feedback', UserFeedbackHandler), ('/users/list_user_feedback',ListUserFeedback), ('/users/delete_user_feedback', DeleteUserFeedback),
-('/users/export_data', ExportDataHandler), ('/users/shop', ShowUserShop), ('/users/export_user_foreign', ExportUserToForeignApp)], debug=True)
+('/users/export_data', ExportDataHandler), ('/users/shop', ShowUserShop), ('/users/export_user_foreign', ExportUserToForeignApp),
+('/users/submit_foreign_user_feedback', SubmitForeignUserFeedback)], debug=True)

@@ -9,21 +9,24 @@ cgi = database.cgi
 
 
 def authenticate(auth_token):
-	return True # DELETE THIS LINE WHEN FOREIGN AUTH TOKENS ARE BEING USED PROPERLY
 	if database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE local_auth_token = :1", auth_token) != None:
 		return True
 	else:
 		return False
 
 def item_to_dictionary(item, self):
+	if item.display_image_url() == '':
+		item_url = ''
+	else:
+		item_url = "https://" + self.request.host + item.display_image_url()
 	return {
 		"id" : item.key().id(),
 		"title" : item.title,
 		"description" : item.description,
-		"image" : self.request.host + item.display_image_url(),
+		"image" : item_url,
 		"seller" : seller_to_dictionary(item.get_creator()),
 		"price" : str(item.price),
-		"url" : self.request.host + "/items/view_item?item_id=" + str(item.key().id()),
+		"url" : "https://" + self.request.host + "/items/view_item?item_id=" + str(item.key().id()),
 		"created_at" : item.created_at.strftime("%m/%d/%Y"),
 		"expiration_date" : item.expiration_date.strftime("%m/%d/%Y")
 	}
@@ -44,6 +47,9 @@ def render_success(self, message):
   self.response.out.write(resp)
 
 def handle_search(self, is_local):
+	if not(authenticate(self.request.get('auth_token'))):
+		render_error(self, "Invalid auth token.")
+		return
 	search_by_params = ["title", "description", "price"]
 	sort_types = ["title", "description", "price", "time_create", "location"]
 	query = cgi.escape(self.request.get("query"))
@@ -183,6 +189,9 @@ def send_new_item_notification(self, item):
 class AddItemRatingHandler(database.webapp2.RequestHandler):
   def post(self):
     #fill out the item feedback
+    if not(authenticate(self.request.get('auth_token'))):
+      render_error(self, "Invalid auth token.")
+      return
     external_li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", cgi.escape(self.request.get('user_id'))).get()
     if not(external_li):
       external_li = database.create_external_user(cgi.escape(self.request.get('user_id')))
@@ -210,6 +219,9 @@ class AddItemRatingHandler(database.webapp2.RequestHandler):
     
 class AddUserRatingHandler(database.webapp2.RequestHandler):
   def post(self):
+    if not(authenticate(self.request.get('auth_token'))):
+      render_error(self, "Invalid auth token.")
+      return
     #fill out the user feedback
     feedback = database.UserFeedback()
     feedback.created_by_id = cgi.escape(self.request.get('user_id'))
@@ -235,12 +247,12 @@ class AddUserRatingHandler(database.webapp2.RequestHandler):
     self.response.out.write(j)
   
 class WebservicesSearchHandler(database.webapp2.RequestHandler):
-	def get(self):
-		handle_search(self, False)
+  def get(self):
+    handle_search(self, False)
 
 class WebservicesLocalSearchHandler(database.webapp2.RequestHandler):
-	def get(self):
-		handle_search(self, True)
+  def get(self):
+    handle_search(self, True)
 
 class WebservicesPartnerSearchHandler(database.webapp2.RequestHandler):
 	def get(self):
@@ -259,7 +271,7 @@ class WebservicesPartnerSearchHandler(database.webapp2.RequestHandler):
 			url = base_url + "/webservices/search?auth_token=" + foreign_auth_token + "&query=" + query + "&limit=" + limit + "&offset=" + offset + "&search_by=" + search_by + "&sort_options=" + sort_options
 			try:
 				result = urlfetch.fetch(url=url, method=urlfetch.GET, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-				self.response.out.write(result.content)
+				self.response.out.write(cgi.escape(result.content))
 				return
 			except Exception, e:
 				render_error(self, "Something went wrong accessing url, " + e.message)
@@ -293,43 +305,52 @@ class WebservicesNewItemRequestHandler(database.webapp2.RequestHandler):
 			render_error(self, "authentication failure")
     
 class SendMessageHandler(database.webapp2.RequestHandler):
-  def post(self):
-    #fill out the thread first
-    thread = db.get(db.Key.from_path('Thread', cgi.escape(self.request.get('destination_conversation_id'))))
-    err_mess = ""
-    success = False
-    external_li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", cgi.escape(self.request.get('source_user_id'))).get()
-    if not(external_li):
-      external_li = database.create_external_user(cgi.escape(self.request.get('source_user_id')))
-    if thread:
-      if thread.created_by_id != external_li.user_id and thread.recipient_id != external_li.user_id:
-        j = json.dumps({"success": False, "message": "Don't try and mess with other people's messages!", "conversation_id": "-1"})
-        self.response.out.write(j)
-        return
-    else:
-      thread = database.Thread(external_conversation=True)
-      thread.title = cgi.escape(self.request.get('subject'))
-      thread.recipient_id = cgi.escape(self.request.get('destination_user_id'))
-      thread.created_by_id = external_li.user_id
-      #need to fill out item details next!!
-      
-      thread.put()
-    
-    #now create a new message
-    message = database.Message(parent=thread, read=False)
-    message.body = cgi.escape(self.request.get('message'))
-    message.created_by_id = external_li.user_id
-    message.recipient_id = cgi.escape(self.request.get('destination_user_id'))
-    try:
-      message.put()
-      err_mess = "Saved message successfully."
-      success = True
-    except TransactionFailedError:
-      err_mess = "Could not save message."
-      success = False
-    
-    j = json.dumps({"success": success, "message": err_mess, "conversation_id": str(thread.key().id())})
-    self.response.out.write(j)
+	def post(self):
+		if not(authenticate(self.request.get('auth_token'))):
+			render_error(self, "Invalid auth token.")
+			return
+		#fill out the thread first
+		thread = None
+		database.logging.info("Destination : " + self.request.get('destination_conversation_id'))
+		if self.request.get('destination_conversation_id'):
+			thread = db.get(db.Key.from_path('Thread', int(cgi.escape(self.request.get('destination_conversation_id')))))
+		err_mess = ""
+		success = False
+		external_li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", cgi.escape(self.request.get('source_user_id'))).get()
+		database.logging.info("external_li : " + external_li)
+		if not(external_li):
+			database.logging.info("creating new external LI")
+			external_li = database.create_external_user(cgi.escape(self.request.get('source_user_id')))
+		if thread:
+			if thread.created_by_id != external_li.user_id and thread.recipient_id != external_li.user_id:
+				j = json.dumps({"success": False, "message": "Don't try and mess with other people's messages!", "conversation_id": "-1"})
+				self.response.out.write(j)
+				return
+		else:
+			thread = database.Thread(external_conversation=True)
+			if self.request.get('source_conversation_id'):
+				thread.external_conversation_id = cgi.escape(self.request.get('source_conversation_id'))
+			thread.title = cgi.escape(self.request.get('subject'))
+			thread.recipient_id = cgi.escape(self.request.get('destination_user_id'))
+			thread.created_by_id = external_li.user_id
+	      #need to fill out item details next!!
+			thread.put()
+	    
+	    #now create a new message
+		message = database.Message(parent=thread, read=False)
+		message.body = cgi.escape(self.request.get('message'))
+		message.created_by_id = external_li.user_id
+		message.recipient_id = cgi.escape(self.request.get('destination_user_id'))
+		try:
+			message.put()
+			err_mess = "Saved message successfully."
+			success = True
+		except TransactionFailedError:
+			err_mess = "Could not save message."
+			success = False
+	    
+		j = json.dumps({"success": success, "message": err_mess, "conversation_id": str(thread.key().id())})
+		self.response.out.write(j)
     
 class UserImportHandler(database.webapp2.RequestHandler):
   def post(self):
@@ -337,6 +358,9 @@ class UserImportHandler(database.webapp2.RequestHandler):
     database.logging.info(self.request.get('user_data'))
     j = json.loads(self.request.get('user_data'))
     user_id = str(cgi.escape(j['google_user_id']))
+    if not(authenticate(j['auth_token'])):
+      render_error(self, "Invalid auth token.")
+      return
     #check if this user already exists in our application
     li = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", user_id).get()
     if li:
@@ -369,29 +393,12 @@ class UserImportHandler(database.webapp2.RequestHandler):
         try:
           item.put()
         except TransactionFailedError:
-          render_error("Could not save item to the datastore.")
+          render_error(self, "Could not save item to the datastore.")
           return
       
       #we've now created the user and imported all of their items, so now lets write a success response
       render_success(self, "User successfully imported.")
       return
-
-class ExportUserHandler(database.webapp2.RequestHandler):
-	def get(self):
-		user = database.users.get_current_user()
-		current_li = database.get_current_li()
-		if user and current_li:
-			items = db.GqlQuery("SELECT * FROM Item WHERE created_by_id = :1 ORDER BY created_at DESC", current_li.user_id)
-			user_hash = {
-				"user_id" : current_li.key().id(),
-				"google_user_id" : current_li.user_id,
-				"username" : current_li.nickname,
-				"mail" : current_li.email,
-				"items" : [item_to_dictionary(i, self) for i in items]
-			}
-			self.response.out.write(json.dumps(user_hash))
-		else:
-			database.render_error(self, "Must be logged in")
 
 class WebservicesSearchSuggestionsHandler(database.webapp2.RequestHandler):
 	def get(self):
@@ -431,9 +438,9 @@ class WebservicesLocalSearchSuggestionsHandler(database.webapp2.RequestHandler):
 			database.logging.info("suggestion = %s", str(s.query))
 		database.logging.info("done")
 
-
 app = database.webapp2.WSGIApplication([('/webservices/search', WebservicesSearchHandler), ('/webservices/local_search', WebservicesLocalSearchHandler), 
-('/webservices/partner_search', WebservicesPartnerSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), ('/webservices/add_item_rating', AddItemRatingHandler), ('/webservices/item', WebservicesItemHandler), 
-('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler), ('/webservices/user_import', UserImportHandler), ('/webservices/export_user', ExportUserHandler), ('/webservices/search_suggestions', WebservicesSearchSuggestionsHandler), ('/webservices/local_search_suggestions', WebservicesLocalSearchSuggestionsHandler)], debug=True)
+('/webservices/partner_search', WebservicesPartnerSearchHandler), ('/webservices/add_user_rating', AddUserRatingHandler), ('/webservices/add_item_rating', AddItemRatingHandler), 
+('/webservices/item', WebservicesItemHandler), ('/webservices/new_item', WebservicesNewItemRequestHandler), ('/webservices/send_message', SendMessageHandler),
+ ('/webservices/user_import', UserImportHandler), ('/webservices/search_suggestions', WebservicesSearchSuggestionsHandler), ('/webservices/local_search_suggestions', WebservicesLocalSearchSuggestionsHandler)], debug=True)
 
 
