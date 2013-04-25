@@ -45,7 +45,7 @@ def render_success(self, message):
 
 def handle_search(self, is_local):
 	if not(authenticate(self.request.get('auth_token'))):
-		render_error("Invalid auth token.")
+		render_error(self, "Invalid auth token.")
 		return
 	search_by_params = ["title", "description", "price"]
 	sort_types = ["title", "description", "price", "time_create", "location"]
@@ -187,7 +187,7 @@ class AddItemRatingHandler(database.webapp2.RequestHandler):
   def post(self):
     #fill out the item feedback
     if not(authenticate(self.request.get('auth_token'))):
-      render_error("Invalid auth token.")
+      render_error(self, "Invalid auth token.")
       return
     external_li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", cgi.escape(self.request.get('user_id'))).get()
     if not(external_li):
@@ -217,7 +217,7 @@ class AddItemRatingHandler(database.webapp2.RequestHandler):
 class AddUserRatingHandler(database.webapp2.RequestHandler):
   def post(self):
     if not(authenticate(self.request.get('auth_token'))):
-      render_error("Invalid auth token.")
+      render_error(self, "Invalid auth token.")
       return
     #fill out the user feedback
     feedback = database.UserFeedback()
@@ -302,52 +302,52 @@ class WebservicesNewItemRequestHandler(database.webapp2.RequestHandler):
 			render_error(self, "authentication failure")
     
 class SendMessageHandler(database.webapp2.RequestHandler):
-  def post(self):
-    if not(authenticate(self.request.get('auth_token'))):
-      render_error("Invalid auth token.")
-      return
-    #fill out the thread first
-	thread = None
-	database.logging.info("Destination : " + self.request.get('destination_conversation_id'))
-	if self.request.get('destination_conversation_id'):
-		thread = db.get(db.Key.from_path('Thread', int(cgi.escape(self.request.get('destination_conversation_id')))))
-	err_mess = ""
-	success = False
-	external_li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", cgi.escape(self.request.get('source_user_id'))).get()
-	database.logging.info("external_li : " + external_li)
-	if not(external_li):
-		database.logging.info("creating new external LI")
-		external_li = database.create_external_user(cgi.escape(self.request.get('source_user_id')))
-	if thread:
-		if thread.created_by_id != external_li.user_id and thread.recipient_id != external_li.user_id:
-			j = json.dumps({"success": False, "message": "Don't try and mess with other people's messages!", "conversation_id": "-1"})
-			self.response.out.write(j)
-			return
-	else:
-		thread = database.Thread(external_conversation=True)
-		if self.request.get('source_conversation_id'):
-			thread.external_conversation_id = cgi.escape(self.request.get('source_conversation_id'))
-		thread.title = cgi.escape(self.request.get('subject'))
-		thread.recipient_id = cgi.escape(self.request.get('destination_user_id'))
-		thread.created_by_id = external_li.user_id
-      #need to fill out item details next!!
-		thread.put()
-    
-    #now create a new message
-	message = database.Message(parent=thread, read=False)
-	message.body = cgi.escape(self.request.get('message'))
-	message.created_by_id = external_li.user_id
-	message.recipient_id = cgi.escape(self.request.get('destination_user_id'))
-	try:
-		message.put()
-		err_mess = "Saved message successfully."
-		success = True
-	except TransactionFailedError:
-		err_mess = "Could not save message."
+	def post(self):
+  		if not(authenticate(self.request.get('auth_token'))):
+    		render_error(self, "Invalid auth token.")
+    		return
+    	#fill out the thread first
+		thread = None
+		database.logging.info("Destination : " + self.request.get('destination_conversation_id'))
+		if self.request.get('destination_conversation_id'):
+			thread = db.get(db.Key.from_path('Thread', int(cgi.escape(self.request.get('destination_conversation_id')))))
+		err_mess = ""
 		success = False
-    
-	j = json.dumps({"success": success, "message": err_mess, "conversation_id": str(thread.key().id())})
-	self.response.out.write(j)
+		external_li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", cgi.escape(self.request.get('source_user_id'))).get()
+		database.logging.info("external_li : " + external_li)
+		if not(external_li):
+			database.logging.info("creating new external LI")
+			external_li = database.create_external_user(cgi.escape(self.request.get('source_user_id')))
+		if thread:
+			if thread.created_by_id != external_li.user_id and thread.recipient_id != external_li.user_id:
+				j = json.dumps({"success": False, "message": "Don't try and mess with other people's messages!", "conversation_id": "-1"})
+				self.response.out.write(j)
+				return
+		else:
+			thread = database.Thread(external_conversation=True)
+			if self.request.get('source_conversation_id'):
+				thread.external_conversation_id = cgi.escape(self.request.get('source_conversation_id'))
+			thread.title = cgi.escape(self.request.get('subject'))
+			thread.recipient_id = cgi.escape(self.request.get('destination_user_id'))
+			thread.created_by_id = external_li.user_id
+	      #need to fill out item details next!!
+			thread.put()
+	    
+	    #now create a new message
+		message = database.Message(parent=thread, read=False)
+		message.body = cgi.escape(self.request.get('message'))
+		message.created_by_id = external_li.user_id
+		message.recipient_id = cgi.escape(self.request.get('destination_user_id'))
+		try:
+			message.put()
+			err_mess = "Saved message successfully."
+			success = True
+		except TransactionFailedError:
+			err_mess = "Could not save message."
+			success = False
+	    
+		j = json.dumps({"success": success, "message": err_mess, "conversation_id": str(thread.key().id())})
+		self.response.out.write(j)
     
 class UserImportHandler(database.webapp2.RequestHandler):
   def post(self):
@@ -356,7 +356,7 @@ class UserImportHandler(database.webapp2.RequestHandler):
     j = json.loads(self.request.get('user_data'))
     user_id = str(cgi.escape(j['google_user_id']))
     if not(authenticate(j['auth_token'])):
-      render_error("Invalid auth token.")
+      render_error(self, "Invalid auth token.")
       return
     #check if this user already exists in our application
     li = db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", user_id).get()
@@ -390,7 +390,7 @@ class UserImportHandler(database.webapp2.RequestHandler):
         try:
           item.put()
         except TransactionFailedError:
-          render_error("Could not save item to the datastore.")
+          render_error(self, "Could not save item to the datastore.")
           return
       
       #we've now created the user and imported all of their items, so now lets write a success response
