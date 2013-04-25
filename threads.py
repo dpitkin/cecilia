@@ -180,6 +180,10 @@ class CreateRemoteThreadHandler(database.webapp2.RequestHandler):
             database.logging.info("Error with result: " + result)
             thread.delete()
             self.redirect("/")
+          
+          foreign_conversation_id = cgi.escape(j_resp["conversation_id"])
+          thread.external_conversation_id = foreign_conversation_id
+          thread.put()
 
           message = database.Message(parent=thread)
           message.body = cgi.escape(self.request.get('message'))

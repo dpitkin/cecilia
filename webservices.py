@@ -295,41 +295,44 @@ class WebservicesNewItemRequestHandler(database.webapp2.RequestHandler):
 class SendMessageHandler(database.webapp2.RequestHandler):
   def post(self):
     #fill out the thread first
-    thread = db.get(db.Key.from_path('Thread', int(cgi.escape(self.request.get('destination_conversation_id')))))
-    err_mess = ""
-    success = False
-    external_li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", cgi.escape(self.request.get('source_user_id'))).get()
-    if not(external_li):
-      external_li = database.create_external_user(cgi.escape(self.request.get('source_user_id')))
-    if thread:
-      if thread.created_by_id != external_li.user_id and thread.recipient_id != external_li.user_id:
-        j = json.dumps({"success": False, "message": "Don't try and mess with other people's messages!", "conversation_id": "-1"})
-        self.response.out.write(j)
-        return
-    else:
-      thread = database.Thread(external_conversation=True)
-      thread.title = cgi.escape(self.request.get('subject'))
-      thread.recipient_id = cgi.escape(self.request.get('destination_user_id'))
-      thread.created_by_id = external_li.user_id
+	thread = None
+	if self.request.get('destination_conversation_id'):
+		thread = db.get(db.Key.from_path('Thread', cgi.escape(self.request.get('destination_conversation_id'))))
+	err_mess = ""
+	success = False
+	external_li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", cgi.escape(self.request.get('source_user_id'))).get()
+	if not(external_li):
+		external_li = database.create_external_user(cgi.escape(self.request.get('source_user_id')))
+	if thread:
+		if thread.created_by_id != external_li.user_id and thread.recipient_id != external_li.user_id:
+			j = json.dumps({"success": False, "message": "Don't try and mess with other people's messages!", "conversation_id": "-1"})
+			self.response.out.write(j)
+			return
+	else:
+		thread = database.Thread(external_conversation=True)
+		if self.request.get('source_conversation_id'):
+			thread.external_conversation_id = cgi.escape(self.request.get('source_conversation_id'))
+		thread.title = cgi.escape(self.request.get('subject'))
+		thread.recipient_id = cgi.escape(self.request.get('destination_user_id'))
+		thread.created_by_id = external_li.user_id
       #need to fill out item details next!!
-      
-      thread.put()
+		thread.put()
     
     #now create a new message
-    message = database.Message(parent=thread, read=False)
-    message.body = cgi.escape(self.request.get('message'))
-    message.created_by_id = external_li.user_id
-    message.recipient_id = cgi.escape(self.request.get('destination_user_id'))
-    try:
-      message.put()
-      err_mess = "Saved message successfully."
-      success = True
-    except TransactionFailedError:
-      err_mess = "Could not save message."
-      success = False
+	message = database.Message(parent=thread, read=False)
+	message.body = cgi.escape(self.request.get('message'))
+	message.created_by_id = external_li.user_id
+	message.recipient_id = cgi.escape(self.request.get('destination_user_id'))
+	try:
+		message.put()
+		err_mess = "Saved message successfully."
+		success = True
+	except TransactionFailedError:
+		err_mess = "Could not save message."
+		success = False
     
-    j = json.dumps({"success": success, "message": err_mess, "conversation_id": str(thread.key().id())})
-    self.response.out.write(j)
+	j = json.dumps({"success": success, "message": err_mess, "conversation_id": str(thread.key().id())})
+	self.response.out.write(j)
     
 class UserImportHandler(database.webapp2.RequestHandler):
   def post(self):
