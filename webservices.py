@@ -16,7 +16,7 @@ def authenticate(auth_token):
 
 def item_to_dictionary(item, self):
 	if item.display_image_url() == '':
-		item_url = None
+		item_url = ''
 	else:
 		item_url = "https://" + self.request.host + item.display_image_url()
 	return {
