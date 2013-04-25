@@ -433,7 +433,7 @@ class WebservicesLocalSearchSuggestionsHandler(database.webapp2.RequestHandler):
 				database.logging.info("Error : %s", str(e))
 
 		j = json.dumps({ "success" : True, "message" : "Here are the search suggestions", "items" : results })
-		self.response.out.write(j)	
+		self.response.out.write(cgi.escape(j))	
 		for s in suggestions:
 			database.logging.info("suggestion = %s", str(s.query))
 		database.logging.info("done")
