@@ -209,7 +209,7 @@ class FeedbackHandler(database.webapp2.RequestHandler):
     else:
       self.redirect('/')
       
-class ForeignFeedbackHandler(database.webapp2.RequestHandler):
+class ForeignItemFeedbackHandler(database.webapp2.RequestHandler):
   def post(self):
     user = database.users.get_current_user()
     li = database.get_current_li()
@@ -224,7 +224,7 @@ class ForeignFeedbackHandler(database.webapp2.RequestHandler):
         base_url = partner.base_url
         foreign_auth_token = partner.foreign_auth_token
         url = base_url + "/webservices/add_item_rating"
-        form_fields = {'target_item_id': str(target_item_id), 'user_name': user_name, 'user_id': user_id, 'rating': rating, 'feedback': feedback}
+        form_fields = {'target_item_id': str(target_item_id), 'user_name': user_name, 'user_id': user_id, 'rating': rating, 'feedback': feedback, 'auth_token': foreign_auth_token}
         post_params = urllib.urlencode(form_fields)
         try:
           result = urlfetch.fetch(url=url, method=urlfetch.POST, payload=post_params, headers={'Content-Type': 'application/x-www-form-urlencoded'})
@@ -351,6 +351,8 @@ class RemoteItemHandler(database.webapp2.RequestHandler):
     partner_id = cgi.escape(self.request.get('partner_id'))
     partner = database.db.get(db.Key.from_path('TrustedPartner', int(partner_id)))
     item_contents = None
+    if current_li:
+      token = current_li.create_xsrf_token()
     if partner:
       base_url = partner.base_url
       foreign_auth_token = partner.foreign_auth_token
@@ -370,7 +372,7 @@ class RemoteItemHandler(database.webapp2.RequestHandler):
       seller_name = str(item_contents["seller"]["username"])
 
     database.logging.info("item contents: " + json.dumps(item_contents))
-    database.render_template(self, '/items/view_remote_item.html', {'item_contents': item_contents, 'partner_id' : partner_id, 'item_id' : str(item_id), 'seller_id' : seller_id, 'seller_name' : seller_name })
+    database.render_template(self, '/items/view_remote_item.html', {'xsrf_token': token, 'item_contents': item_contents, 'partner_id' : partner_id, 'item_id' : str(item_id), 'seller_id' : seller_id, 'seller_name' : seller_name })
 
 
 app = database.webapp2.WSGIApplication([('/items/', MainHandler), ('/items/new_item', NewHandler), 
@@ -379,4 +381,4 @@ app = database.webapp2.WSGIApplication([('/items/', MainHandler), ('/items/new_i
 ('/items/update_item', UpdateHandler), ('/items/submit_feedback', FeedbackHandler), ('/items/delete_item_feedback', DeleteFeedbackHandler),
 ('/items/old_searches', OldSearches), ('/items/submit_bid', BidHandler), ('/items/item_sold', SoldHandler), ('/items/new_collection', NewCollectionHandler),
 ('/items/save_collection', SaveCollectionHandler), ('/items/view_collection', ViewCollectionHandler), ('/items/delete_collection', DeleteCollectionHandler), 
-('/items/view_remote_item', RemoteItemHandler), ('/items/submit_foreign_feedback', ForeignFeedbackHandler)], debug=True)
+('/items/view_remote_item', RemoteItemHandler), ('/items/submit_foreign_feedback', ForeignItemFeedbackHandler)], debug=True)
