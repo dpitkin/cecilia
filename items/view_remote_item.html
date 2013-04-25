@@ -31,7 +31,7 @@ $('#seller_rating').raty({
 	<p>
 		Posted by: {{ escape(item_contents["seller"]["username"]) }}
 	</p>
-	<p>Title: {{ item_contents["title"] }}</p>
+	<p>Title: {{ sanitizeHTML('<a href="' + item_contents["url"] + '">' + item_contents["title"] + '</a>')}} </p>
 	<p>Description: <textarea class="readonlyRichText">{{ item_contents["description"] }}</textarea></p>
 	<p>Price: ${{ item_contents["price"]}}</p>
   {% if item_contents['image'] %}

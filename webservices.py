@@ -321,7 +321,6 @@ class SendMessageHandler(database.webapp2.RequestHandler):
 		err_mess = ""
 		success = False
 		external_li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", cgi.escape(self.request.get('source_user_id'))).get()
-		database.logging.info("external_li : " + external_li)
 		if not(external_li):
 			database.logging.info("creating new external LI")
 			external_li = database.create_external_user(cgi.escape(self.request.get('source_user_id')))
