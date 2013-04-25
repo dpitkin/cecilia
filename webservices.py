@@ -22,7 +22,7 @@ def item_to_dictionary(item, self):
 		"image" : self.request.host + item.display_image_url(),
 		"seller" : seller_to_dictionary(item.get_creator()),
 		"price" : str(item.price),
-		"url" : self.request.host + "/items/view_item?item_id=" + str(item.key().id()),
+		"url" : "https://" + self.request.host + "/items/view_item?item_id=" + str(item.key().id()),
 		"created_at" : item.created_at.strftime("%m/%d/%Y"),
 		"expiration_date" : item.expiration_date.strftime("%m/%d/%Y")
 	}
@@ -302,10 +302,10 @@ class WebservicesNewItemRequestHandler(database.webapp2.RequestHandler):
     
 class SendMessageHandler(database.webapp2.RequestHandler):
 	def post(self):
-  		if not(authenticate(self.request.get('auth_token'))):
-    		render_error(self, "Invalid auth token.")
-    		return
-    	#fill out the thread first
+		if not(authenticate(self.request.get('auth_token'))):
+			render_error(self, "Invalid auth token.")
+			return
+		#fill out the thread first
 		thread = None
 		database.logging.info("Destination : " + self.request.get('destination_conversation_id'))
 		if self.request.get('destination_conversation_id'):
