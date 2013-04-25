@@ -1,4 +1,4 @@
-application: ceciliasec-finals
+application: ceciliasec-hardcode
 version: test
 runtime: python27
 api_version: 1
