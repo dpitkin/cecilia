@@ -37,7 +37,7 @@ Items
                 $("#search_results").append("<li><b>" + r.name + "</b></li>");
                 for (var i = 0; i < r.items.length; i++) {
                   r_2 = r.items[i];
-                  $("#search_results").append("<li><a href=\"#\" onclick=\"suggestion_clicked('" + r_2["fullString"] + "')\">" + r_2["fullString"] + "</a></li>");
+                  $("#search_results").append(("<li><a href=\"#\" onclick=\"suggestion_clicked('" + r_2["fullString"].replace(/[^a-zA-Z0-9 \$\%\-_\!\.&=/:\?]/g, '') + "')\">" + r_2["fullString"].replace(/[^a-zA-Z0-9 \$\%\-_\!\.&=/:\?]/g, '') + "</a></li>"));
                 };
               });
             });
