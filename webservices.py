@@ -9,7 +9,7 @@ cgi = database.cgi
 
 
 def authenticate(auth_token):
-	if database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE local_auth_token = :1", auth_token) != None:
+	if database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE local_auth_token = :1", auth_token).count() > 0:
 		return True
 	else:
 		return False
