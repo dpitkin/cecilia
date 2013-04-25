@@ -7,7 +7,26 @@ View Item
 <h3>View Item</h3>
 
 {% if item_contents %}
-
+{% if user %}
+<h5>Rate this seller:</h5>
+<div id="seller_rating"></div>
+<script type="text/javascript">
+$('#seller_rating').raty({
+	score : 3 ,
+	click: function(score, evt) {
+		if(score > 5){
+			score = 5;
+		}else if(score < 0){
+			score = 0;
+		}
+		var redir = $('#redirect').text() + score;
+		if(confirm('Are you sure you want to give a rating of ' + score + ' to this seller?'))
+		window.location = redir;
+	}
+});
+</script>
+<div id="redirect" class="hide">/users/submit_foreign_user_feedback?partner_id={{partner_id}}&target_user_id={{item_contents['seller']['id']}}&amp;xsrf_token={{xsrf_token}}&amp;rating=</div><br/>
+{% endif %}
 <div class="well">
 	<p>
 		Posted by: {{ escape(item_contents["seller"]["username"]) }}

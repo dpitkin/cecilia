@@ -120,6 +120,34 @@ class DeleteHandler(database.webapp2.RequestHandler):
     else:
       self.redirect('/')
       
+class SubmitForeignUserFeedback(database.webapp2.RequestHandler):
+  def get(self):
+    user = database.users.get_current_user()
+    li = database.get_current_li()
+    partner = db.get(db.Key.from_path('TrustedPartner', int(cgi.escape(self.request.get('partner_id')))))
+    if user and li and partner and li.verify_xsrf_token(self):
+      #grab all their items
+      url = partner.base_url + "/webservices/add_user_rating" 
+      try:
+        final = {'target_user_id': self.request.get('target_user_id'), 'user_name': li.nickname, 'user_id': li.user_id, 
+        'rating': int(self.request.get('rating')), 'feedback': 'Rating', 'auth_token': partner.foreign_auth_token}
+        database.logging.info(final)
+        result = urlfetch.fetch(url=url, method=urlfetch.POST, payload=urllib.urlencode(final), headers={'Content-Type': 'application/x-www-form-urlencoded'})
+        
+        database.logging.info(result.content);
+        item_contents = json.loads(result.content)
+      except Exception, e:
+        item_contents = None
+    self.redirect('/')
+      
+#target_user_id: STRING
+#user_name: STRING
+#user_id: STRING
+#rating: FLOAT (1-5)
+#feedback: STRING
+#feedback_id: STRING
+
+      
 class UserFeedbackHandler(database.webapp2.RequestHandler):
   def get(self):
     user = database.users.get_current_user()
@@ -229,4 +257,5 @@ class ExportUserToForeignApp(database.webapp2.RequestHandler):
 app = database.webapp2.WSGIApplication([('/users/', MainHandler), ('/users/verify_user/', RegisterHandler), 
 ('/users/save_user', SaveLIHandler), ('/users/delete_user', DeleteHandler), ('/users/update_user', UpdateLIHandler),
 ('/users/submit_feedback', UserFeedbackHandler), ('/users/list_user_feedback',ListUserFeedback), ('/users/delete_user_feedback', DeleteUserFeedback),
-('/users/export_data', ExportDataHandler), ('/users/shop', ShowUserShop), ('/users/export_user_foreign', ExportUserToForeignApp)], debug=True)
+('/users/export_data', ExportDataHandler), ('/users/shop', ShowUserShop), ('/users/export_user_foreign', ExportUserToForeignApp),
+('/users/submit_foreign_user_feedback', SubmitForeignUserFeedback)], debug=True)

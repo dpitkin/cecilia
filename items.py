@@ -351,6 +351,8 @@ class RemoteItemHandler(database.webapp2.RequestHandler):
     partner_id = cgi.escape(self.request.get('partner_id'))
     partner = database.db.get(db.Key.from_path('TrustedPartner', int(partner_id)))
     item_contents = None
+    if current_li:
+      token = current_li.create_xsrf_token()
     if partner:
       base_url = partner.base_url
       foreign_auth_token = partner.foreign_auth_token
@@ -370,7 +372,7 @@ class RemoteItemHandler(database.webapp2.RequestHandler):
       seller_name = str(item_contents["seller"]["username"])
 
     database.logging.info("item contents: " + json.dumps(item_contents))
-    database.render_template(self, '/items/view_remote_item.html', {'item_contents': item_contents, 'partner_id' : partner_id, 'item_id' : str(item_id), 'seller_id' : seller_id, 'seller_name' : seller_name })
+    database.render_template(self, '/items/view_remote_item.html', {'xsrf_token': token, 'item_contents': item_contents, 'partner_id' : partner_id, 'item_id' : str(item_id), 'seller_id' : seller_id, 'seller_name' : seller_name })
 
 
 app = database.webapp2.WSGIApplication([('/items/', MainHandler), ('/items/new_item', NewHandler), 
