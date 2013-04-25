@@ -296,12 +296,15 @@ class SendMessageHandler(database.webapp2.RequestHandler):
   def post(self):
     #fill out the thread first
 	thread = None
+	database.logging.info("Destination : " + self.request.get('destination_conversation_id'))
 	if self.request.get('destination_conversation_id'):
-		thread = db.get(db.Key.from_path('Thread', cgi.escape(self.request.get('destination_conversation_id'))))
+		thread = db.get(db.Key.from_path('Thread', int(cgi.escape(self.request.get('destination_conversation_id')))))
 	err_mess = ""
 	success = False
 	external_li = database.db.GqlQuery("SELECT * FROM LoginInformation WHERE user_id=:1", cgi.escape(self.request.get('source_user_id'))).get()
+	database.logging.info("external_li : " + external_li)
 	if not(external_li):
+		database.logging.info("creating new external LI")
 		external_li = database.create_external_user(cgi.escape(self.request.get('source_user_id')))
 	if thread:
 		if thread.created_by_id != external_li.user_id and thread.recipient_id != external_li.user_id:

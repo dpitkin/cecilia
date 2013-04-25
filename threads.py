@@ -154,6 +154,8 @@ class CreateRemoteThreadHandler(database.webapp2.RequestHandler):
       thread.title = cgi.escape(self.request.get('title'))
       thread.external_conversation = True
       thread.recipient_id = cgi.escape(self.request.get('remote_user_id'))
+      thread.partner_id = cgi.escape(self.request.get('partner_id'))
+      thread.item_id = item_id
       thread.put()
       partner = database.db.get(db.Key.from_path('TrustedPartner', int(cgi.escape(self.request.get('partner_id')))))
       if partner:
@@ -209,23 +211,55 @@ class SaveMessageHandler(database.webapp2.RequestHandler):
     user = database.users.get_current_user()
     thread_key = db.Key.from_path('Thread', int(self.request.get('thread_id')))
     thread = db.get(thread_key)
+    current_li = database.get_current_li()
     if user and database.get_current_li().verify_xsrf_token(self) and (thread.recipient_id == user.user_id() or thread.created_by_id == user.user_id()):
       if thread.external_conversation:
         #its an external conversation, so we should send the message out to the other users API
-        None
-        #Request:
-        #auth_token: STRING
-        #item_id: STRING
-        #source_user_id: STRING
-        #source_user_name: STRING
-        #destination_user_id: STRING
-        #subject: STRING
-        #message: STRING
-        #source_conversation_id: STRING
-        #destination_conversation_id: STRING
+        message = database.Message(parent=thread)
+        message.body = cgi.escape(self.request.get('message'))
+        message.created_by_id = user.user_id()
+        message.recipient_id = thread.recipient_id if user.user_id() == thread.created_by_id else thread.created_by_id
+        message.read = False
 
-        #result = urlfetch.fetch(url=url, method=urlfetch.GET, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-				#self.response.out.write(result.content)
+        partner = database.db.get(db.Key.from_path('TrustedPartner', int(thread.partner_id)))
+        if not(partner):
+          database.logging.info("No partner on external thread")
+          self.redirect("/")
+          return
+
+        destination_user_id = thread.recipient_id
+        if destination_user_id == user.user_id():
+          destination_user_id = thread.created_by_id
+          pass
+        params = {
+          "auth_token" : partner.foreign_auth_token,
+          "item_id" : thread.item_id,
+          "source_user_id" : user.user_id(),
+          "source_user_name" : current_li.get_public_display_name(),
+          "destination_user_id" : destination_user_id,
+          "subject" : thread.title,
+          "message" : message.body,
+          "source_conversation_id" : thread.key().id(),
+          "destination_conversation_id" : thread.external_conversation_id
+        }
+        database.logging.info("params: " + json.dumps(params))
+        base_url = partner.base_url
+        url = base_url + "/webservices/send_message"
+        try:
+          result = urlfetch.fetch(url=url, payload=urllib.urlencode(params), method=urlfetch.POST, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+          database.logging.info("Result : " + result.content)
+          j_resp = json.loads(result.content)
+          database.logging.info("result[success]=" + str(j_resp["success"]))
+          if not(j_resp["success"]):
+            database.logging.info("Error with result: " + result)
+            self.redirect("/")
+                    
+          message.put()
+          database.logging.info("Created a new message under thread #%s\nSentBy: %s\nSentTo: %s\nCreatedAt: %s",
+          message.parent().key().id(), message.created_by_id, message.recipient_id, message.created_at)
+        except Exception, e:
+          database.logging.info("Error : %s", str(e))
+          self.redirect("/")
       else:
         message = database.Message(parent=thread)
         message.body = cgi.escape(self.request.get('message'))

@@ -190,6 +190,8 @@ class Thread(db.Model):
   item_details = db.StringProperty()
   external_conversation = db.BooleanProperty()
   external_conversation_id = db.StringProperty()
+  partner_id = db.StringProperty()
+  item_id = db.StringProperty()
   
   def messages(this):
     return db.GqlQuery("SELECT * FROM Message WHERE ANCESTOR is :1", this.key())
