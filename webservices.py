@@ -15,11 +15,15 @@ def authenticate(auth_token):
 		return False
 
 def item_to_dictionary(item, self):
+	if item.display_image_url() == '':
+		item_url = None
+	else:
+		item_url = "https://" + self.request.host + item.display_image_url()
 	return {
 		"id" : item.key().id(),
 		"title" : item.title,
 		"description" : item.description,
-		"image" : "https://" + self.request.host + item.display_image_url(),
+		"image" : item_url,
 		"seller" : seller_to_dictionary(item.get_creator()),
 		"price" : str(item.price),
 		"url" : "https://" + self.request.host + "/items/view_item?item_id=" + str(item.key().id()),
