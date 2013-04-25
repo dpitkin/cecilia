@@ -9,7 +9,6 @@ cgi = database.cgi
 
 
 def authenticate(auth_token):
-	return True # DELETE THIS LINE WHEN FOREIGN AUTH TOKENS ARE BEING USED PROPERLY
 	if database.db.GqlQuery("SELECT * FROM TrustedPartner WHERE local_auth_token = :1", auth_token) != None:
 		return True
 	else:
